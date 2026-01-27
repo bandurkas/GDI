@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  COMPLETED
+  PENDING
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  TEST
+  MIDTRANS
+}
+
+enum CashbackStatus {
+  PENDING
+  AVAILABLE
+  PAID
+  REVERSED
+}
+
+enum PayoutStatus {
+  REQUESTED
+  PROCESSING
+  PAID
+  REFUSED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  cashbackPercentage Float?  @default(80.0)
+  createdAt    DateTime  @default(now())
+  
+  cart         Cart?
+  orders       Order[]
+  wallet       Wallet?
+  cashbackTransactions CashbackTransaction[]
+  payouts      Payout[]
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  active      Boolean    @default(true)
+  
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+}
+
+model Order {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  totalCents    Int
+  status        OrderStatus    @default(PENDING)
+  paymentMethod PaymentMethod  @default(TEST)
+  createdAt     DateTime       @default(now())
+  
+  items         OrderItem[]
+  cashbackTransaction CashbackTransaction?
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  productName String
+  priceCents  Int
+  quantity    Int
+}
+
+model Wallet {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id])
+  availableBalanceCents Int      @default(0)
+  pendingBalanceCents   Int      @default(0)
+  totalEarnedCents      Int      @default(0)
+  totalPaidOutCents     Int      @default(0)
+  updatedAt             DateTime @default(now()) @updatedAt
+}
+
+model CashbackTransaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  orderId     String          @unique
+  order       Order           @relation(fields: [orderId], references: [id])
+  amountCents Int
+  rate        Float           @default(0.8)
+  status      CashbackStatus  @default(PENDING)
+  createdAt   DateTime        @default(now())
+  availableAt DateTime?
+  paidAt      DateTime?
+  reversedAt  DateTime?
+  notes       String?
+}
+
+model Payout {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  amountCents Int
+  status      PayoutStatus  @default(REQUESTED)
+  method      String?
+  reference   String?
+  receiptUrl  String?
+  requestedAt DateTime      @default(now())
+  processedAt DateTime?
+  updatedAt   DateTime      @default(now()) @updatedAt
+  notes       String?
+  
+  @@index([userId, status])
+}

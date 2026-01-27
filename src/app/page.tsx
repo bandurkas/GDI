@@ -1,65 +1,297 @@
+
+
+import { CheckCircle2, Zap, Shield, Brain, Globe, ChevronRight, ArrowRight, CreditCard } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export default function GDIPage() {
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans overflow-x-hidden">
+            {/* --- HERO SECTION --- */}
+            <div className="relative pt-16 pb-20 lg:pt-24 lg:pb-32 bg-white dark:bg-slate-950 isolate">
+
+                {/* Vibrant Mesh Gradient Background (Stripe-inspired) */}
+                <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-slate-950 overflow-hidden pointer-events-none">
+                    {/* Grid Pattern */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+
+                    {/* Base soft gradient: Blue/Cyan/Purple from Logo */}
+                    <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-[#00AEEF] blur-[100px] opacity-20 animate-blob-slow mix-blend-multiply"></div>
+                    <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[80%] rounded-full bg-[#6A5AE0] blur-[100px] opacity-20 animate-blob-slow animation-delay-2000 mix-blend-multiply"></div>
+                    <div className="absolute top-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-[#00C2FF] blur-[100px] opacity-15 animate-blob-slow animation-delay-4000 mix-blend-multiply"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-white dark:from-slate-950 to-transparent"></div>
+                </div>
+
+                {/* Angled Separation (Bottom) */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-slate-50 dark:bg-slate-900 origin-bottom-right -skew-y-3 translate-y-12 z-0"></div>
+
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                        {/* Left Content */}
+                        <div className="text-left">
+                            {/* Pill Badge */}
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-900 dark:text-white text-xs font-bold uppercase tracking-wider mb-8 border border-slate-900/5 dark:border-white/10 backdrop-blur-md">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+                                </span>
+                                AI-Driven Scale
+                                <ChevronRight size={14} className="opacity-50" />
+                            </div>
+
+                            <h1 className="text-6xl lg:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 leading-[0.95]">
+                                Designing <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00AEEF] via-[#6A5AE0] to-[#00AEEF] animate-gradient-x">Software Systems</span> <br />
+                                for Business <br />
+                                Growth
+                            </h1>
+                            <p className="max-w-xl text-xl text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-10">
+                                Join the millions of companies that use Global Digital Informasi to accept payments, embed financial services, and build faster.
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                <Link href="/auth/register" className="px-8 py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-bold rounded-full hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center gap-2 group">
+                                    Start now <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+                                </Link>
+                                <Link href="/products" className="px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold rounded-full border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-2">
+                                    Contact sales
+                                </Link>
+                            </div>
+
+
+                            {/* Trusted By Strip */}
+                            <div className="mt-16 pt-8 border-t border-slate-100/50 dark:border-white/10">
+                                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">Trusted by innovative teams</p>
+                                <div className="flex flex-wrap gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500 dark:brightness-150">
+                                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg"><Globe size={20} className="text-indigo-600" /> ACME Corp</div>
+                                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg"><Zap size={20} className="text-amber-500" /> BoltShift</div>
+                                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg"><Brain size={20} className="text-purple-600" /> NeuralNet</div>
+                                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg"><Shield size={20} className="text-emerald-500" /> Security</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Visual (Floating UI Mockup) */}
+                        <div className="relative hidden lg:block perspective-1000">
+                            <div className="relative w-full aspect-[3/4] max-w-sm mx-auto rotate-y-neg-12 rotate-x-5 hover:rotate-0 transition-transform duration-700 ease-out preserve-3d">
+                                {/* Floating Phone/Card */}
+                                <div className="absolute inset-0 bg-white rounded-[2.5rem] shadow-2xl border-[1px] border-slate-200 overflow-hidden ring-1 ring-slate-900/5">
+
+                                    {/* Fake Mobile Header */}
+                                    <div className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 pt-4">
+                                        <div className="w-8 h-1 bg-slate-200 rounded-full"></div>
+                                        <div className="flex gap-1">
+                                            <div className="w-4 h-4 rounded-full bg-slate-100"></div>
+                                            <div className="w-4 h-4 rounded-full bg-slate-100"></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="p-8 flex flex-col items-center text-center space-y-8 mt-4">
+
+                                        {/* Logo/Icon */}
+                                        {/* Logo/Icon */}
+                                        <div className="w-20 h-24 relative mb-2 transform hover:scale-105 transition-transform flex items-center justify-center">
+                                            <Image src="/gdi-logo.png" alt="GDI" width={80} height={96} className="w-full h-auto object-contain" />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <h3 className="text-slate-900 font-bold text-xl">Abstraction Magazine</h3>
+                                            <p className="text-slate-500 font-medium">$19 per month</p>
+                                        </div>
+
+                                        {/* Pay Button */}
+                                        <button className="w-full py-3 bg-slate-900 text-white rounded-lg font-bold flex items-center justify-center gap-2 shadow-md hover:bg-slate-800 transition-colors">
+                                            <span className="text-lg">Pay</span>
+                                        </button>
+
+                                        <div className="relative w-full flex items-center justify-center gap-4 py-2">
+                                            <div className="h-[1px] bg-slate-100 w-full"></div>
+                                            <span className="text-xs text-slate-400 font-semibold uppercase whitespace-nowrap">Or pay with card</span>
+                                            <div className="h-[1px] bg-slate-100 w-full"></div>
+                                        </div>
+
+                                        {/* Inputs */}
+                                        <div className="w-full space-y-3 text-left">
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                                                <div className="mt-1 h-10 w-full bg-slate-50 border border-slate-200 rounded-md"></div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase">Card Information</label>
+                                                <div className="mt-1 h-10 w-full bg-slate-50 border border-slate-200 rounded-md flex items-center px-3 gap-2">
+                                                    <CreditCard size={14} className="text-slate-400" />
+                                                    <div className="flex-1"></div>
+                                                    <div className="flex gap-1">
+                                                        <div className="w-6 h-4 bg-slate-200 rounded-sm"></div>
+                                                        <div className="w-6 h-4 bg-slate-200 rounded-sm"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Floating Notification Card 1 */}
+                                <div className="absolute -right-12 top-24 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 w-64 animate-float-slow">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                                            <CheckCircle2 size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-500 font-semibold uppercase">Payment Successful</p>
+                                            <p className="text-slate-900 font-bold">$149.00 USD</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Floating Notification Card 2 */}
+                                <div className="absolute -left-12 bottom-32 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 w-56 animate-float-slow animation-delay-2000">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+                                            <Globe size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-500 font-semibold uppercase">Global Payout</p>
+                                            <p className="text-slate-900 font-bold">Sent to ID</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div >
+
+            {/* --- ABOUT COMPANY SECTION --- */}
+            <section className="py-12 lg:py-20 bg-white dark:bg-slate-900 relative">
+                <div className="container mx-auto px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <h2 className="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-4">About Us</h2>
+                            <h3 className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+                                Strategic Digital Partner for the <br className="hidden lg:block" /> Future Economy.
+                            </h3>
+                            <div className="space-y-6 text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <p>
+                                    Global Digital Informasi is a technology company specializing in AI-driven software and digital solutions for businesses worldwide.
+                                </p>
+                                <p>
+                                    Our expertise covers AI consulting, automation, virtual assistants, and custom digital products tailored to real business needs. Instead of generic solutions, we design systems based on each client’s data, goals, and operational processes.
+                                </p>
+                                <p>
+                                    We work with businesses of different sizes — from growing startups to established companies — providing secure, scalable, and future-ready technology solutions.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Visual Element / Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4 translate-y-8">
+                                <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                    <Brain className="text-indigo-600 mb-4 h-8 w-8" />
+                                    <p className="font-bold text-slate-900 dark:text-white">AI-Driven</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Intelligent automation cores.</p>
+                                </div>
+                                <div className="bg-indigo-600 p-6 rounded-2xl shadow-xl text-white">
+                                    <Globe className="mb-4 h-8 w-8" />
+                                    <p className="font-bold">Global Scale</p>
+                                    <p className="text-sm text-indigo-100">Serving worldwide markets.</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                    <Shield className="text-emerald-600 mb-4 h-8 w-8" />
+                                    <p className="font-bold text-slate-900 dark:text-white">Secure</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Enterprise-grade protection.</p>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                    <Zap className="text-amber-500 mb-4 h-8 w-8" />
+                                    <p className="font-bold text-slate-900 dark:text-white">Fast</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">Optimized performance.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section >
+
+            {/* --- MISSION SECTION --- */}
+            <section className="py-24 bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
+                <div className="container mx-auto px-4 text-center max-w-4xl">
+                    <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-8">Our Mission</h2>
+                    <blockquote className="text-3xl lg:text-4xl font-medium text-slate-900 dark:text-white leading-normal mb-8">
+                        "To make advanced AI and digital technologies practical, accessible, and measurable in real business performance."
+                    </blockquote>
+                    <Link href="/auth/register" className="inline-flex items-center text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
+                        Join our journey <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </div>
+            </section >
+
+            {/* --- CAPABILITIES / STRENGTHS SECTION --- */}
+            <section className="py-24 bg-white dark:bg-slate-950">
+                <div className="container mx-auto px-4">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Key Strengths</h2>
+                        <p className="text-xl text-slate-500 dark:text-slate-400">Why leading companies choose GDI.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {[
+                            {
+                                title: "Custom Solutions",
+                                desc: "Custom AI and software solutions tailored to business needs.",
+                                icon: <Brain size={24} />
+                            },
+                            {
+                                title: "High Performance",
+                                desc: "Secure, scalable, and high-performance architecture.",
+                                icon: <Zap size={24} />
+                            },
+                            {
+                                title: "Automation Expert",
+                                desc: "Proven experience in automation and digital transformation.",
+                                icon: <CheckCircle2 size={24} />
+                            },
+                            {
+                                title: "Long-term Partner",
+                                desc: "Long-term partnership and continuous support.",
+                                icon: <Shield size={24} />
+                            }
+                        ].map((item, idx) => (
+                            <div key={idx} className="group p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                <div className="h-12 w-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                    {item.icon}
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">{item.title}</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                                    {item.desc}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section >
+
+            {/* --- FOOTER CTA --- */}
+            < section className="py-20 bg-slate-900 text-white text-center" >
+                <div className="container mx-auto px-4">
+                    <h2 className="text-3xl font-bold mb-6">Ready to scale your business?</h2>
+                    <p className="text-indigo-200 mb-8 text-lg max-w-2xl mx-auto">
+                        Global Digital Informasi is not just a technology vendor, but a strategic digital partner helping businesses build sustainable growth in the digital economy.
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <Link href="/auth/register" className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-full transition-colors shadow-lg shadow-indigo-500/30">
+                            Get Started
+                        </Link>
+                        <Link href="/products" className="px-8 py-3 bg-transparent border border-slate-600 hover:border-white text-white font-bold rounded-full transition-colors">
+                            Explore Solutions
+                        </Link>
+                    </div>
+                </div>
+            </section >
+        </div >
+    );
 }
