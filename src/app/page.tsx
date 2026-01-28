@@ -96,7 +96,7 @@ export default async function GDIPage() {
                                         {/* Logo/Icon */}
                                         {/* Logo/Icon */}
                                         <div className="w-20 h-24 relative mb-2 transform hover:scale-105 transition-transform flex items-center justify-center">
-                                            <Image src="/gdi-logo.png" alt="GDI" width={80} height={96} className="w-full h-auto object-contain" />
+                                            <Image src="/gdi-logo.svg" alt="GDI" width={80} height={96} className="w-full h-auto object-contain" />
                                         </div>
 
                                         <div className="space-y-2">

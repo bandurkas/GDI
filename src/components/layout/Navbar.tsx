@@ -26,7 +26,7 @@ export function Navbar() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
                     <Image
-                        src="/gdi-logo.png"
+                        src="/gdi-logo.svg"
                         alt="GDI Logo"
                         width={200}
                         height={56}

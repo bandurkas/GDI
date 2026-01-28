@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "GDI",
     images: [
       {
-        url: "/gdi-logo.png",
+        url: "/gdi-logo.svg",
         width: 800,
         height: 600,
       },
