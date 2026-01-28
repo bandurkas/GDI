@@ -156,7 +156,14 @@ const en = {
         guestModalTitle: "Ready to Transform?",
         guestModalMsg: "Join GDI today to add premium AI solutions to your cart and start your transformation journey.",
         guestModalRegister: "Create Account",
-        guestModalLogin: "Already have an account? Sign In"
+        guestModalLogin: "Already have an account? Sign In",
+        forgotPasswordTitle: "Reset your password",
+        forgotPasswordSubtitle: "Enter your email address and we'll send you a link to reset your password.",
+        forgotPasswordLink: "Forgot password?",
+        sendResetLink: "Send reset link",
+        backToSignIn: "Back to sign in",
+        resetLinkSent: "If an account exists for this email, you will receive a reset link shortly.",
+        errorEmailNotFound: "No account found with that email address",
     },
     cart: {
         title: "Your Shopping Cart",
@@ -519,7 +526,14 @@ const id: Dictionary = {
         guestModalTitle: "Siap Bertransformasi?",
         guestModalMsg: "Bergabunglah dengan GDI hari ini untuk menambahkan solusi AI premium ke keranjang Anda dan mulai perjalanan transformasi Anda.",
         guestModalRegister: "Buat Akun",
-        guestModalLogin: "Sudah punya akun? Masuk"
+        guestModalLogin: "Sudah punya akun? Masuk",
+        forgotPasswordTitle: "Atur ulang kata sandi",
+        forgotPasswordSubtitle: "Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk mengatur ulang kata sandi Anda.",
+        forgotPasswordLink: "Lupa kata sandi?",
+        sendResetLink: "Kirim tautan atur ulang",
+        backToSignIn: "Kembali ke halaman masuk",
+        resetLinkSent: "Jika akun tersedia untuk email ini, Anda akan segera menerima tautan atur ulang.",
+        errorEmailNotFound: "Akun dengan alamat email tersebut tidak ditemukan",
     },
     cart: {
         title: "Keranjang Belanja Anda",

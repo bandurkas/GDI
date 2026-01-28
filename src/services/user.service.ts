@@ -122,4 +122,26 @@ export class UserService {
             } as any
         });
     }
+
+    static async requestPasswordReset(email: string) {
+        console.log(`[UserService] Password reset requested for: ${email}`);
+
+        // Find user
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            console.log(`[UserService] Reset requested for non-existent email: ${email}`);
+            return { success: false, error: "Email not found" };
+        }
+
+        // In a real app, we would:
+        // 1. Generate a secure token
+        // 2. Save it to the DB with an expiry
+        // 3. Send an email with a link like /auth/reset-password?token=XYZ
+
+        console.log(`[UserService] Reset link would be sent to: ${email}`);
+        return { success: true };
+    }
 }

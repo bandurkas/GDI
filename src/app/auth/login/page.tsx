@@ -73,7 +73,15 @@ export default function LoginPage() {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{dictionary.auth.passwordLabel}</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{dictionary.auth.passwordLabel}</label>
+                                <Link
+                                    href="/auth/forgot-password"
+                                    className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors"
+                                >
+                                    {dictionary.auth.forgotPasswordLink}
+                                </Link>
+                            </div>
                             <input
                                 type="password"
                                 required

@@ -8,6 +8,7 @@ import { LoadingBar } from "@/components/ui/LoadingBar";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { CartProvider } from "@/context/CartContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Global Digital Informasi",
     description: "Strategic Digital Partner for the Future Economy.",
-    url: "https://gdi.id", // Placeholder URL
+    url: "https://gdi.id",
     siteName: "GDI",
     images: [
       {
@@ -39,10 +40,6 @@ export const metadata: Metadata = {
     images: ["/gdi-logo.png"],
   },
 };
-
-import { CartProvider } from "@/context/CartContext";
-
-// ... existing imports
 
 export default async function RootLayout({
   children,
