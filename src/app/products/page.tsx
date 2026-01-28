@@ -8,6 +8,19 @@ import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Dictionary } from "@/lib/dictionaries";
+
+interface Product {
+  id: string;
+  name: string;
+  title: string;
+  tagline: string;
+  highlights: string[];
+  scope: { title: string; details: string[] }[];
+  deliverables: string[];
+  timeline: { day: string; activity: string }[];
+  bestFor: string[];
+  value: string[];
+}
 import dynamic from "next/dynamic";
 const ProductDrawer = dynamic(() => import("@/components/ui/ProductDrawer"), {
   ssr: false,
@@ -344,7 +357,8 @@ export default function ProductsPage() {
 
   const [activeTab, setActiveTab] = useState('solutions');
   const [loading, setLoading] = useState<string | null>(null);
-  const [activeProduct, setActiveProduct] = useState<any | null>(null);
+  const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const router = useRouter();
 
   const handleAddToCart = async (productId: string) => {
@@ -410,7 +424,7 @@ export default function ProductsPage() {
       <div className="container mx-auto px-4 pb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {solutions.map((item) => (
-            <div key={item.id} className="group relative bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10 hover:border-indigo-500/30">
+            <div key={item.id} id={item.id} className="group relative bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/10 hover:border-indigo-500/30">
               {/* Tier Label */}
               <div className="absolute top-8 right-8 text-xs font-mono text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-white/10 px-2 py-1 rounded">
                 {item.tier}

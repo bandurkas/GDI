@@ -3,6 +3,11 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Toaster, toast } from 'sonner';
+import { GuestAuthModal } from "@/components/ui/GuestAuthModal";
+
+interface PartialCartItem {
+    quantity: number;
+}
 
 interface CartContextType {
     itemsCount: number;
@@ -14,13 +19,14 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
     const [itemsCount, setItemsCount] = useState(0);
+    const [showAuthModal, setShowAuthModal] = useState(false);
 
     const refreshCart = async () => {
         try {
             const res = await fetch("/api/cart?t=" + new Date().getTime());
             if (res.ok) {
                 const data = await res.json();
-                const count = data.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
+                const count = data.items?.reduce((acc: number, item: PartialCartItem) => acc + item.quantity, 0) || 0;
                 setItemsCount(count);
             }
         } catch (e) {
@@ -40,6 +46,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 await refreshCart();
                 toast.success('Added to cart!');
                 return true;
+            } else if (res.status === 401) {
+                setShowAuthModal(true);
+                return false;
             } else {
                 toast.error('Failed to add to cart');
                 return false;
@@ -52,12 +61,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
-        refreshCart();
+        const init = async () => {
+            await refreshCart();
+        };
+        init();
     }, []);
 
     return (
         <CartContext.Provider value={{ itemsCount, refreshCart, addToCart }}>
             {children}
+            <GuestAuthModal
+                isOpen={showAuthModal}
+                onClose={() => setShowAuthModal(false)}
+            />
             <Toaster position="bottom-right" richColors />
         </CartContext.Provider>
     );

@@ -15,7 +15,7 @@ export class FinancialService {
      * Get comprehensive financial metrics for a single user
      */
     static async getUserFinancialMetrics(userId: string): Promise<UserFinancialMetrics> {
-        const [orders, cashback, wallet, payouts] = await Promise.all([
+        const [orders, cashback, wallet] = await Promise.all([
             prisma.order.findMany({
                 where: { userId, status: "COMPLETED" },
                 select: { totalCents: true },

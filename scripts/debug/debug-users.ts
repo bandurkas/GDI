@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 import { UserService } from "./src/services/user.service";
 import { prisma } from "./src/lib/prisma";

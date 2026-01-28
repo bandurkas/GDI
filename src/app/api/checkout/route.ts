@@ -8,11 +8,12 @@ export async function POST(req: Request) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const { paymentMethod } = await req.json();
+        const { paymentMethod } = await req.json(); // "TEST" or "MIDTRANS"
         const order = await OrderService.createOrder(session.user.id, paymentMethod);
         return NextResponse.json(order);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Checkout error:", error);
-        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : "Internal server error";
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }

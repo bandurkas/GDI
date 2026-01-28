@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 import { PrismaClient } from "@prisma/client";
 import { FinancialService } from "./src/services/financial.service";

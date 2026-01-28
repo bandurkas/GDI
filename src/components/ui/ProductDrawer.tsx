@@ -3,10 +3,33 @@
 import { X, Check, ArrowRight, Clock, FileText, Target, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 
+interface ProductDetail {
+    title: string;
+    details: string[];
+}
+
+interface ProductTimelineItem {
+    day: string;
+    activity: string;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    title: string;
+    tagline: string;
+    highlights: string[];
+    scope: ProductDetail[];
+    deliverables: string[];
+    timeline: ProductTimelineItem[];
+    bestFor: string[];
+    value: string[];
+}
+
 interface ProductDrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    product: any; // Using any for flexibility with the complex content structure
+    product: Product | null;
     onBuy: (id: string) => void;
     loading: boolean;
 }
@@ -77,7 +100,7 @@ export default function ProductDrawer({ isOpen, onClose, product, onBuy, loading
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Scope of Work</h3>
                         <div className="space-y-2">
-                            {product.scope.map((item: any, idx: number) => (
+                            {product.scope.map((item: ProductDetail, idx: number) => (
                                 <div key={idx} className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                                     <button
                                         onClick={() => toggleAccordion(idx)}
@@ -122,7 +145,7 @@ export default function ProductDrawer({ isOpen, onClose, product, onBuy, loading
                         <div className="space-y-4">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Timeline</h3>
                             <div className="relative pl-4 border-l-2 border-indigo-100 dark:border-indigo-900/30 space-y-4">
-                                {product.timeline.map((item: any, idx: number) => (
+                                {product.timeline.map((item: ProductTimelineItem, idx: number) => (
                                     <div key={idx} className="relative">
                                         <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white dark:border-slate-900"></span>
                                         <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{item.day}</p>

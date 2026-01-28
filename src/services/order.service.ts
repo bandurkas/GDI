@@ -3,6 +3,9 @@ import { PaymentService, PaymentMode } from "./payment.service";
 
 export class OrderService {
     static async createOrder(userId: string, paymentMethod: PaymentMode) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new Error("User not found");
+
         const order = await prisma.$transaction(async (tx) => {
             // 1. Fetch cart items
             const cart = await tx.cart.findUnique({
@@ -14,26 +17,18 @@ export class OrderService {
                 throw new Error("Cart is empty");
             }
 
-            // 2. Calculate total cents (using product price from DB as single source of truth)
+            // 2. Calculate total cents
             let totalCents = 0;
             for (const item of cart.items) {
                 totalCents += item.product.priceCents * item.quantity;
             }
 
-            // 3. Process Payment (via abstraction)
-            const paymentService = new PaymentService(paymentMethod);
-            const paymentResult = await paymentService.pay(totalCents);
-
-            if (paymentResult.status !== "SUCCESS") {
-                throw new Error("Payment failed");
-            }
-
-            // 4. Create Order
+            // 3. Create PENDING Order
             const order = await tx.order.create({
                 data: {
                     userId,
                     totalCents,
-                    status: "COMPLETED",
+                    status: "PENDING", // Always starts as PENDING for Midtrans
                     paymentMethod: paymentMethod === "TEST" ? "TEST" : "MIDTRANS",
                     items: {
                         create: cart.items.map((item) => ({
@@ -46,34 +41,82 @@ export class OrderService {
                 },
             });
 
-            // 5. Clear Cart
+            // 4. Clear Cart
             await tx.cartItem.deleteMany({
                 where: { cartId: cart.id },
             });
 
-            // 6. Create PENDING Cashback Transaction
-            // Fetch user's cashback percentage, default to 80% if not set
-            const user = await tx.user.findUnique({ where: { id: userId } });
-            const userPercentage = user?.cashbackPercentage ?? 80.0;
-            const cashbackRate = userPercentage / 100; // Convert 80.0 -> 0.8
+            return order;
+        });
 
-            const cashbackAmount = Math.floor(totalCents * cashbackRate);
+        // 5. Process Payment (Request Snap Token)
+        const paymentService = new PaymentService(paymentMethod);
+        const customerDetails = {
+            first_name: user.name || user.email.split("@")[0],
+            email: user.email,
+        };
+
+        const paymentResult = await paymentService.pay(order.totalCents, order.id, customerDetails);
+
+        if (paymentResult.status === "FAILED") {
+            // Update order status to FAILED if token generation fails
+            await prisma.order.update({
+                where: { id: order.id },
+                data: { status: "FAILED" },
+            });
+            throw new Error(paymentResult.error || "Payment initialization failed");
+        }
+
+        // If TEST mode, we can auto-complete if we want, or just leave as is.
+        // Actually for TEST mode, let's auto-complete so it still works as before.
+        if (paymentMethod === "TEST") {
+            await this.completeOrder(order.id);
+            return { ...order, status: "COMPLETED" };
+        }
+
+        return {
+            ...order,
+            snapToken: paymentResult.snapToken
+        };
+    }
+
+    static async completeOrder(orderId: string) {
+        return await prisma.$transaction(async (tx) => {
+            const order = await tx.order.findUnique({
+                where: { id: orderId },
+                include: { items: true },
+            });
+
+            if (!order) throw new Error("Order not found");
+            if (order.status === "COMPLETED") return order;
+
+            // 1. Update Order Status
+            const updatedOrder = await tx.order.update({
+                where: { id: orderId },
+                data: { status: "COMPLETED" },
+            });
+
+            // 2. Create PENDING Cashback Transaction
+            const user = await tx.user.findUnique({ where: { id: order.userId } });
+            const userPercentage = user?.cashbackPercentage ?? 80.0;
+            const cashbackRate = userPercentage / 100;
+            const cashbackAmount = Math.floor(order.totalCents * cashbackRate);
 
             await tx.cashbackTransaction.create({
                 data: {
-                    userId,
+                    userId: order.userId,
                     orderId: order.id,
                     amountCents: cashbackAmount,
                     rate: cashbackRate,
-                    status: "PENDING",  // Starts as PENDING
+                    status: "PENDING",
                 },
             });
 
-            // 7. Update Wallet - Add to PENDING balance
+            // 3. Update Wallet - Add to PENDING balance
             await tx.wallet.upsert({
-                where: { userId },
+                where: { userId: order.userId },
                 create: {
-                    userId,
+                    userId: order.userId,
                     availableBalanceCents: 0,
                     pendingBalanceCents: cashbackAmount,
                     totalEarnedCents: cashbackAmount,
@@ -85,20 +128,17 @@ export class OrderService {
                 },
             });
 
+            return updatedOrder;
+        }).then(async (order) => {
+            // 4. Auto-Approve Cashback (Instant Rewards)
+            try {
+                const { CashbackService } = await import("./cashback.service");
+                await CashbackService.approveCashback(order.id);
+            } catch (error) {
+                console.error("Failed to auto-approve cashback:", error);
+            }
             return order;
         });
-
-        // 8. Auto-Approve Cashback (Instant Rewards)
-        // We do this outside the main transaction to avoid nested transaction complexity
-        // If this fails, the user still has PENDING cashback, which is a safe fallback.
-        try {
-            const { CashbackService } = await import("./cashback.service");
-            await CashbackService.approveCashback(order.id);
-        } catch (error) {
-            console.error("Failed to auto-approve cashback:", error);
-        }
-
-        return order;
     }
 
     static async getUserOrders(userId: string, page: number = 1, limit: number = 10) {

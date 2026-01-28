@@ -17,7 +17,9 @@ export async function POST(req: Request) {
         const payout = await PayoutService.requestPayout(session.user.id, amountCents);
 
         return NextResponse.json(payout);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message || "Something went wrong" }, { status: 400 });
+    } catch (error: unknown) {
+        console.error("[API] Payout request error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+        return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 }

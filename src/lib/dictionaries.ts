@@ -31,7 +31,11 @@ const en = {
         startTransformation: "Start AI Transformation",
         browseServices: "Browse Services",
         unknownService: "Unknown Service",
-        completed: "Completed"
+        completed: "Completed",
+        profile: "Profile",
+        save: "Save Changes",
+        success: "Success",
+        error: "Error"
     },
     nav: {
         solutions: "Solutions",
@@ -118,7 +122,19 @@ const en = {
         tableStatus: "Status",
         tableReceipt: "Receipt",
         page: "Page",
-        of: "of"
+        of: "of",
+        profileTitle: "Your Profile",
+        profileSubtitle: "Manage your personal information and payout settings.",
+        personalInfo: "Personal Information",
+        payoutSettings: "Payout Settings",
+        nameLabel: "Full Name",
+        namePlaceholder: "John Doe",
+        walletLabel: "USDT Wallet Address (TRC20)",
+        walletPlaceholder: "T...",
+        telegramLabel: "Telegram Username",
+        telegramPlaceholder: "@username",
+        updateSuccess: "Profile updated successfully.",
+        updateError: "Failed to update profile."
     },
     auth: {
         signInTitle: "Sign in to your account",
@@ -136,7 +152,11 @@ const en = {
         passwordPlaceholder: "••••••••",
         minChar: "Minimum 6 characters",
         errorInvalid: "Invalid email or password",
-        errorGeneric: "Something went wrong"
+        errorGeneric: "Something went wrong",
+        guestModalTitle: "Ready to Transform?",
+        guestModalMsg: "Join GDI today to add premium AI solutions to your cart and start your transformation journey.",
+        guestModalRegister: "Create Account",
+        guestModalLogin: "Already have an account? Sign In"
     },
     cart: {
         title: "Your Shopping Cart",
@@ -154,7 +174,9 @@ const en = {
         instantReward: "INSTANT REWARD",
         payNow: "Pay Now",
         processing: "Processing...",
-        paymentFailed: "Payment failed"
+        paymentFailed: "Payment failed",
+        agreeTo: "I agree to the",
+        refundPolicy: "Refund Policy"
     },
     admin: {
         title: "Admin Console",
@@ -187,6 +209,158 @@ const en = {
         statsToday: "Today's Orders",
         statsTotal: "Total Payouts Paid",
         set: "Set"
+    },
+    footer: {
+        rights: "All rights reserved.",
+        solutions: "Solutions",
+        company: "Company",
+        support: "Support",
+        privacy: "Privacy Policy",
+        terms: "Terms of Service",
+        refund: "Refund Policy",
+        contact: "Contact Us"
+    },
+    privacy: {
+        title: "Privacy Policy",
+        lastUpdated: "Last updated: 12.10.25",
+        sections: [
+            {
+                title: "1. Introduction",
+                content: "Global Digital Informasi (“Company”, “we”, “our”, “us”) respects your privacy and is committed to protecting personal and business-related data. This policy explains how we collect and protect information."
+            },
+            {
+                title: "2. Information We Collect",
+                content: "We collect Personal & Business Information (name, email, role), Communication Data, and Payment Information. We do not store full credit or debit card details."
+            },
+            {
+                title: "3. How We Use Information",
+                content: "We use information to provide services, communicate with clients, process payments, manage onboarding, and comply with legal obligations. We do not use personal data for profiling."
+            },
+            {
+                title: "4. Payment Processing",
+                content: "Payments are processed by trusted third-party providers. We do not directly store sensitive payment data. Please refer to their respective policies for details."
+            },
+            {
+                title: "5. Data Sharing & Disclosure",
+                content: "We do not sell personal data. Information is shared only with payment processors, trusted service providers, or legal authorities when required by law."
+            },
+            {
+                title: "6. Data Security",
+                content: "We apply technical and organizational measures including access controls and secure channels. While we take protection seriously, no system is 100% secure."
+            },
+            {
+                title: "7. Data Retention",
+                content: "We retain data only as long as necessary for service delivery, legal compliance, or legitimate business purposes. Data is securely deleted when no longer required."
+            },
+            {
+                title: "8. Your Rights",
+                content: "You have the right to request access, correction, or deletion of your personal data. Requests can be submitted via email and will receive a response within a reasonable timeframe."
+            },
+            {
+                title: "9. Cookies & Website Tracking",
+                content: "Our website uses cookies to ensure functionality and analyze performance. You can control cookie settings through your browser, though disabling them may affect functionality."
+            },
+            {
+                title: "10. International Data Use",
+                content: "Services may involve international clients. Data may be processed in jurisdictions with different standards while we continue to apply reasonable safeguards."
+            },
+            {
+                title: "11. Changes to This Policy",
+                content: "We may update this policy periodically. The latest version is always available on this page. Continued use indicates acceptance of the updated policy."
+            },
+            {
+                title: "12. Contact Information",
+                content: "For questions about your data, contact us at info@gdiconsult.online | https://gdiconsult.online"
+            }
+        ]
+    },
+    terms: {
+        title: "Terms & Conditions",
+        lastUpdated: "Last updated: 12.10.25",
+        sections: [
+            {
+                title: "1. Introduction",
+                content: "These Terms & Conditions govern the use of the website and services provided by Global Digital Informasi. By accessing our website, you agree to be bound by these Terms."
+            },
+            {
+                title: "2. Services",
+                content: "GDI provides professional digital and consulting services (AI/ML, automation, strategy). All services are digital and service-based; no physical products are sold."
+            },
+            {
+                title: "3. Payments & Pricing",
+                content: "Payments are processed online in IDR. Full payment is generally required before service delivery. Failure to complete payment may result in delayed or cancelled services."
+            },
+            {
+                title: "4. Service Delivery",
+                content: "Confirmation and onboarding follow successful payment. Timelines are estimates and depend on client cooperation and scope."
+            },
+            {
+                title: "5. Refund Policy",
+                content: "Services are often customized and non-refundable once delivery has started. Refund eligibility is governed by our separate Refund Policy."
+            },
+            {
+                title: "6. Client Responsibilities",
+                content: "Clients must provide accurate information and cooperate during onboarding. Clients are responsible for business decisions made based on our recommendations."
+            },
+            {
+                title: "7. Intellectual Property",
+                content: "All materials remain GDI's intellectual property until full payment is received. Deliverables are for internal business use only."
+            },
+            {
+                title: "8. Confidentiality & Data Handling",
+                content: "Client information is treated as confidential. We apply reasonable technical measures to protect data. Clients remain owners of their business data."
+            },
+            {
+                title: "9. Limitation of Liability",
+                content: "GDI is not liable for indirect or consequential damages. Services are provided on an 'as is' and 'as available' basis."
+            },
+            {
+                title: "10. Acceptable Use & Compliance",
+                content: "Clients agree not to use services for illegal activities or fraud. We reserve the right to refuse services that violate these conditions."
+            },
+            {
+                title: "11. Termination",
+                content: "We may suspend or terminate services for violations or fraudulent activity. Termination does not automatically entitle the client to a refund."
+            },
+            {
+                title: "12. Changes to Terms",
+                content: "We may update these Terms at any time. Continued use of our services constitutes acceptance of the updated Terms."
+            },
+            {
+                title: "13. Contact Information",
+                content: "For questions, contact Global Digital Informasi at info@gdiconsult.online | https://gdiconsult.online"
+            }
+        ]
+    },
+    refund: {
+        title: "Refund Policy",
+        lastUpdated: "Last updated: 12.10.2025",
+        sections: [
+            {
+                title: "1. Overview",
+                content: "Global Digital Informasi provides professional digital consulting, AI & machine learning services, and custom technology solutions. All services are digital and service-based. This Refund Policy explains when refunds may be granted."
+            },
+            {
+                title: "2. Eligibility for Refunds",
+                content: "A refund may be considered only if the request is submitted before any service delivery has started, and no onboarding, consultation, or project setup has taken place. Payment was made in error or duplicated."
+            },
+            {
+                title: "3. Non-Refundable Cases",
+                content: "Refunds are generally not provided if service delivery has started, consultation sessions have occurred, or work has begun (including research, planning, analysis, design, or development). Delays caused by the client are also non-refundable."
+            },
+            {
+                title: "4. Partial Refunds",
+                content: "In limited cases, a partial refund may be considered if only a clearly defined portion of the service has been delivered and the remaining scope has not yet started. These are evaluated case by case."
+            },
+            {
+                title: "5. Refund Method & Processing",
+                content: "Approved refunds are issued to the original payment method. Processing takes 5–14 business days. Transaction fees charged by providers may be non-refundable."
+            },
+            {
+                title: "6. How to Request a Refund",
+                content: "Provide your full name, email, transaction ID, and clear reason. Send requests to info@gdiconsult.online."
+            }
+        ]
     }
 };
 
@@ -220,7 +394,11 @@ const id: Dictionary = {
         startTransformation: "Mulai Transformasi AI",
         browseServices: "Lihat Layanan",
         unknownService: "Layanan Tidak Diketahui",
-        completed: "Selesai"
+        completed: "Selesai",
+        profile: "Profil",
+        save: "Simpan Perubahan",
+        success: "Berhasil",
+        error: "Kesalahan"
     },
     nav: {
         solutions: "Solusi",
@@ -307,7 +485,19 @@ const id: Dictionary = {
         tableStatus: "Status",
         tableReceipt: "Resi",
         page: "Halaman",
-        of: "dari"
+        of: "dari",
+        profileTitle: "Profil Anda",
+        profileSubtitle: "Kelola informasi pribadi dan pengaturan penarikan Anda.",
+        personalInfo: "Informasi Pribadi",
+        payoutSettings: "Pengaturan Penarikan",
+        nameLabel: "Nama Lengkap",
+        namePlaceholder: "Budi Santoso",
+        walletLabel: "Alamat Dompet USDT (TRC20)",
+        walletPlaceholder: "T...",
+        telegramLabel: "Username Telegram",
+        telegramPlaceholder: "@username",
+        updateSuccess: "Profil berhasil diperbarui.",
+        updateError: "Gagal memperbarui profil."
     },
     auth: {
         signInTitle: "Masuk ke akun Anda",
@@ -325,7 +515,11 @@ const id: Dictionary = {
         passwordPlaceholder: "••••••••",
         minChar: "Minimal 6 karakter",
         errorInvalid: "Email atau kata sandi salah",
-        errorGeneric: "Terjadi kesalahan"
+        errorGeneric: "Terjadi kesalahan",
+        guestModalTitle: "Siap Bertransformasi?",
+        guestModalMsg: "Bergabunglah dengan GDI hari ini untuk menambahkan solusi AI premium ke keranjang Anda dan mulai perjalanan transformasi Anda.",
+        guestModalRegister: "Buat Akun",
+        guestModalLogin: "Sudah punya akun? Masuk"
     },
     cart: {
         title: "Keranjang Belanja Anda",
@@ -343,7 +537,9 @@ const id: Dictionary = {
         instantReward: "HADIAH LANGSUNG",
         payNow: "Bayar Sekarang",
         processing: "Memproses...",
-        paymentFailed: "Pembayaran gagal"
+        paymentFailed: "Pembayaran gagal",
+        agreeTo: "Saya setuju dengan",
+        refundPolicy: "Kebijakan Refund"
     },
     admin: {
         title: "Konsol Admin",
@@ -376,6 +572,158 @@ const id: Dictionary = {
         statsToday: "Pesanan Hari Ini",
         statsTotal: "Total Penarikan Dibayar",
         set: "Atur"
+    },
+    footer: {
+        rights: "Seluruh hak cipta.",
+        solutions: "Solusi",
+        company: "Perusahaan",
+        support: "Dukungan",
+        privacy: "Kebijakan Privasi",
+        terms: "Syarat & Ketentuan",
+        refund: "Kebijakan Refund",
+        contact: "Hubungi Kami"
+    },
+    privacy: {
+        title: "Kebijakan Privasi",
+        lastUpdated: "Terakhir diperbarui: 12.10.25",
+        sections: [
+            {
+                title: "1. Pendahuluan",
+                content: "Global Digital Informasi (“Perusahaan”, “kami”) menghormati privasi Anda dan berkomitmen untuk melindungi data pribadi dan terkait bisnis. Kebijakan ini menjelaskan cara kami mengumpulkan dan melindungi informasi."
+            },
+            {
+                title: "2. Informasi yang Kami Kumpulkan",
+                content: "Kami mengumpulkan Informasi Pribadi & Bisnis (nama, email, peran), Data Komunikasi, dan Informasi Pembayaran. Kami tidak menyimpan detail kartu kredit atau debit lengkap."
+            },
+            {
+                title: "3. Cara Kami Menggunakan Informasi",
+                content: "Kami menggunakan informasi untuk menyediakan layanan, berkomunikasi dengan klien, memproses pembayaran, mengelola onboarding, dan mematuhi kewajiban hukum. Kami tidak menggunakan data pribadi untuk profiling."
+            },
+            {
+                title: "4. Pemrosesan Pembayaran",
+                content: "Pembayaran diproses oleh penyedia pihak ketiga tepercaya. Kami tidak secara langsung menyimpan data pembayaran sensitif. Silakan merujuk ke kebijakan masing-masing penyedia."
+            },
+            {
+                title: "5. Pembagian & Pengungkapan Data",
+                content: "Kami tidak menjual data pribadi. Informasi dibagikan hanya dengan pemroses pembayaran, penyedia layanan tepercaya, atau otoritas hukum jika diwajibkan oleh undang-undang."
+            },
+            {
+                title: "6. Keamanan Data",
+                content: "Kami menerapkan langkah-langkah teknis dan organisasinal termasuk kontrol akses dan saluran aman. Meskipun kami menangani perlindungan dengan serius, tidak ada sistem yang 100% aman."
+            },
+            {
+                title: "7. Retensi Data",
+                content: "Kami menyimpan data hanya selama diperlukan untuk pengiriman layanan, kepatuhan hukum, atau tujuan bisnis yang sah. Data dihapus dengan aman jika tidak lagi diperlukan."
+            },
+            {
+                title: "8. Hak-Hak Anda",
+                content: "Anda berhak meminta akses, koreksi, atau penghapusan data pribadi Anda. Permintaan dapat diajukan melalui email dan akan ditanggapi dalam jangka waktu yang wajar."
+            },
+            {
+                title: "9. Cookies & Pelacakan Situs Web",
+                content: "Situs web kami menggunakan cookies untuk memastikan fungsionalitas dan menganalisis kinerja. Anda dapat mengatur cookie melalui browser Anda, meskipun menonaktifkannya dapat memengaruhi fungsionalitas."
+            },
+            {
+                title: "10. Penggunaan Data Internasional",
+                content: "Layanan mungkin melibatkan klien internasional. Data dapat diproses di yurisdiksi dengan standar perlindungan yang berbeda sementara kami terus menerapkan pengamanan yang wajar."
+            },
+            {
+                title: "11. Perubahan pada Kebijakan Ini",
+                content: "Kami dapat memperbarui kebijakan ini secara berkala. Versi terbaru selalu tersedia di halaman ini. Penggunaan berkelanjutan menunjukkan penerimaan terhadap kebijakan yang diperbarui."
+            },
+            {
+                title: "12. Informasi Kontak",
+                content: "Untuk pertanyaan tentang data Anda, hubungi kami di info@gdiconsult.online | https://gdiconsult.online"
+            }
+        ]
+    },
+    terms: {
+        title: "Syarat & Ketentuan",
+        lastUpdated: "Terakhir diperbarui: 12.10.25",
+        sections: [
+            {
+                title: "1. Pendahuluan",
+                content: "Syarat & Ketentuan ini mengatur penggunaan situs web dan layanan yang disediakan oleh Global Digital Informasi. Dengan mengakses situs web kami, Anda setuju untuk terikat oleh Syarat ini."
+            },
+            {
+                title: "2. Layanan",
+                content: "GDI menyediakan layanan digital dan konsultasi profesional (AI/ML, otomatisasi, strategi). Semua layanan bersifat digital dan berbasis layanan; tidak ada produk fisik yang dijual."
+            },
+            {
+                title: "3. Pembayaran & Harga",
+                content: "Pembayaran diproses online dalam IDR. Pembayaran penuh umumnya diperlukan sebelum pengiriman layanan. Kegagalan untuk menyelesaikan pembayaran dapat mengakibatkan keterlambatan atau pembatalan layanan."
+            },
+            {
+                title: "4. Pengiriman Layanan",
+                content: "Konfirmasi dan onboarding mengikuti pembayaran yang berhasil. Garis waktu adalah perkiraan dan tergantung pada kerja sama klien dan cakupan."
+            },
+            {
+                title: "5. Kebijakan Refund",
+                content: "Layanan sering kali dikustomisasi dan tidak dapat di-refund setelah pengiriman dimulai. Kelayakan refund diatur oleh Kebijakan Refund terpisah kami."
+            },
+            {
+                title: "6. Tanggung Jawab Klien",
+                content: "Klien harus memberikan informasi yang akurat dan bekerja sama selama onboarding. Klien bertanggung jawab atas keputusan bisnis yang dibuat berdasarkan rekomendasi kami."
+            },
+            {
+                title: "7. Kekayaan Intelektual",
+                content: "Semua materi tetap menjadi kekayaan intelektual GDI sampai pembayaran penuh diterima. Hasil kerja hanya untuk penggunaan bisnis internal."
+            },
+            {
+                title: "8. Kerahasiaan & Penanganan Data",
+                content: "Informasi klien diperlakukan sebagai rahasia. Kami menerapkan langkah-langkah teknis yang wajar untuk melindungi data. Klien tetap menjadi pemilik data bisnis mereka."
+            },
+            {
+                title: "9. Batasan Kewajiban",
+                content: "GDI tidak bertanggung jawab atas kerusakan tidak langsung atau konsekuensi. Layanan disediakan atas dasar 'apa adanya' dan 'sebagaimana tersedia'."
+            },
+            {
+                title: "10. Penggunaan yang Diterima & Kepatuhan",
+                content: "Klien setuju untuk tidak menggunakan layanan untuk kegiatan ilegal atau penipuan. Kami berhak menolak layanan yang melanggar ketentuan ini."
+            },
+            {
+                title: "11. Pemutusan",
+                content: "Kami dapat menangguhkan atau menghentikan layanan karena pelanggaran atau aktivitas penipuan. Pemutusan tidak secara otomatis memberikan hak kepada klien untuk mendapatkan refund."
+            },
+            {
+                title: "12. Perubahan Ketentuan",
+                content: "Kami dapat memperbarui Ketentuan ini kapan saja. Penggunaan layanan kami secara berkelanjutan merupakan penerimaan terhadap Ketentuan yang diperbarui."
+            },
+            {
+                title: "13. Informasi Kontak",
+                content: "Untuk pertanyaan hubungi Global Digital Informasi di info@gdiconsult.online | https://gdiconsult.online"
+            }
+        ]
+    },
+    refund: {
+        title: "Kebijakan Refund",
+        lastUpdated: "Terakhir diperbarui: 12.10.2025",
+        sections: [
+            {
+                title: "1. Ikhtisar",
+                content: "Global Digital Informasi menyediakan konsultasi digital profesional, layanan AI & machine learning, dan solusi teknologi kustom. Semua layanan bersifat digital dan berbasis layanan. Kebijakan Refund ini menjelaskan kapan refund dapat diberikan."
+            },
+            {
+                title: "2. Kelayakan Refund",
+                content: "Refund dapat dipertimbangkan hanya jika permintaan diajukan sebelum pengiriman layanan dimulai, dan tidak ada onboarding, konsultasi, atau pengaturan proyek yang dilakukan. Pembayaran dilakukan karena kesalahan atau duplikasi."
+            },
+            {
+                title: "3. Kasus Non-Refundable",
+                content: "Refund umumnya tidak diberikan jika pengiriman layanan telah dimulai, sesi konsultasi telah terjadi, atau pekerjaan telah dimulai (termasuk riset, perencanaan, analisis, desain, atau pengembangan). Keterlambatan yang disebabkan oleh klien juga tidak dapat di-refund."
+            },
+            {
+                title: "4. Refund Parsial",
+                content: "Dalam kasus terbatas, refund parsial dapat dipertimbangkan jika hanya sebagian layanan yang didefinisikan dengan jelas telah dikirimkan dan sisa cakupan belum dimulai. Ini dievaluasi kasus per kasus."
+            },
+            {
+                title: "5. Metode & Pemrosesan Refund",
+                content: "Refund yang disetujui dikirim ke metode pembayaran asli. Pemrosesan memakan waktu 5–14 hari kerja. Biaya transaksi yang dikenakan oleh penyedia mungkin tidak dapat di-refund."
+            },
+            {
+                title: "6. Cara Meminta Refund",
+                content: "Berikan nama lengkap, email, ID transaksi, dan alasan yang jelas. Kirim permintaan ke info@gdiconsult.online."
+            }
+        ]
     }
 };
 

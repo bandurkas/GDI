@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ShoppingBag, Trash2, CreditCard, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -9,15 +9,40 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import Script from "next/script";
+
+interface CartItem {
+    id: string;
+    productId: string;
+    product: {
+        name: string;
+        priceCents: number;
+    };
+    quantity: number;
+}
+
+interface Cart {
+    id: string;
+    userId: string;
+    items: CartItem[];
+}
 
 export default function CartPage() {
     const { data: session, status } = useSession();
     const { refreshCart } = useCart();
     const { dictionary } = useLanguage();
-    const [cart, setCart] = useState<any>(null);
+    const [cart, setCart] = useState<Cart | null>(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
+    const [agreed, setAgreed] = useState(false);
     const router = useRouter();
+
+    const fetchCart = useCallback(async () => {
+        const res = await fetch("/api/cart");
+        const data = await res.json();
+        setCart(data);
+        setLoading(false);
+    }, []);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -25,17 +50,13 @@ export default function CartPage() {
             return;
         }
         if (status === "authenticated") {
-            fetchCart();
-            refreshCart(); // Ensure badge is in sync on load
+            const init = async () => {
+                await fetchCart();
+                await refreshCart(); // Ensure badge is in sync on load
+            };
+            init();
         }
-    }, [status]);
-
-    const fetchCart = async () => {
-        const res = await fetch("/api/cart");
-        const data = await res.json();
-        setCart(data);
-        setLoading(false);
-    };
+    }, [status, fetchCart, refreshCart, router]);
 
     const clearCart = async () => {
         await fetch("/api/cart", { method: "DELETE" });
@@ -49,18 +70,43 @@ export default function CartPage() {
             const res = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentMethod: "TEST" }),
+                body: JSON.stringify({ paymentMethod: "MIDTRANS" }),
             });
 
             if (res.ok) {
-                router.push("/dashboard?success=true");
+                const orderData = await res.json();
+
+                if (orderData.snapToken) {
+                    // @ts-expect-error midtrans-client snap is injected via Script tag
+                    window.snap.pay(orderData.snapToken, {
+                        onSuccess: function () {
+                            router.push("/dashboard?success=true");
+                            refreshCart();
+                        },
+                        onPending: function () {
+                            router.push("/dashboard?pending=true");
+                            refreshCart();
+                        },
+                        onError: function () {
+                            alert(dictionary.cart.paymentFailed);
+                        },
+                        onClose: function () {
+                            setPaying(false);
+                        }
+                    });
+                } else if (orderData.status === "COMPLETED") {
+                    // Fallback for immediate success (like TEST mode if we switch it)
+                    router.push("/dashboard?success=true");
+                    refreshCart();
+                }
             } else {
                 const data = await res.json();
                 alert(data.error || dictionary.cart.paymentFailed);
+                setPaying(false);
             }
-        } catch (err) {
+        } catch (error: unknown) {
+            console.error("Payment error:", error);
             alert(dictionary.cart.paymentFailed);
-        } finally {
             setPaying(false);
         }
     };
@@ -71,7 +117,7 @@ export default function CartPage() {
         </div>
     );
 
-    const totalCents = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
+    const totalCents = cart?.items?.reduce((acc: number, item) => acc + (item.product.priceCents * item.quantity), 0) || 0;
 
     // Get cashback percentage from session, default to 80% if not set
     const userPercentage = session?.user?.cashbackPercentage ?? 80.0;
@@ -81,12 +127,16 @@ export default function CartPage() {
 
     return (
         <div className="max-w-4xl mx-auto py-8">
+            <Script
+                src="https://app.sandbox.midtrans.com/snap/snap.js"
+                data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+            />
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                     <ShoppingBag className="text-indigo-600 dark:text-indigo-400" />
                     {dictionary.cart.title}
                 </h1>
-                {cart?.items?.length > 0 && (
+                {cart && cart.items.length > 0 && (
                     <button onClick={clearCart} className="text-sm font-medium text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2">
                         <Trash2 size={16} />
                         {dictionary.cart.emptyCart}
@@ -94,7 +144,7 @@ export default function CartPage() {
                 )}
             </div>
 
-            {!cart?.items?.length ? (
+            {cart === null || cart.items.length === 0 ? (
                 <div className="group relative text-center py-24 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 dark:to-black/20 pointer-events-none" />
 
@@ -113,7 +163,7 @@ export default function CartPage() {
             ) : (
                 <div className="grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
-                        {cart.items.map((item: any) => (
+                        {cart.items.map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
@@ -152,11 +202,28 @@ export default function CartPage() {
                                 </div>
                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% {dictionary.cart.instantReward}</p>
                             </div>
+                            <div className="flex items-start gap-3 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
+                                <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-white/20'}`}>
+                                    {agreed && <ArrowRight size={12} className="text-white" />}
+                                </div>
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-tight">
+                                    {dictionary.cart.agreeTo}{" "}
+                                    <Link
+                                        href="/refund"
+                                        target="_blank"
+                                        className="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-0.5"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {dictionary.cart.refundPolicy}
+                                        <ArrowRight size={10} />
+                                    </Link>
+                                </span>
+                            </div>
 
                             <button
                                 onClick={handlePay}
-                                disabled={paying}
-                                className="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 disabled:bg-slate-400 group"
+                                disabled={paying || !agreed}
+                                className="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-600 disabled:shadow-none group"
                             >
                                 <CreditCard size={20} />
                                 {paying ? dictionary.cart.processing : dictionary.cart.payNow}

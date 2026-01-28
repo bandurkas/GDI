@@ -8,7 +8,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const session = await getServerSession(authOptions);
     const { id } = await params;
 
-    if (!session || (session.user as any).role !== "ADMIN") {
+    if (!session || session.user.role !== "ADMIN") {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,6 +24,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
     } catch (error) {
+        console.error("[API] Admin user update error:", error);
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }

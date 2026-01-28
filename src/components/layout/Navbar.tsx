@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingCart, User, LogOut, Shield } from "lucide-react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 import { useCart } from "@/context/CartContext";
@@ -12,11 +13,12 @@ export function Navbar() {
     const { data: session } = useSession();
     const { itemsCount } = useCart();
     const { dictionary, language, switchLanguage } = useLanguage();
+    const pathname = usePathname();
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-colors duration-300">
             <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                <Link href="/" className="flex items-center">
+                <Link href="/" className="flex items-center" aria-label="GDI Home">
                     <Image
                         src="/gdi-logo.png"
                         alt="GDI Logo"
@@ -28,23 +30,27 @@ export function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    <Link href="/" aria-current={pathname === "/" ? "page" : undefined} className={`text-sm font-medium transition-colors ${pathname === "/" ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400"}`}>
                         GDI
                     </Link>
-                    <Link href="/products" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    <Link href="/products" aria-current={pathname === "/products" ? "page" : undefined} className={`text-sm font-medium transition-colors ${pathname === "/products" ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400"}`}>
                         {dictionary.common.products}
                     </Link>
 
                     {/* Language Switcher */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 rounded-full p-1 border border-slate-200 dark:border-white/10">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 rounded-full p-1 border border-slate-200 dark:border-white/10" role="group" aria-label="Language Switcher">
                         <button
                             onClick={() => switchLanguage('en')}
+                            aria-label="Switch to English"
+                            aria-pressed={language === 'en'}
                             className={`p-1.5 rounded-full text-xs font-bold transition-all ${language === 'en' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white'}`}
                         >
                             🇬🇧
                         </button>
                         <button
                             onClick={() => switchLanguage('id')}
+                            aria-label="Switch to Indonesian"
+                            aria-pressed={language === 'id'}
                             className={`p-1.5 rounded-full text-xs font-bold transition-all ${language === 'id' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white'}`}
                         >
                             🇮🇩
@@ -54,10 +60,16 @@ export function Navbar() {
                     {session ? (
                         <>
                             {session.user.role !== "ADMIN" && (
-                                <Link href="/dashboard" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2">
-                                    <User size={18} />
-                                    {dictionary.common.dashboard}
-                                </Link>
+                                <div className="flex items-center gap-4">
+                                    <Link href="/dashboard" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2">
+                                        <User size={18} />
+                                        {dictionary.common.dashboard}
+                                    </Link>
+                                    <Link href="/dashboard/profile" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2">
+                                        <Shield size={18} />
+                                        {dictionary.common.profile}
+                                    </Link>
+                                </div>
                             )}
 
                             {session.user.role === "ADMIN" && (
@@ -67,7 +79,7 @@ export function Navbar() {
                                 </Link>
                             )}
 
-                            <Link href="/cart" className="relative p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors">
+                            <Link href="/cart" aria-label={`View shopping cart, ${itemsCount} items`} className="relative p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors">
                                 <ShoppingCart size={22} />
                                 {itemsCount > 0 && (
                                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
