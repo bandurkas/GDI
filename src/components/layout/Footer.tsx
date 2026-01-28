@@ -81,13 +81,9 @@ export function Footer() {
                                 <Mail size={16} className="text-slate-400" />
                                 <span>info@gdiconsult.online</span>
                             </li>
-                            <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                <Phone size={16} className="text-slate-400" />
-                                <span>+62 123 4567 890</span>
-                            </li>
-                            <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                <MapPin size={16} className="text-slate-400" />
-                                <span>Jakarta, Indonesia</span>
+                            <li className="flex items-start gap-3 text-slate-500 dark:text-slate-400 text-sm">
+                                <MapPin size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                                <span>Menara 165 lt.14 Unit E, Jl. TB Simatupang, Cilandak Timur, Jakarta Selatan</span>
                             </li>
                         </ul>
                     </div>
