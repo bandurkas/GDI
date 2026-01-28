@@ -14,11 +14,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     try {
         const body = await req.json();
-        const { cashbackPercentage } = body;
+        const { cashbackPercentage, newPassword } = body;
 
         if (typeof cashbackPercentage === "number") {
             const updatedUser = await UserService.updateCashbackPercentage(id, cashbackPercentage);
             return NextResponse.json(updatedUser);
+        }
+
+        if (typeof newPassword === "string") {
+            if (newPassword.length < 6) {
+                return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+            }
+            const updatedUser = await UserService.resetUserPassword(id, newPassword);
+            return NextResponse.json({ success: true, message: "Password updated successfully" });
         }
 
         return NextResponse.json({ error: "Invalid data" }, { status: 400 });

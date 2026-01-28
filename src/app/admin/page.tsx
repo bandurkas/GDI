@@ -136,13 +136,17 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
 }
 
 // --- UserUpdateModal Component ---
-function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean, onClose: () => void, user: AdminUser | null, onUpdate: (id: string, percentage: number) => void }) {
+function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean, onClose: () => void, user: AdminUser | null, onUpdate: (id: string, data: { percentage?: number, newPassword?: string }) => void }) {
     const { dictionary } = useLanguage();
     const [percentage, setPercentage] = useState(user?.cashbackPercentage || 80);
+    const [newPassword, setNewPassword] = useState("");
+    const [showPasswordReset, setShowPasswordReset] = useState(false);
 
     useEffect(() => {
         if (user) {
             setPercentage(user.cashbackPercentage ?? 80);
+            setNewPassword("");
+            setShowPasswordReset(false);
         }
     }, [user]);
 
@@ -150,12 +154,28 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onUpdate(user.id, percentage);
+
+        if (showPasswordReset && newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters");
+            return;
+        }
+
+        const updateData: { percentage?: number, newPassword?: string } = {};
+
+        if (percentage !== user.cashbackPercentage) {
+            updateData.percentage = percentage;
+        }
+
+        if (showPasswordReset && newPassword) {
+            updateData.newPassword = newPassword;
+        }
+
+        onUpdate(user.id, updateData);
     };
 
     return (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-900 rounded-lg w-full max-w-sm shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-lg w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{dictionary.admin.edit}</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><XCircle size={18} /></button>
@@ -190,9 +210,41 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
                             <p className="text-xs text-slate-400 mt-4 italic">Default is 80% if not set.</p>
                         </div>
 
+                        <div className="border-t border-slate-100 dark:border-slate-800 pt-6">
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswordReset(!showPasswordReset)}
+                                className="flex items-center gap-2 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+                            >
+                                <Shield size={16} />
+                                {showPasswordReset ? "Cancel Password Reset" : "Reset Password"}
+                            </button>
+
+                            {showPasswordReset && (
+                                <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">New Password</label>
+                                    <input
+                                        type="password"
+                                        minLength={6}
+                                        placeholder="Enter new password (min 6 characters)"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                        required={showPasswordReset}
+                                    />
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 flex items-start gap-1">
+                                        <Shield size={12} className="mt-0.5 flex-shrink-0" />
+                                        <span>User will need to use this new password to login</span>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="flex gap-3 justify-end pt-5 border-t border-slate-100 dark:border-slate-800 mt-8">
                             <button type="button" onClick={onClose} className="px-5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-sm transition-all shadow-sm">{dictionary.common.cancel}</button>
-                            <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-500/20 transition-all">{dictionary.admin.set}</button>
+                            <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-500/20 transition-all">
+                                {showPasswordReset ? "Update & Reset Password" : dictionary.admin.set}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -346,12 +398,22 @@ export default function AdminPage() {
         }
     };
 
-    const handleUserUpdate = async (id: string, percentage: number) => {
+    const handleUserUpdate = async (id: string, data: { percentage?: number, newPassword?: string }) => {
         try {
+            const body: any = {};
+
+            if (data.percentage !== undefined) {
+                body.cashbackPercentage = data.percentage;
+            }
+
+            if (data.newPassword) {
+                body.newPassword = data.newPassword;
+            }
+
             const res = await fetch(`/api/admin/users/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cashbackPercentage: percentage }),
+                body: JSON.stringify(body),
             });
 
             const json = await res.json();
@@ -360,7 +422,12 @@ export default function AdminPage() {
                 throw new Error(json.error || "Failed to update user");
             }
 
-            toast.success("User updated successfully!");
+            if (data.newPassword) {
+                toast.success("User updated and password reset successfully!");
+            } else {
+                toast.success("User updated successfully!");
+            }
+
             setIsUserModalOpen(false);
             fetchData("users", page); // Refresh current page
         } catch (err: any) {

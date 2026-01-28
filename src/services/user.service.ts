@@ -144,4 +144,13 @@ export class UserService {
         console.log(`[UserService] Reset link would be sent to: ${email}`);
         return { success: true };
     }
+
+    static async resetUserPassword(userId: string, newPassword: string) {
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+
+        return await prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash }
+        });
+    }
 }
