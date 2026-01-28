@@ -25,14 +25,24 @@ export function Navbar() {
             <div className="container mx-auto flex h-20 items-center justify-between px-4">
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
-                    <Image
-                        src="/gdi-logo.svg"
-                        alt="GDI Logo"
-                        width={200}
-                        height={56}
-                        className="h-10 w-auto md:h-14"
-                        priority={true}
-                    />
+                    <div className="relative">
+                        <Image
+                            src="/gdi-logo.svg"
+                            alt="GDI Logo"
+                            width={200}
+                            height={56}
+                            className="h-10 w-auto md:h-14 block dark:hidden"
+                            priority={true}
+                        />
+                        <Image
+                            src="/gdi-logo-dark.svg"
+                            alt="GDI Logo"
+                            width={200}
+                            height={56}
+                            className="h-10 w-auto md:h-14 hidden dark:block"
+                            priority={true}
+                        />
+                    </div>
                 </Link>
 
                 <div className="flex items-center gap-3 md:gap-6">

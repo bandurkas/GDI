@@ -17,11 +17,18 @@ export function Footer() {
                     <div className="space-y-6">
                         <Link href="/" className="inline-block">
                             <Image
-                                src="/gdi-logo.png" // Fallback to png for now
+                                src="/gdi-logo.svg"
                                 alt="GDI Logo"
                                 width={180}
                                 height={50}
-                                className="h-10 w-auto"
+                                className="h-10 w-auto opacity-90 dark:opacity-100 block dark:hidden"
+                            />
+                            <Image
+                                src="/gdi-logo-dark.svg"
+                                alt="GDI Logo"
+                                width={180}
+                                height={50}
+                                className="h-10 w-auto opacity-90 dark:opacity-100 hidden dark:block"
                             />
                         </Link>
                         <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-xs">
