@@ -21,7 +21,8 @@ async function main() {
 
     // 2. Verify Payouts Extended Data
     console.log("\n2. Testing PayoutService.getAllPayouts()...");
-    const payouts = await PayoutService.getAllPayouts();
+    const result = await PayoutService.getAllPayouts();
+    const payouts = result.payouts;
     if (payouts.length > 0) {
         const firstPayout = payouts[0] as any;
         console.log("First Payout Sample:", {

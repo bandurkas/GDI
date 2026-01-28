@@ -6,6 +6,7 @@ import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCi
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardData {
     wallet: {
@@ -38,6 +39,7 @@ interface DashboardData {
 
 export default function DashboardPage() {
     const { data: session, status } = useSession();
+    const { dictionary } = useLanguage();
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -176,8 +178,8 @@ export default function DashboardPage() {
         <div className="space-y-10 py-8 max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">User Dashboard</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">Welcome back, <span className="font-bold text-indigo-600 dark:text-indigo-400">{session?.user?.email}</span></p>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.dashboard.title}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">{dictionary.dashboard.welcome} <span className="font-bold text-indigo-600 dark:text-indigo-400">{session?.user?.email}</span></p>
                 </div>
 
                 {data?.wallet && (
@@ -187,7 +189,7 @@ export default function DashboardPage() {
                                 <Wallet size={24} />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cashback</p>
+                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{dictionary.dashboard.cashback}</p>
                                 <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">{formatCurrency((data.wallet.availableBalanceCents || 0) * 100)}</p>
                             </div>
                         </div>
@@ -197,7 +199,7 @@ export default function DashboardPage() {
                                 <DollarSign size={24} />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500 uppercase tracking-widest">Total Bills</p>
+                                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500 uppercase tracking-widest">{dictionary.dashboard.totalBills}</p>
                                 <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight tabular-nums">{formatCurrency((data.totalBills || 0) * 100)}</p>
                             </div>
                         </div>
@@ -215,12 +217,12 @@ export default function DashboardPage() {
                         <div className="relative">
                             <div className="flex items-center gap-3 mb-6">
                                 <ArrowUpRight className="text-indigo-600 dark:text-indigo-400" size={24} />
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white">Withdraw Funds</h3>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.withdrawFunds}</h3>
                             </div>
 
                             <form onSubmit={handleRequestPayout} className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Amount (IDR)</label>
+                                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{dictionary.dashboard.amountLabel}</label>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Rp</span>
                                         <input
@@ -231,7 +233,7 @@ export default function DashboardPage() {
                                             className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                         />
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Minimum withdrawal amount is Rp 10.000</p>
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">{dictionary.dashboard.minWithdraw}</p>
                                 </div>
 
                                 {payoutError && (
@@ -253,7 +255,7 @@ export default function DashboardPage() {
                                     disabled={payoutLoading}
                                     className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center"
                                 >
-                                    {payoutLoading ? "Processing..." : "Request Payout"}
+                                    {payoutLoading ? dictionary.dashboard.processing : dictionary.dashboard.requestPayout}
                                 </button>
                             </form>
                         </div>
@@ -266,22 +268,22 @@ export default function DashboardPage() {
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center gap-3 mb-8">
                             <Clock className="text-indigo-600 dark:text-indigo-400" size={24} />
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white">Payout History</h3>
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.payoutHistory}</h3>
                         </div>
 
                         {!data?.payouts || data.payouts.length === 0 ? (
                             <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-slate-400 dark:text-slate-500 font-medium">No payout history yet.</p>
+                                <p className="text-slate-400 dark:text-slate-500 font-medium">{dictionary.dashboard.noPayouts}</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
                                         <tr className="border-b border-slate-100 dark:border-slate-800">
-                                            <th className="text-left text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pl-4">Date</th>
-                                            <th className="text-right text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">Amount</th>
-                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">Status</th>
-                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pr-4">Receipt</th>
+                                            <th className="text-left text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pl-4">{dictionary.dashboard.tableDate}</th>
+                                            <th className="text-right text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">{dictionary.dashboard.tableAmount}</th>
+                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">{dictionary.dashboard.tableStatus}</th>
+                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pr-4">{dictionary.dashboard.tableReceipt}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -321,7 +323,7 @@ export default function DashboardPage() {
                         {data?.payoutsMeta && data.payoutsMeta.totalPages > 1 && (
                             <div className="flex items-center justify-between mt-6 px-2">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Page {payoutPage} of {payoutTotalPages}
+                                    {dictionary.dashboard.page} {payoutPage} {dictionary.dashboard.of} {payoutTotalPages}
                                 </span>
                                 <div className="flex gap-2">
                                     <button
@@ -352,14 +354,14 @@ export default function DashboardPage() {
 
                 <div className="flex items-center gap-3 mb-8 relative z-10">
                     <Package className="text-indigo-400" size={24} />
-                    <h3 className="text-xl font-black text-white">Purchased Services</h3>
+                    <h3 className="text-xl font-black text-white">{dictionary.dashboard.purchasedServices}</h3>
                 </div>
 
                 {!data?.orders || data.orders.length === 0 ? (
                     <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10 relative z-10">
-                        <p className="text-slate-400 font-medium">No services purchased yet.</p>
+                        <p className="text-slate-400 font-medium">{dictionary.dashboard.noServices}</p>
                         <Link href="/products" className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-full transition-all">
-                            Browse Services
+                            {dictionary.common.browseServices}
                         </Link>
                     </div>
                 ) : (
@@ -377,8 +379,8 @@ export default function DashboardPage() {
                                     <div key={order.id} className="grid grid-cols-12 items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl transition-all group">
                                         <div className="col-span-6">
                                             <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
-                                                {order.items[0]?.productName || "Unknown Service"}
-                                                {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} more</span>}
+                                                {order.items[0]?.productName || dictionary.common.unknownService}
+                                                {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
                                             </p>
                                             <p className="text-[10px] text-slate-500 mt-0.5">Order ID: #{order.id.slice(-8)}</p>
                                         </div>
@@ -390,7 +392,7 @@ export default function DashboardPage() {
                                             <p className="text-sm font-black text-white tracking-tight tabular-nums">{formatCurrency(order.totalCents * 100)}</p>
                                             <div className="mt-1 inline-flex">
                                                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
-                                                    Completed
+                                                    {dictionary.common.completed}
                                                 </span>
                                             </div>
                                         </div>
@@ -411,17 +413,17 @@ export default function DashboardPage() {
                                 disabled={page === 1}
                                 className="text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors flex items-center gap-1"
                             >
-                                ← Previous
+                                ← {dictionary.dashboard.page}
                             </button>
                             <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                                Page {page} of {totalPages}
+                                {dictionary.dashboard.page} {page} {dictionary.dashboard.of} {totalPages}
                             </span>
                             <button
                                 onClick={() => handlePageChange(page + 1)}
                                 disabled={page === totalPages}
                                 className="text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors flex items-center gap-1"
                             >
-                                Next →
+                                {dictionary.dashboard.page} →
                             </button>
                         </div>
                     </>

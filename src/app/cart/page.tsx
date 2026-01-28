@@ -8,10 +8,12 @@ import { useRouter } from "next/navigation";
 
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CartPage() {
     const { data: session, status } = useSession();
     const { refreshCart } = useCart();
+    const { dictionary } = useLanguage();
     const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
@@ -54,10 +56,10 @@ export default function CartPage() {
                 router.push("/dashboard?success=true");
             } else {
                 const data = await res.json();
-                alert(data.error || "Payment failed");
+                alert(data.error || dictionary.cart.paymentFailed);
             }
         } catch (err) {
-            alert("Payment failed");
+            alert(dictionary.cart.paymentFailed);
         } finally {
             setPaying(false);
         }
@@ -82,12 +84,12 @@ export default function CartPage() {
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                     <ShoppingBag className="text-indigo-600 dark:text-indigo-400" />
-                    Your Shopping Cart
+                    {dictionary.cart.title}
                 </h1>
                 {cart?.items?.length > 0 && (
                     <button onClick={clearCart} className="text-sm font-medium text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2">
                         <Trash2 size={16} />
-                        Empty Cart
+                        {dictionary.cart.emptyCart}
                     </button>
                 )}
             </div>
@@ -100,10 +102,10 @@ export default function CartPage() {
                         <div className="h-20 w-20 rounded-3xl bg-white dark:bg-white/5 shadow-xl shadow-slate-200 dark:shadow-black/20 flex items-center justify-center mb-6 text-slate-300 dark:text-slate-600 group-hover:scale-110 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-all duration-500">
                             <ShoppingBag size={40} />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Your cart is empty</h3>
-                        <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-xs mx-auto">Looks like you haven't added any AI solutions to your cart yet.</p>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{dictionary.cart.cartEmptyTitle}</h3>
+                        <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-xs mx-auto">{dictionary.cart.cartEmptyMsg}</p>
                         <Link href="/products" className="inline-flex items-center gap-2 bg-slate-900 dark:bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 hover:scale-105 active:scale-95">
-                            Start Shopping
+                            {dictionary.cart.startShopping}
                             <ArrowRight size={18} />
                         </Link>
                     </div>
@@ -115,11 +117,11 @@ export default function CartPage() {
                             <div key={item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">Quantity: {item.quantity}</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">{dictionary.cart.quantity}: {item.quantity}</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency((item.product.priceCents * item.quantity) * 100)}</p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{formatCurrency(item.product.priceCents * 100)} each</p>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{formatCurrency(item.product.priceCents * 100)} {dictionary.cart.each}</p>
                                 </div>
                             </div>
                         ))}
@@ -127,28 +129,28 @@ export default function CartPage() {
 
                     <div className="space-y-6">
                         <div className="p-8 rounded-3xl border border-indigo-100 dark:border-indigo-500/10 bg-indigo-50/50 dark:bg-slate-900/80 backdrop-blur-md shadow-lg shadow-indigo-50 dark:shadow-none">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Order Summary</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{dictionary.cart.summary}</h2>
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400 text-sm font-medium">
-                                    <span>Subtotal</span>
+                                    <span>{dictionary.cart.subtotal}</span>
                                     <span className="tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(totalCents * 100)}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400 text-sm font-medium">
-                                    <span>Tax</span>
+                                    <span>{dictionary.cart.tax}</span>
                                     <span className="tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(0)}</span>
                                 </div>
                                 <div className="pt-4 border-t border-indigo-100 dark:border-white/10 flex justify-between items-baseline">
-                                    <span className="font-bold text-slate-900 dark:text-white text-lg">Total</span>
+                                    <span className="font-bold text-slate-900 dark:text-white text-lg">{dictionary.cart.total}</span>
                                     <span className="font-bold text-indigo-600 dark:text-indigo-400 text-xl tracking-tighter tabular-nums">{formatCurrency(totalCents * 100)}</span>
                                 </div>
                             </div>
 
                             <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/20 mb-8">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">Estimated Cashback:</span>
+                                    <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{dictionary.cart.estimatedCashback}:</span>
                                     <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">{formatCurrency(cashbackCents * 100)}</span>
                                 </div>
-                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% INSTANT REWARD</p>
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% {dictionary.cart.instantReward}</p>
                             </div>
 
                             <button
@@ -157,7 +159,7 @@ export default function CartPage() {
                                 className="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 disabled:bg-slate-400 group"
                             >
                                 <CreditCard size={20} />
-                                {paying ? "Processing..." : "Pay Now"}
+                                {paying ? dictionary.cart.processing : dictionary.cart.payNow}
                                 {!paying && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
                             </button>
                         </div>

@@ -5,7 +5,8 @@ import { prisma } from "./src/lib/prisma";
 async function main() {
     console.log("--- Debugging UserService ---");
     try {
-        const users = await UserService.getAllUsersWithStats();
+        const result = await UserService.getAllUsersWithStats();
+        const users = result.users;
         console.log(`Found ${users.length} users`);
         if (users.length > 0) {
             console.log("Sample User:", JSON.stringify(users[0], null, 2));

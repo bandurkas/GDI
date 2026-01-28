@@ -6,6 +6,7 @@ import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCa
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AdminPayout {
     id: string;
@@ -34,6 +35,7 @@ interface AdminUser {
 
 // --- StatusUpdateModal Component ---
 function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: boolean, onClose: () => void, payout: AdminPayout | null, onUpdate: (id: string, status: string, comment: string, receipt?: string) => void }) {
+    const { dictionary } = useLanguage();
     const [status, setStatus] = useState(payout?.status || "REQUESTED");
     const [comment, setComment] = useState("");
     const [receipt, setReceipt] = useState("");
@@ -55,27 +57,27 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl shadow-slate-900/20 border border-slate-200 dark:border-slate-700 overflow-hidden transform transition-all">
-                <div className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between items-center">
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Update Payout Status</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm shadow-2xl shadow-slate-900/20 border border-slate-200 dark:border-slate-700 overflow-hidden transform transition-all">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between items-center">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">{dictionary.admin.updateStatus}</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><XCircle size={20} /></button>
                 </div>
 
-                <div className="p-8">
-                    <div className="mb-8 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div className="p-6">
+                    <div className="mb-6 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Payout ID</span>
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{dictionary.admin.payoutId}</span>
                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">#{payout.id.slice(-6)}</span>
                         </div>
                         <div className="text-right">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 block">Amount</span>
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 block">{dictionary.admin.amount}</span>
                             <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(payout.amountCents * 100)}</span>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">New Status</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">{dictionary.admin.newStatus}</label>
                             <div className="relative">
                                 <select
                                     value={status}
@@ -93,7 +95,7 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
 
                         {status === "PAID" && (
                             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">Receipt URL</label>
+                                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">{dictionary.admin.receiptUrl}</label>
                                 <div className="relative">
                                     <ClipboardList className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                     <input
@@ -109,21 +111,21 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
                         )}
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">Admin Comment <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">{dictionary.admin.comment} <span className="text-red-500">*</span></label>
                             <textarea
                                 required
-                                placeholder="Please provide a reason for this status update..."
+                                placeholder={dictionary.admin.comment}
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                             />
                         </div>
 
-                        <div className="flex gap-3 justify-end pt-6 border-t border-slate-50 dark:border-slate-800 mt-8">
-                            <button type="button" onClick={onClose} className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white rounded-xl text-sm transition-all shadow-sm hover:shadow">Cancel</button>
-                            <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 text-sm transition-all flex items-center gap-2">
+                        <div className="flex gap-3 justify-end pt-6 border-t border-slate-50 dark:border-slate-800 mt-6">
+                            <button type="button" onClick={onClose} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white rounded-xl text-sm transition-all shadow-sm hover:shadow">{dictionary.common.cancel}</button>
+                            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 text-sm transition-all flex items-center gap-2">
                                 <CheckCircle size={18} />
-                                Update Status
+                                {dictionary.admin.update}
                             </button>
                         </div>
                     </form>
@@ -135,6 +137,7 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
 
 // --- UserUpdateModal Component ---
 function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean, onClose: () => void, user: AdminUser | null, onUpdate: (id: string, percentage: number) => void }) {
+    const { dictionary } = useLanguage();
     const [percentage, setPercentage] = useState(user?.cashbackPercentage || 80);
 
     useEffect(() => {
@@ -154,38 +157,42 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-lg w-full max-w-sm shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Update User</h3>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{dictionary.admin.edit}</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><XCircle size={18} /></button>
                 </div>
 
                 <div className="p-6">
                     <div className="mb-6">
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">User Email</p>
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">{dictionary.admin.userEmail}</p>
                         <p className="text-sm font-bold text-slate-900 dark:text-white">{user.email}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Cashback Percentage</label>
-                            <div className="flex items-center">
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    max="100"
-                                    required
-                                    value={percentage}
-                                    onChange={(e) => setPercentage(parseFloat(e.target.value))}
-                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white rounded-l-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 z-10"
-                                />
-                                <span className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-l-0 border-slate-300 dark:border-slate-700 rounded-r-md text-sm font-medium text-slate-500 dark:text-slate-400">%</span>
+                            <div className="flex justify-between items-end mb-4">
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">{dictionary.admin.cashbackPercent}</label>
+                                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{percentage}%</span>
                             </div>
-                            <p className="text-xs text-slate-400 mt-2">Default is 80% if not set.</p>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="0.5"
+                                value={percentage}
+                                onChange={(e) => setPercentage(parseFloat(e.target.value))}
+                                className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 transition-all"
+                            />
+                            <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <span>0%</span>
+                                <span>50%</span>
+                                <span>100%</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-4 italic">Default is 80% if not set.</p>
                         </div>
 
-                        <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
-                            <button type="button" onClick={onClose} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm transition-colors">Cancel</button>
-                            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 text-sm shadow-sm transition-colors">Save Changes</button>
+                        <div className="flex gap-3 justify-end pt-5 border-t border-slate-100 dark:border-slate-800 mt-8">
+                            <button type="button" onClick={onClose} className="px-5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-sm transition-all shadow-sm">{dictionary.common.cancel}</button>
+                            <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm shadow-lg shadow-indigo-500/20 transition-all">{dictionary.admin.set}</button>
                         </div>
                     </form>
                 </div>
@@ -195,6 +202,7 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
 }
 
 export default function AdminPage() {
+    const { dictionary } = useLanguage();
     const { data: session, status } = useSession();
     const [activeTab, setActiveTab] = useState<"users" | "payouts">("payouts");
     const [data, setData] = useState<any[]>([]);
@@ -376,7 +384,7 @@ export default function AdminPage() {
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                         <Shield className="text-indigo-600 dark:text-indigo-500" size={32} />
-                        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Manager Dashboard</h1>
+                        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.admin.title}</h1>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 font-medium">Overview of financial performance and platform management.</p>
                 </div>
@@ -386,11 +394,11 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
                         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-indigo-100 dark:hover:border-indigo-900/50 group">
                             <div className="flex items-center justify-between mb-3">
-                                <p className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Orders Today</p>
+                                <p className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{dictionary.admin.statsToday}</p>
                                 <ShoppingCart size={16} className="text-indigo-500/70 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
                             </div>
                             <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{dailyStats.todayOrdersCount}</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Value: {formatCurrency((dailyStats.todayOrdersSum || 0) * 100)}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">{dictionary.admin.amount}: {formatCurrency((dailyStats.todayOrdersSum || 0) * 100)}</p>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 group">
@@ -443,7 +451,7 @@ export default function AdminPage() {
                         `}
                         >
                             <ArrowUpRight size={18} className="mr-2" />
-                            Payout Requests
+                            {dictionary.admin.payouts}
                         </button>
 
                         <button
@@ -456,7 +464,7 @@ export default function AdminPage() {
                         `}
                         >
                             <Users size={18} className="mr-2" />
-                            User Management
+                            {dictionary.admin.users}
                         </button>
                     </nav>
                 </div>
@@ -468,22 +476,22 @@ export default function AdminPage() {
                                 <tr className="bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800">
                                     {activeTab === "payouts" ? (
                                         <>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User</th>
-                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daily Orders</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Amount</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                                            <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Comment</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.userEmail}</th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.statsToday}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.amount}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">{dictionary.admin.status}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.requested}</th>
+                                            <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
                                     ) : activeTab === "users" ? (
                                         <>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User details</th>
-                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Cashback %</th>
-                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Spent</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.allUsers}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.role}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.cashbackPercent}</th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.totalSpent}</th>
                                             <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Earned</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Balance</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.availableBalance}</th>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
                                     ) : null}
@@ -492,11 +500,11 @@ export default function AdminPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">Loading data...</td>
+                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{dictionary.common.loading}</td>
                                     </tr>
                                 ) : data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">No records found.</td>
+                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{dictionary.admin.noPayouts}</td>
                                     </tr>
                                 ) : (
                                     data.map((item: any) => (
@@ -568,7 +576,7 @@ export default function AdminPage() {
                                                 <>
                                                     <td className="px-4 py-4 max-w-[200px]">
                                                         <div className="font-medium text-slate-900 dark:text-white truncate" title={item.email}>{item.email}</div>
-                                                        <div className="text-xs text-slate-500 dark:text-slate-400">Joined: {new Date(item.createdAt).toLocaleDateString()}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{dictionary.admin.joined}: {new Date(item.createdAt).toLocaleDateString()}</div>
                                                     </td>
                                                     <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">{item.role}</td>
                                                     <td className="px-4 py-4 text-right font-medium text-indigo-600 dark:text-indigo-400">{item.cashbackPercentage}%</td>
