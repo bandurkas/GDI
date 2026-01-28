@@ -2,22 +2,11 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { FileText, Clock } from "lucide-react";
-
-interface Section {
-    title: string;
-    content: string;
-}
-
-interface TermsData {
-    title: string;
-    lastUpdated: string;
-    sections: Section[];
-}
+import { FileText, ShieldCheck, Clock, Bookmark } from "lucide-react";
 
 export default function TermsPage() {
     const { dictionary } = useLanguage();
-    const terms = dictionary.terms;
+    const { terms } = dictionary as any;
 
     if (!terms) return null;
 
@@ -38,7 +27,7 @@ export default function TermsPage() {
                 </div>
 
                 <div className="space-y-8">
-                    {terms.sections.map((section, index: number) => (
+                    {terms.sections.map((section: any, index: number) => (
                         <div
                             key={index}
                             className="p-8 md:p-10 rounded-3xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm"

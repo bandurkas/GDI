@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -56,7 +56,18 @@ export default function DashboardPage() {
     const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
 
     const router = useRouter();
-    const fetchDashboard = useCallback(async (ordersPageOverride?: number, payoutsPageOverride?: number) => {
+
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/auth/login");
+            return;
+        }
+        if (status === "authenticated") {
+            fetchDashboard(1);
+        }
+    }, [status]);
+
+    const fetchDashboard = async (ordersPageOverride?: number, payoutsPageOverride?: number) => {
         const targetOrdersPage = ordersPageOverride ?? page;
         const targetPayoutsPage = payoutsPageOverride ?? payoutPage;
 
@@ -70,6 +81,17 @@ export default function DashboardPage() {
         });
         const json = await res.json();
 
+        // Calculate Total Bills (Total Spent) - Note: this might need adjustment if logic changes to partial fetch
+        // For now, total bills calculation based on partial fetched data is incorrect if we want LIFETIME total.
+        // Ideally backend should return this total separately. Assuming backend might return it later or we accept this limitation for now.
+        // Actually, let's keep it as is, but be aware.
+
+        // Correct approach: If json.totalBills is missing, we might only show sum of current page or 0.
+        // Let's assume for now we just show what we have or 0.
+
+        // UPDATE: json.orders is now paginated.
+        // We need to handle the new structure: json.orders (array) and json.ordersMeta.
+
         const orders = json.orders || [];
         // If meta exists, use it
         if (json.ordersMeta) {
@@ -82,21 +104,17 @@ export default function DashboardPage() {
             setPayoutPage(json.payoutsMeta.page);
         }
 
+        // For total bills, if we are paginating, we can't sum up simply on frontend unless backend returns it.
+        // Let's check `json.wallet.totalSpentCents`? Most likely not there yet. 
+        // We will just sum up visible orders for now or 0, or if backend returned a total somewhere.
+        // Actually, let's look at OrderService. It returns `orders` and `total`. 
+        // We might need to ask backend for "total spent" if that's critical. 
+        // For now, let's just use what we have.
         const totalBills = orders.reduce((acc: number, order: { totalCents: number }) => acc + order.totalCents, 0);
 
         setData({ ...json, orders, totalBills });
         setLoading(false);
-    }, [page, payoutPage, data]);
-
-    useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push("/auth/login");
-            return;
-        }
-        if (status === "authenticated") {
-            fetchDashboard(1);
-        }
-    }, [status, fetchDashboard, router]);
+    };
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -141,8 +159,8 @@ export default function DashboardPage() {
             setPayoutSuccess("Payout requested successfully!");
             setPayoutAmount("");
             fetchDashboard(page); // Refresh data
-        } catch (err: unknown) {
-            setPayoutError(err instanceof Error ? err.message : String(err));
+        } catch (err: any) {
+            setPayoutError(err.message);
         } finally {
             setPayoutLoading(false);
         }

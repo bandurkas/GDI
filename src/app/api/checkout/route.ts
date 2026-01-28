@@ -11,9 +11,8 @@ export async function POST(req: Request) {
         const { paymentMethod } = await req.json(); // "TEST" or "MIDTRANS"
         const order = await OrderService.createOrder(session.user.id, paymentMethod);
         return NextResponse.json(order);
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error("Checkout error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Internal server error";
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
     }
 }

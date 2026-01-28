@@ -35,8 +35,8 @@ export async function GET(req: Request) {
         } else {
             return NextResponse.json({ error: "Invalid type" }, { status: 400 });
         }
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error("API Error:", error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
+        return NextResponse.json({ error: error.message || String(error) }, { status: 500 });
     }
 }

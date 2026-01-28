@@ -51,10 +51,9 @@ export function Footer() {
                             {dictionary.footer.solutions}
                         </h3>
                         <ul className="space-y-4">
-                            <li><Link href="/products#start-ai" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.startAi.name}</Link></li>
-                            <li><Link href="/products#middle-scale" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.middleScale.name}</Link></li>
-                            <li><Link href="/products#automation-platform" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.autoPlatform.name}</Link></li>
-                            <li><Link href="/products#ent-assistant" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.entAssistant.name}</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Start AI Pack</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Enterprise AI</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Cloud Infrastructure</Link></li>
                         </ul>
                     </div>
 
@@ -82,19 +81,13 @@ export function Footer() {
                                 <Mail size={16} className="text-slate-400" />
                                 <span>info@gdiconsult.online</span>
                             </li>
-                            <li className="flex items-start gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                <Phone size={16} className="text-slate-400 mt-1 shrink-0" />
-                                <div>
-                                    <span className="font-bold block text-slate-900 dark:text-white mb-0.5">Phone number:</span>
-                                    <span>+62 812 1901 04 08</span>
-                                </div>
+                            <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
+                                <Phone size={16} className="text-slate-400" />
+                                <span>+62 123 4567 890</span>
                             </li>
-                            <li className="flex items-start gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                <MapPin size={16} className="text-slate-400 mt-1 shrink-0" />
-                                <div>
-                                    <span className="font-bold block text-slate-900 dark:text-white mb-0.5">Address:</span>
-                                    <span>Menara 165 lt.14 Unit E, Jl. TB Simatupang, Cilandak Timiur, Jakarta Selatan</span>
-                                </div>
+                            <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
+                                <MapPin size={16} className="text-slate-400" />
+                                <span>Jakarta, Indonesia</span>
                             </li>
                         </ul>
                     </div>

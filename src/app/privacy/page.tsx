@@ -2,22 +2,11 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { Lock, Clock } from "lucide-react";
-
-interface Section {
-    title: string;
-    content: string;
-}
-
-interface PrivacyData {
-    title: string;
-    lastUpdated: string;
-    sections: Section[];
-}
+import { Shield, Lock, FileText, Clock } from "lucide-react";
 
 export default function PrivacyPage() {
     const { dictionary } = useLanguage();
-    const privacy = dictionary.privacy;
+    const { privacy } = dictionary as any;
 
     if (!privacy) return null;
 
@@ -38,7 +27,7 @@ export default function PrivacyPage() {
                 </div>
 
                 <div className="space-y-8">
-                    {privacy.sections.map((section, index: number) => (
+                    {privacy.sections.map((section: any, index: number) => (
                         <div
                             key={index}
                             className="p-8 md:p-10 rounded-3xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm"

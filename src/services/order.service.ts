@@ -52,7 +52,7 @@ export class OrderService {
         // 5. Process Payment (Request Snap Token)
         const paymentService = new PaymentService(paymentMethod);
         const customerDetails = {
-            first_name: user.name || user.email.split("@")[0],
+            first_name: (user as any).name || user.email.split("@")[0],
             email: user.email,
         };
 

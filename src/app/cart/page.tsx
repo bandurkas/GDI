@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ShoppingBag, Trash2, CreditCard, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -11,38 +11,15 @@ import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import Script from "next/script";
 
-interface CartItem {
-    id: string;
-    productId: string;
-    product: {
-        name: string;
-        priceCents: number;
-    };
-    quantity: number;
-}
-
-interface Cart {
-    id: string;
-    userId: string;
-    items: CartItem[];
-}
-
 export default function CartPage() {
     const { data: session, status } = useSession();
     const { refreshCart } = useCart();
     const { dictionary } = useLanguage();
-    const [cart, setCart] = useState<Cart | null>(null);
+    const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
     const [agreed, setAgreed] = useState(false);
     const router = useRouter();
-
-    const fetchCart = useCallback(async () => {
-        const res = await fetch("/api/cart");
-        const data = await res.json();
-        setCart(data);
-        setLoading(false);
-    }, []);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -50,13 +27,17 @@ export default function CartPage() {
             return;
         }
         if (status === "authenticated") {
-            const init = async () => {
-                await fetchCart();
-                await refreshCart(); // Ensure badge is in sync on load
-            };
-            init();
+            fetchCart();
+            refreshCart(); // Ensure badge is in sync on load
         }
-    }, [status, fetchCart, refreshCart, router]);
+    }, [status]);
+
+    const fetchCart = async () => {
+        const res = await fetch("/api/cart");
+        const data = await res.json();
+        setCart(data);
+        setLoading(false);
+    };
 
     const clearCart = async () => {
         await fetch("/api/cart", { method: "DELETE" });
@@ -77,17 +58,17 @@ export default function CartPage() {
                 const orderData = await res.json();
 
                 if (orderData.snapToken) {
-                    // @ts-expect-error midtrans-client snap is injected via Script tag
+                    // @ts-ignore
                     window.snap.pay(orderData.snapToken, {
-                        onSuccess: function () {
+                        onSuccess: function (result: any) {
                             router.push("/dashboard?success=true");
                             refreshCart();
                         },
-                        onPending: function () {
+                        onPending: function (result: any) {
                             router.push("/dashboard?pending=true");
                             refreshCart();
                         },
-                        onError: function () {
+                        onError: function (result: any) {
                             alert(dictionary.cart.paymentFailed);
                         },
                         onClose: function () {
@@ -104,8 +85,7 @@ export default function CartPage() {
                 alert(data.error || dictionary.cart.paymentFailed);
                 setPaying(false);
             }
-        } catch (error: unknown) {
-            console.error("Payment error:", error);
+        } catch (err) {
             alert(dictionary.cart.paymentFailed);
             setPaying(false);
         }
@@ -117,7 +97,7 @@ export default function CartPage() {
         </div>
     );
 
-    const totalCents = cart?.items?.reduce((acc: number, item) => acc + (item.product.priceCents * item.quantity), 0) || 0;
+    const totalCents = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
 
     // Get cashback percentage from session, default to 80% if not set
     const userPercentage = session?.user?.cashbackPercentage ?? 80.0;
@@ -136,7 +116,7 @@ export default function CartPage() {
                     <ShoppingBag className="text-indigo-600 dark:text-indigo-400" />
                     {dictionary.cart.title}
                 </h1>
-                {cart && cart.items.length > 0 && (
+                {cart?.items?.length > 0 && (
                     <button onClick={clearCart} className="text-sm font-medium text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2">
                         <Trash2 size={16} />
                         {dictionary.cart.emptyCart}
@@ -144,7 +124,7 @@ export default function CartPage() {
                 )}
             </div>
 
-            {cart === null || cart.items.length === 0 ? (
+            {!cart?.items?.length ? (
                 <div className="group relative text-center py-24 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 dark:to-black/20 pointer-events-none" />
 
@@ -163,7 +143,7 @@ export default function CartPage() {
             ) : (
                 <div className="grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
-                        {cart.items.map((item) => (
+                        {cart.items.map((item: any) => (
                             <div key={item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>

@@ -5,10 +5,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { Toaster, toast } from 'sonner';
 import { GuestAuthModal } from "@/components/ui/GuestAuthModal";
 
-interface PartialCartItem {
-    quantity: number;
-}
-
 interface CartContextType {
     itemsCount: number;
     refreshCart: () => Promise<void>;
@@ -26,7 +22,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const res = await fetch("/api/cart?t=" + new Date().getTime());
             if (res.ok) {
                 const data = await res.json();
-                const count = data.items?.reduce((acc: number, item: PartialCartItem) => acc + item.quantity, 0) || 0;
+                const count = data.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
                 setItemsCount(count);
             }
         } catch (e) {
@@ -61,10 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
-        const init = async () => {
-            await refreshCart();
-        };
-        init();
+        refreshCart();
     }, []);
 
     return (

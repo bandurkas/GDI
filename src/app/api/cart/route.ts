@@ -20,7 +20,6 @@ export async function POST(req: Request) {
         const item = await CartService.addToCart(session.user.id, productId, quantity);
         return NextResponse.json(item);
     } catch (error) {
-        console.error("[API] Cart post error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

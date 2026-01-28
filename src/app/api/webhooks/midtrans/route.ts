@@ -44,9 +44,8 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ status: "OK" });
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error("Webhook Error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Internal server error";
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { User, Mail, Wallet, Send, CheckCircle, Loader2 } from "lucide-react";
+import { User, Mail, Wallet, Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -17,7 +17,11 @@ export default function ProfilePage() {
         telegram: "",
     });
 
-    const fetchProfile = useCallback(async () => {
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
         try {
             const res = await fetch("/api/user/profile");
             const data = await res.json();
@@ -34,11 +38,7 @@ export default function ProfilePage() {
         } finally {
             setLoading(false);
         }
-    }, [dictionary.dashboard.updateError]);
-
-    useEffect(() => {
-        fetchProfile();
-    }, [fetchProfile]);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

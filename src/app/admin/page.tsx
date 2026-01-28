@@ -1,23 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Users, ClipboardList, Shield, CreditCard, CheckCircle, XCircle, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-
-interface AdminDailyStats {
-    todayOrdersSum: number;
-    todayOrdersCount: number;
-    todayCashbackRequested: number;
-    todayCashbackPaid: number;
-    pendingCashbackCount: number;
-    totalCustomers: number;
-    newCustomersToday: number;
-    activeCustomersCount: number;
-}
 
 interface AdminPayout {
     id: string;
@@ -51,7 +40,13 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
     const [comment, setComment] = useState("");
     const [receipt, setReceipt] = useState("");
 
-    // Initial state is set via props, use key in parent to reset
+    useEffect(() => {
+        if (payout) {
+            setStatus(payout.status);
+            setComment("");
+            setReceipt(payout.receiptUrl || "");
+        }
+    }, [payout]);
 
     if (!isOpen || !payout) return null;
 
@@ -145,7 +140,11 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
     const { dictionary } = useLanguage();
     const [percentage, setPercentage] = useState(user?.cashbackPercentage || 80);
 
-    // Initial state is set via props, use key in parent to reset
+    useEffect(() => {
+        if (user) {
+            setPercentage(user.cashbackPercentage ?? 80);
+        }
+    }, [user]);
 
     if (!isOpen || !user) return null;
 
@@ -206,8 +205,8 @@ export default function AdminPage() {
     const { dictionary } = useLanguage();
     const { data: session, status } = useSession();
     const [activeTab, setActiveTab] = useState<"users" | "payouts">("payouts");
-    const [data, setData] = useState<(AdminPayout | AdminUser)[]>([]);
-    const [dailyStats, setDailyStats] = useState<AdminDailyStats | null>(null);
+    const [data, setData] = useState<any[]>([]);
+    const [dailyStats, setDailyStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     // Pagination State
@@ -229,51 +228,6 @@ export default function AdminPage() {
 
 
 
-    const fetchDailyStats = useCallback(async () => {
-        try {
-            const res = await fetch(`/api/admin/financial?stats=daily&t=${new Date().getTime()}`);
-            const json = await res.json();
-            setDailyStats(json);
-        } catch (e) {
-            console.error(e);
-        }
-    }, []);
-
-    const fetchData = useCallback(async (type: string, pageNum: number) => {
-        setLoading(true);
-        try {
-            let endpoint = `/api/admin?type=${type}&page=${pageNum}&limit=10`;
-            if (type === "payouts") {
-                endpoint = `/api/admin/payouts?page=${pageNum}&limit=10`;
-            }
-
-            const nocache = `&t=${new Date().getTime()}`;
-            const finalEndpoint = `${endpoint}${nocache}`;
-
-            const res = await fetch(finalEndpoint, {
-                cache: 'no-store',
-                headers: { 'Pragma': 'no-cache' }
-            });
-            const json = await res.json();
-
-            if (json.data && Array.isArray(json.data)) {
-                setData(json.data);
-                setTotalPages(json.meta?.totalPages || 1);
-                setPage(pageNum);
-            } else if (Array.isArray(json)) {
-                setData(json);
-                setTotalPages(1);
-            } else {
-                setData([]);
-            }
-        } catch (err) {
-            console.error("Fetch error:", err);
-            setData([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
     // Initial Data Load
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -288,7 +242,7 @@ export default function AdminPage() {
             fetchDailyStats();
             fetchData(activeTab, 1);
         }
-    }, [status, session, router, activeTab, fetchDailyStats, fetchData]);
+    }, [status, session]);
 
     // Tab Change Data Load
     useEffect(() => {
@@ -296,7 +250,55 @@ export default function AdminPage() {
             setPage(1); // Reset page on tab change
             fetchData(activeTab, 1);
         }
-    }, [activeTab, status, session, fetchData]);
+    }, [activeTab]);
+
+    const fetchDailyStats = async () => {
+        try {
+            const res = await fetch(`/api/admin/financial?stats=daily&t=${new Date().getTime()}`);
+            const json = await res.json();
+            setDailyStats(json);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const fetchData = async (type: string, pageNum: number) => {
+        setLoading(true);
+        try {
+            let endpoint = `/api/admin?type=${type}&page=${pageNum}&limit=10`;
+            if (type === "payouts") {
+                endpoint = `/api/admin/payouts?page=${pageNum}&limit=10`;
+            }
+
+            // Add timestamp to prevent caching
+            const nocache = `&t=${new Date().getTime()}`;
+            const finalEndpoint = `${endpoint}${nocache}`;
+
+
+            const res = await fetch(finalEndpoint, {
+                cache: 'no-store',
+                headers: { 'Pragma': 'no-cache' }
+            });
+            const json = await res.json();
+
+            if (json.data && Array.isArray(json.data)) {
+                setData(json.data);
+                setTotalPages(json.meta?.totalPages || 1);
+                setPage(pageNum);
+            } else if (Array.isArray(json)) {
+                // Fallback for endpoints not yet paginated (if any)
+                setData(json);
+                setTotalPages(1);
+            } else {
+                setData([]);
+            }
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setData([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -304,8 +306,15 @@ export default function AdminPage() {
         }
     };
 
-    // Modals reset via key, so we don't need explicitly separate open handlers if we just set the item.
-    // Removed unused openUpdateModal and openUserModal warnings.
+    const openUpdateModal = (payout: AdminPayout) => {
+        setSelectedPayout(payout);
+        setIsModalOpen(true);
+    };
+
+    const openUserModal = (user: AdminUser) => {
+        setSelectedUser(user);
+        setIsUserModalOpen(true);
+    };
 
     const handleUpdate = async (id: string, newStatus: string, comment: string, receipt?: string) => {
         if (!comment) {
@@ -332,8 +341,8 @@ export default function AdminPage() {
             setIsModalOpen(false);
             fetchData("payouts", page); // Refresh current page
             fetchDailyStats(); // Refresh stats too
-        } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : String(err));
+        } catch (err: any) {
+            toast.error(err.message);
         }
     };
 
@@ -354,8 +363,8 @@ export default function AdminPage() {
             toast.success("User updated successfully!");
             setIsUserModalOpen(false);
             fetchData("users", page); // Refresh current page
-        } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : String(err));
+        } catch (err: any) {
+            toast.error(err.message);
         }
     };
 
@@ -434,9 +443,6 @@ export default function AdminPage() {
                     <nav className="flex space-x-8" aria-label="Tabs">
                         <button
                             onClick={() => setActiveTab("payouts")}
-                            role="tab"
-                            aria-selected={activeTab === "payouts"}
-                            aria-controls="payouts-panel"
                             className={`
                             group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
                             ${activeTab === "payouts"
@@ -450,9 +456,6 @@ export default function AdminPage() {
 
                         <button
                             onClick={() => setActiveTab("users")}
-                            role="tab"
-                            aria-selected={activeTab === "users"}
-                            aria-controls="users-panel"
                             className={`
                             group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
                             ${activeTab === "users"
@@ -473,23 +476,23 @@ export default function AdminPage() {
                                 <tr className="bg-slate-50 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800">
                                     {activeTab === "payouts" ? (
                                         <>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.userEmail}</th>
-                                            <th scope="col" className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.statsToday}</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.amount}</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">{dictionary.admin.status}</th>
-                                            <th scope="col" className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.requested}</th>
-                                            <th scope="col" className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.userEmail}</th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.statsToday}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.amount}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">{dictionary.admin.status}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.requested}</th>
+                                            <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
                                     ) : activeTab === "users" ? (
                                         <>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.allUsers}</th>
-                                            <th scope="col" className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.role}</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.cashbackPercent}</th>
-                                            <th scope="col" className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.totalSpent}</th>
-                                            <th scope="col" className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Earned</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.availableBalance}</th>
-                                            <th scope="col" className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.allUsers}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.role}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.cashbackPercent}</th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.totalSpent}</th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Earned</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.availableBalance}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
                                     ) : null}
                                 </tr>
@@ -504,32 +507,32 @@ export default function AdminPage() {
                                         <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{dictionary.admin.noPayouts}</td>
                                     </tr>
                                 ) : (
-                                    (data as (AdminPayout | AdminUser)[]).map((item) => (
+                                    data.map((item: any) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             {activeTab === "payouts" ? (
                                                 <>
                                                     <td className="px-4 py-4 max-w-[200px]">
-                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={(item as AdminPayout).user?.email}>{(item as AdminPayout).user?.email}</div>
-                                                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">ID: {(item as AdminPayout).user?.id?.substring(0, 8)}...</div>
+                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={item.user?.email}>{item.user?.email}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">ID: {item.user?.id?.substring(0, 8)}...</div>
                                                     </td>
                                                     <td className="hidden lg:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                                        {formatCurrency(((item as AdminPayout).dayOrdersSum || 0) * 100)}
+                                                        {formatCurrency((item.dayOrdersSum || 0) * 100)}
                                                     </td>
-                                                    <td className="px-4 py-4 text-right font-medium text-slate-900 dark:text-white">{formatCurrency((item as AdminPayout).amountCents * 100)}</td>
+                                                    <td className="px-4 py-4 text-right font-medium text-slate-900 dark:text-white">{formatCurrency(item.amountCents * 100)}</td>
                                                     <td className="px-4 py-4 text-center">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(item as AdminPayout).status === 'PAID' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                                            (item as AdminPayout).status === 'REQUESTED' ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
-                                                                (item as AdminPayout).status === 'PROCESSING' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                                            item.status === 'REQUESTED' ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
+                                                                item.status === 'PROCESSING' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
                                                                     'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
                                                             }`}>
-                                                            {(item as AdminPayout).status}
+                                                            {item.status}
                                                         </span>
                                                     </td>
                                                     <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
-                                                        {new Date((item as AdminPayout).requestedAt).toLocaleDateString()}
+                                                        {new Date(item.requestedAt).toLocaleDateString()}
                                                     </td>
-                                                    <td className="hidden xl:table-cell px-4 py-4 text-sm text-slate-500 dark:text-slate-400 italic max-w-xs truncate" title={(item as AdminPayout).notes}>
-                                                        {(item as AdminPayout).notes || "-"}
+                                                    <td className="hidden xl:table-cell px-4 py-4 text-sm text-slate-500 dark:text-slate-400 italic max-w-xs truncate" title={item.notes}>
+                                                        {item.notes || "-"}
                                                     </td>
                                                     <td className="px-4 py-4 text-right">
                                                         <div className="relative inline-block text-left">
@@ -544,9 +547,9 @@ export default function AdminPage() {
                                                                 <>
                                                                     <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
                                                                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right overflow-hidden">
-                                                                        {(item as AdminPayout).receiptUrl && (
+                                                                        {item.receiptUrl && (
                                                                             <a
-                                                                                href={(item as AdminPayout).receiptUrl}
+                                                                                href={item.receiptUrl}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
                                                                                 onClick={() => setOpenMenuId(null)}
@@ -557,7 +560,7 @@ export default function AdminPage() {
                                                                             </a>
                                                                         )}
                                                                         <button
-                                                                            onClick={() => { setSelectedPayout(item as AdminPayout); setIsModalOpen(true); setOpenMenuId(null); }}
+                                                                            onClick={() => { setSelectedPayout(item); setIsModalOpen(true); setOpenMenuId(null); }}
                                                                             className="w-full text-left px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 transition-colors"
                                                                         >
                                                                             <Edit size={16} />
@@ -572,14 +575,14 @@ export default function AdminPage() {
                                             ) : activeTab === "users" ? (
                                                 <>
                                                     <td className="px-4 py-4 max-w-[200px]">
-                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={(item as AdminUser).email}>{(item as AdminUser).email}</div>
-                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{dictionary.admin.joined}: {new Date((item as AdminUser).createdAt).toLocaleDateString()}</div>
+                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={item.email}>{item.email}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400">{dictionary.admin.joined}: {new Date(item.createdAt).toLocaleDateString()}</div>
                                                     </td>
-                                                    <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">{(item as AdminUser).role}</td>
-                                                    <td className="px-4 py-4 text-right font-medium text-indigo-600 dark:text-indigo-400">{(item as AdminUser).cashbackPercentage}%</td>
-                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency((item as AdminUser).totalSpentCents * 100)}</td>
-                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency((item as AdminUser).totalEarnedCents * 100)}</td>
-                                                    <td className="px-4 py-4 text-right font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency((item as AdminUser).availableBalanceCents * 100)}</td>
+                                                    <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">{item.role}</td>
+                                                    <td className="px-4 py-4 text-right font-medium text-indigo-600 dark:text-indigo-400">{item.cashbackPercentage}%</td>
+                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(item.totalSpentCents * 100)}</td>
+                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(item.totalEarnedCents * 100)}</td>
+                                                    <td className="px-4 py-4 text-right font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(item.availableBalanceCents * 100)}</td>
                                                     <td className="px-4 py-4 text-right">
                                                         <div className="relative inline-block text-left">
                                                             <button
@@ -594,7 +597,7 @@ export default function AdminPage() {
                                                                     <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
                                                                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                                                                         <button
-                                                                            onClick={() => { setSelectedUser(item as AdminUser); setIsUserModalOpen(true); setOpenMenuId(null); }}
+                                                                            onClick={() => { setSelectedUser(item); setIsUserModalOpen(true); setOpenMenuId(null); }}
                                                                             className="w-full text-left px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 transition-colors"
                                                                         >
                                                                             <Edit size={16} />
@@ -619,11 +622,10 @@ export default function AdminPage() {
                         <div className="text-sm text-slate-500 dark:text-slate-400">
                             Showing page <span className="font-bold text-slate-900 dark:text-white">{page}</span> of <span className="font-bold text-slate-900 dark:text-white">{totalPages}</span>
                         </div>
-                        <div className="flex gap-2" role="navigation" aria-label="Pagination">
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => handlePageChange(page - 1)}
                                 disabled={page === 1}
-                                aria-label="Previous page"
                                 className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300"
                             >
                                 <ChevronLeft size={16} />
@@ -631,7 +633,6 @@ export default function AdminPage() {
                             <button
                                 onClick={() => handlePageChange(page + 1)}
                                 disabled={page === totalPages}
-                                aria-label="Next page"
                                 className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300"
                             >
                                 <ChevronRight size={16} />
@@ -641,25 +642,19 @@ export default function AdminPage() {
                 </div>
 
                 {/* Modal */}
-                {selectedPayout && (
-                    <StatusUpdateModal
-                        key={selectedPayout.id}
-                        isOpen={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                        payout={selectedPayout}
-                        onUpdate={handleUpdate}
-                    />
-                )}
+                <StatusUpdateModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    payout={selectedPayout}
+                    onUpdate={handleUpdate}
+                />
 
-                {selectedUser && (
-                    <UserUpdateModal
-                        key={selectedUser.id}
-                        isOpen={isUserModalOpen}
-                        onClose={() => setIsUserModalOpen(false)}
-                        user={selectedUser}
-                        onUpdate={handleUserUpdate}
-                    />
-                )}
+                <UserUpdateModal
+                    isOpen={isUserModalOpen}
+                    onClose={() => setIsUserModalOpen(false)}
+                    user={selectedUser}
+                    onUpdate={handleUserUpdate}
+                />
             </div>
         </div>
     );

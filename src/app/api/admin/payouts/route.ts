@@ -25,7 +25,6 @@ export async function GET(req: Request) {
             }
         });
     } catch (error) {
-        console.error("[API] Admin payouts fetch error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

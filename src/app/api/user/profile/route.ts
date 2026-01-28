@@ -19,10 +19,10 @@ export async function GET() {
 
         // Return profile fields
         return NextResponse.json({
-            name: user.name,
+            name: (user as any).name,
             email: user.email,
-            usdtWallet: user.usdtWallet,
-            telegram: user.telegram,
+            usdtWallet: (user as any).usdtWallet,
+            telegram: (user as any).telegram,
         });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
@@ -45,7 +45,7 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Invalid email" }, { status: 400 });
         }
 
-        const data: { name?: string; email?: string; usdtWallet?: string; telegram?: string } = {};
+        const data: any = {};
         if (name !== undefined) data.name = name;
         if (email !== undefined) data.email = email;
         if (usdtWallet !== undefined) data.usdtWallet = usdtWallet;
@@ -54,15 +54,14 @@ export async function PATCH(req: Request) {
         const updatedUser = await UserService.updateProfile(session.user.id, data);
 
         return NextResponse.json({
-            name: updatedUser.name,
+            name: (updatedUser as any).name,
             email: updatedUser.email,
-            usdtWallet: updatedUser.usdtWallet,
-            telegram: updatedUser.telegram,
+            usdtWallet: (updatedUser as any).usdtWallet,
+            telegram: (updatedUser as any).telegram,
         });
 
-    } catch (error: unknown) {
-        console.error("[API] Profile update error:", error);
-        if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+    } catch (error: any) {
+        if (error.code === 'P2002') {
             return NextResponse.json({ error: "Email already in use" }, { status: 400 });
         }
         return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });

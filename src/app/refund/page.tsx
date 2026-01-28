@@ -2,22 +2,11 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { RefreshCcw, Clock } from "lucide-react";
-
-interface Section {
-    title: string;
-    content: string;
-}
-
-interface RefundData {
-    title: string;
-    lastUpdated: string;
-    sections: Section[];
-}
+import { RefreshCcw, CreditCard, Clock, HelpCircle } from "lucide-react";
 
 export default function RefundPage() {
     const { dictionary } = useLanguage();
-    const refund = dictionary.refund;
+    const { refund } = dictionary as any;
 
     if (!refund) return null;
 
@@ -38,7 +27,7 @@ export default function RefundPage() {
                 </div>
 
                 <div className="space-y-8">
-                    {refund.sections.map((section, index: number) => (
+                    {refund.sections.map((section: any, index: number) => (
                         <div
                             key={index}
                             className="p-8 md:p-10 rounded-3xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm"

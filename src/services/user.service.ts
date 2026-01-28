@@ -36,16 +36,6 @@ export class UserService {
     static async findByEmail(email: string) {
         return await prisma.user.findUnique({
             where: { email },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                usdtWallet: true,
-                telegram: true,
-                createdAt: true,
-                cashbackPercentage: true,
-            }
         });
     }
 
@@ -61,7 +51,6 @@ export class UserService {
                 select: {
                     id: true,
                     email: true,
-                    name: true,
                     role: true,
                     createdAt: true,
                     _count: {
@@ -87,6 +76,7 @@ export class UserService {
             }),
         ]);
 
+        // Calculate total spent for each user (only COMPLETED orders)
         // Calculate total spent for each user (only COMPLETED orders)
         const transformedUsers = users.map(user => ({
             id: user.id,
@@ -129,7 +119,7 @@ export class UserService {
                 telegram: true,
                 createdAt: true,
                 cashbackPercentage: true,
-            }
+            } as any
         });
     }
 }

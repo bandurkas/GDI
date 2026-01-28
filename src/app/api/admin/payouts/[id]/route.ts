@@ -16,7 +16,7 @@ const checkAdmin = async () => {
 // Single source of truth for Payout Status Updates
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await checkAdmin();
+        const admin = await checkAdmin();
         const { id } = await params;
         const body = await req.json();
 
@@ -43,10 +43,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         return NextResponse.json(result);
 
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error(`[API] Error updating payout:`, error);
-        const errorMessage = error instanceof Error ? error.message : "Internal server error";
-        if (errorMessage === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        if (error.message === "Unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
     }
 }

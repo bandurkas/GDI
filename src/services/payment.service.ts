@@ -1,4 +1,4 @@
-// @ts-expect-error midtrans-client does not have @types
+// @ts-ignore
 import midtransClient from "midtrans-client";
 
 export type PaymentStatus = "SUCCESS" | "FAILED" | "PENDING";
@@ -10,13 +10,8 @@ export interface PaymentResult {
     error?: string;
 }
 
-export interface CustomerDetails {
-    first_name: string;
-    email: string;
-}
-
 export interface PaymentProvider {
-    processPayment(amountCents: number, orderId: string, customerDetails?: CustomerDetails): Promise<PaymentResult>;
+    processPayment(amountCents: number, orderId: string, customerDetails?: any): Promise<PaymentResult>;
 }
 
 export class TestPaymentProvider implements PaymentProvider {
@@ -29,7 +24,6 @@ export class TestPaymentProvider implements PaymentProvider {
 }
 
 export class MidtransPaymentProvider implements PaymentProvider {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private snap: any;
 
     constructor() {
@@ -40,7 +34,7 @@ export class MidtransPaymentProvider implements PaymentProvider {
         });
     }
 
-    async processPayment(amountCents: number, orderId: string, customerDetails?: CustomerDetails): Promise<PaymentResult> {
+    async processPayment(amountCents: number, orderId: string, customerDetails?: any): Promise<PaymentResult> {
         try {
             const parameter = {
                 transaction_details: {
@@ -53,17 +47,16 @@ export class MidtransPaymentProvider implements PaymentProvider {
                 customer_details: customerDetails
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const transaction = await (this.snap as any).createTransaction(parameter);
+            const transaction = await this.snap.createTransaction(parameter);
             return {
                 status: "PENDING",
                 snapToken: transaction.token,
             };
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error("Midtrans Snap Error:", error);
             return {
                 status: "FAILED",
-                error: error instanceof Error ? error.message : "Payment failed"
+                error: error.message
             };
         }
     }
@@ -75,10 +68,14 @@ export class PaymentService {
     private provider: PaymentProvider;
 
     constructor(mode: PaymentMode) {
-        this.provider = mode === "TEST" ? new TestPaymentProvider() : new MidtransPaymentProvider();
+        if (mode === "TEST") {
+            this.provider = new TestPaymentProvider();
+        } else {
+            this.provider = new MidtransPaymentProvider();
+        }
     }
 
-    async pay(amountCents: number, orderId: string, customerDetails?: CustomerDetails): Promise<PaymentResult> {
+    async pay(amountCents: number, orderId: string, customerDetails?: any): Promise<PaymentResult> {
         return this.provider.processPayment(amountCents, orderId, customerDetails);
     }
 }
