@@ -9,35 +9,40 @@ async function main() {
     // Create products
     const products = [
         {
-            name: "Cloud Hosting Pro",
-            description: "Scale your application with ease. High performance guaranteed.",
-            priceCents: 2900,
+            id: "start-ai",
+            name: "Start AI Pack",
+            description: "Essential automation for beginners.",
+            priceCents: 8500000,
+            active: true
         },
         {
-            name: "AI Analytics Suite",
-            description: "Gain deep insights into your business with our AI-powered tool.",
-            priceCents: 5900,
+            id: "middle-scale",
+            name: "Middle Scale AI",
+            description: "Secure, context-aware GenAI for teams.",
+            priceCents: 17500000,
+            active: true
         },
         {
-            name: "Security Shield Plus",
-            description: "Enterprise-grade security for your digital assets.",
-            priceCents: 1500,
+            id: "automation-platform",
+            name: "AI Automation Platform",
+            description: "Turn raw data into strategic assets.",
+            priceCents: 26000000,
+            active: true
         },
         {
-            name: "Developer API Access",
-            description: "Full access to our robust developer endpoints.",
-            priceCents: 9900,
-        },
+            id: "ent-assistant",
+            name: "Enterprise AI Assistant",
+            description: "Scalable cloud foundations for AI.",
+            priceCents: 34000000,
+            active: true
+        }
     ];
 
     for (const product of products) {
         await prisma.product.upsert({
-            where: { id: product.name.replace(/\s+/g, '-').toLowerCase() },
+            where: { id: product.id },
             update: product,
-            create: {
-                id: product.name.replace(/\s+/g, '-').toLowerCase(),
-                ...product,
-            },
+            create: product,
         });
     }
 
