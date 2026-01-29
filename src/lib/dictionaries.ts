@@ -63,7 +63,7 @@ const en = {
         exploreSolutions: "Explore Solutions"
     },
     products: {
-        title: "Enterprise AI Infrastructure",
+        title: "AI Product & Service",
         subtitle: "A complete suite of intelligent tools to transform your business. From automation foundations to full-scale AI operations.",
         businessOutcomes: "Business Outcomes",
         coreCapabilities: "Core Capabilities",
@@ -433,7 +433,7 @@ const id: Dictionary = {
         exploreSolutions: "Jelajahi Solusi"
     },
     products: {
-        title: "Infrastruktur AI Perusahaan",
+        title: "Produk & Layanan AI",
         subtitle: "Rangkaian lengkap alat cerdas untuk mengubah bisnis Anda. Dari fondasi otomatisasi hingga operasi AI skala penuh.",
         businessOutcomes: "Hasil Bisnis",
         coreCapabilities: "Kemampuan Inti",
