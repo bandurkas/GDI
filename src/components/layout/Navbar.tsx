@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingCart, User, LogOut, Shield, Menu, X } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import Image from "next/image";
 
 import { useCart } from "@/context/CartContext";
@@ -46,6 +47,11 @@ export function Navbar() {
                 </Link>
 
                 <div className="flex items-center gap-3 md:gap-6">
+                    {/* Theme Toggle (Desktop) */}
+                    <div className="hidden md:block">
+                        <ThemeToggle />
+                    </div>
+
                     {/* Desktop Navigation Links */}
                     <div className="hidden md:flex items-center gap-6">
                         <Link href="/" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
