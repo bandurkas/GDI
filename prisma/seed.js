@@ -47,17 +47,19 @@ async function main() {
     }
 
     // Create Admin user
-    const adminEmail = "admin@admin.com";
-    const adminPassword = "123456";
+    const adminEmail = "ceo@gdi.com";
+    const adminPassword = "J@K@rta2026";
     const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
 
     await prisma.user.upsert({
         where: { email: adminEmail },
-        update: {},
+        update: {
+            role: "SUPER_ADMIN",
+        },
         create: {
             email: adminEmail,
             passwordHash: adminPasswordHash,
-            role: "ADMIN",
+            role: "SUPER_ADMIN",
             wallet: { create: {} },
             cart: { create: {} },
         },

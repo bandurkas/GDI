@@ -153,4 +153,27 @@ export class UserService {
             data: { passwordHash }
         });
     }
+
+    static async deleteUser(userId: string) {
+        return await prisma.$transaction(async (tx) => {
+            // Delete associated data first
+            await tx.wallet.deleteMany({ where: { userId } });
+            await tx.cart.deleteMany({ where: { userId } });
+            await tx.cashbackTransaction.deleteMany({ where: { userId } });
+            await tx.orderItem.deleteMany({ where: { order: { userId } } });
+            await tx.order.deleteMany({ where: { userId } });
+            await tx.payout.deleteMany({ where: { userId } });
+
+            return await tx.user.delete({
+                where: { id: userId }
+            });
+        });
+    }
+
+    static async updateRole(userId: string, role: Role) {
+        return await prisma.user.update({
+            where: { id: userId },
+            data: { role }
+        });
+    }
 }

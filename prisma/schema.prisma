@@ -8,8 +8,9 @@ datasource db {
 }
 
 enum Role {
-  USER
+  SUPER_ADMIN
   ADMIN
+  USER
 }
 
 enum OrderStatus {

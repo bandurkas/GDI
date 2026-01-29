@@ -6,7 +6,11 @@ export default withAuth(
         const token = req.nextauth.token;
         const path = req.nextUrl.pathname;
 
-        if (path.startsWith("/admin") && token?.role !== "ADMIN") {
+        if (path.startsWith("/super-admin") && token?.role !== "SUPER_ADMIN") {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+
+        if (path.startsWith("/admin") && token?.role !== "ADMIN" && token?.role !== "SUPER_ADMIN") {
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
     },
@@ -18,5 +22,5 @@ export default withAuth(
 );
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*", "/cart/:path*"],
+    matcher: ["/dashboard/:path*", "/admin/:path*", "/super-admin/:path*", "/cart/:path*"],
 };

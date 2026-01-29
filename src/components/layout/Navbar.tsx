@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { ShoppingCart, User, LogOut, Shield, Menu, X } from "lucide-react";
+import { ShoppingCart, User, LogOut, Shield, Menu, X, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import Image from "next/image";
 
@@ -114,6 +114,13 @@ export function Navbar() {
                                     <Link href="/admin" className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors flex items-center gap-2">
                                         <Shield size={18} />
                                         {dictionary.common.adminManager}
+                                    </Link>
+                                )}
+
+                                {session.user.role === "SUPER_ADMIN" && (
+                                    <Link href="/super-admin/users" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-2">
+                                        <Users size={18} />
+                                        Manage Users
                                     </Link>
                                 )}
 
@@ -238,6 +245,19 @@ export function Navbar() {
                                                 <Shield size={18} />
                                             </div>
                                             {dictionary.common.adminManager}
+                                        </Link>
+                                    )}
+
+                                    {session.user.role === "SUPER_ADMIN" && (
+                                        <Link
+                                            href="/super-admin/users"
+                                            className="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold transition-colors"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                        >
+                                            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300">
+                                                <Users size={18} />
+                                            </div>
+                                            Manage Users
                                         </Link>
                                     )}
 
