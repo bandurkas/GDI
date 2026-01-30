@@ -47,8 +47,9 @@ model User {
   email        String    @unique
   name         String?
   passwordHash String
-  role         Role      @default(USER)
-  cashbackPercentage Float?  @default(80.0)
+  role               Role     @default(USER)
+  mustChangePassword Boolean  @default(false)
+  cashbackPercentage Float?   @default(80.0)
   usdtWallet   String?
   telegram     String?
   createdAt    DateTime  @default(now())

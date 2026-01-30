@@ -4,15 +4,25 @@ import { authOptions } from "@/lib/auth";
 import { OrderService } from "@/services/order.service";
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     try {
-        const { paymentMethod } = await req.json(); // "TEST" or "MIDTRANS"
-        const order = await OrderService.createOrder(session.user.id, paymentMethod);
-        return NextResponse.json(order);
+        const session = await getServerSession(authOptions);
+        const { paymentMethod, guestEmail, guestName, items } = await req.json();
+
+        if (session) {
+            // Authenticated checkout
+            const order = await OrderService.createOrder(session.user.id, paymentMethod || "MIDTRANS");
+            return NextResponse.json(order);
+        } else {
+            // Guest checkout
+            if (!guestEmail || !items || items.length === 0) {
+                return NextResponse.json({ error: "Missing guest info or items" }, { status: 400 });
+            }
+
+            const order = await OrderService.createGuestOrder(guestEmail, guestName, items, paymentMethod || "MIDTRANS");
+            return NextResponse.json(order);
+        }
     } catch (error: any) {
         console.error("Checkout error:", error);
-        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Checkout failed" }, { status: 500 });
     }
 }

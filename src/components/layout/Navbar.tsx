@@ -82,16 +82,14 @@ export function Navbar() {
                     </div>
 
                     {/* Cart Icon (Always Visible) */}
-                    {session && (
-                        <Link href="/cart" className="relative p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors">
-                            <ShoppingCart size={20} className="md:w-[22px] md:h-[22px]" />
-                            {itemsCount > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                                    {itemsCount}
-                                </span>
-                            )}
-                        </Link>
-                    )}
+                    <Link href="/cart" className="relative p-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors">
+                        <ShoppingCart size={20} className="md:w-[22px] md:h-[22px]" />
+                        {itemsCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                                {itemsCount}
+                            </span>
+                        )}
+                    </Link>
 
                     {/* Desktop Menu Items */}
                     <div className="hidden md:flex items-center gap-4">

@@ -46,20 +46,41 @@ async function main() {
         });
     }
 
-    // Create Admin user
-    const adminEmail = "ceo@gdi.com";
-    const adminPassword = "J@K@rta2026";
-    const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+    // Create Super Admin user
+    const superAdminEmail = "superadmin@gdiconsult.online";
+    const superAdminPassword = "SuperAdmin2026!";
+    const superAdminPasswordHash = await bcrypt.hash(superAdminPassword, 10);
 
     await prisma.user.upsert({
-        where: { email: adminEmail },
+        where: { email: superAdminEmail },
         update: {
             role: "SUPER_ADMIN",
+            passwordHash: superAdminPasswordHash,
         },
         create: {
-            email: adminEmail,
-            passwordHash: adminPasswordHash,
+            email: superAdminEmail,
+            passwordHash: superAdminPasswordHash,
             role: "SUPER_ADMIN",
+            wallet: { create: {} },
+            cart: { create: {} },
+        },
+    });
+
+    // Create requested Admin user
+    const requestedAdminEmail = "admin@admin.com";
+    const requestedAdminPassword = "123456";
+    const requestedAdminPasswordHash = await bcrypt.hash(requestedAdminPassword, 10);
+
+    await prisma.user.upsert({
+        where: { email: requestedAdminEmail },
+        update: {
+            passwordHash: requestedAdminPasswordHash, // Update password if exists
+            role: "ADMIN",
+        },
+        create: {
+            email: requestedAdminEmail,
+            passwordHash: requestedAdminPasswordHash,
+            role: "ADMIN",
             wallet: { create: {} },
             cart: { create: {} },
         },

@@ -167,4 +167,84 @@ export class OrderService {
             orderBy: { createdAt: "desc" },
         });
     }
+
+    static async createGuestOrder(email: string, name: string | null, items: { productId: string, quantity: number }[], paymentMethod: PaymentMode) {
+        // 1. Find or create user
+        let user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user) {
+            // Create a "shadow" user for the guest
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    name: name || email.split("@")[0],
+                    passwordHash: "", // No password yet
+                    role: "USER",
+                    mustChangePassword: true,
+                }
+            });
+        }
+
+        const order = await prisma.$transaction(async (tx) => {
+            // 2. Fetch products to get prices
+            const productIds = items.map(i => i.productId);
+            const products = await tx.product.findMany({
+                where: { id: { in: productIds } }
+            });
+
+            // 3. Calculate total
+            let totalCents = 0;
+            const orderItems = items.map(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (!product) throw new Error(`Product ${item.productId} not found`);
+                totalCents += product.priceCents * item.quantity;
+                return {
+                    productId: item.productId,
+                    productName: product.name,
+                    priceCents: product.priceCents,
+                    quantity: item.quantity,
+                };
+            });
+
+            // 4. Create Order
+            return await tx.order.create({
+                data: {
+                    userId: user!.id,
+                    totalCents,
+                    status: "PENDING",
+                    paymentMethod: paymentMethod === "TEST" ? "TEST" : "MIDTRANS",
+                    items: {
+                        create: orderItems,
+                    },
+                },
+            });
+        });
+
+        // 5. Process Payment
+        const paymentService = new PaymentService(paymentMethod);
+        const customerDetails = {
+            first_name: user.name || user.email.split("@")[0],
+            email: user.email,
+        };
+
+        const paymentResult = await paymentService.pay(order.totalCents, order.id, customerDetails);
+
+        if (paymentResult.status === "FAILED") {
+            await prisma.order.update({
+                where: { id: order.id },
+                data: { status: "FAILED" },
+            });
+            throw new Error(paymentResult.error || "Payment initialization failed");
+        }
+
+        if (paymentMethod === "TEST") {
+            await this.completeOrder(order.id);
+            return { ...order, status: "COMPLETED" };
+        }
+
+        return {
+            ...order,
+            snapToken: paymentResult.snapToken
+        };
+    }
 }

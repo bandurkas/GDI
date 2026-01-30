@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,11 +6,13 @@ import { useSession } from "next-auth/react";
 import { ShoppingBag, Trash2, CreditCard, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import Script from "next/script";
+import { GuestCheckoutModal } from "@/components/cart/GuestCheckoutModal";
 
 export default function CartPage() {
     const { data: session, status } = useSession();
@@ -19,76 +22,125 @@ export default function CartPage() {
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
     const [agreed, setAgreed] = useState(false);
+    const [showGuestModal, setShowGuestModal] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push("/auth/login");
-            return;
-        }
-        if (status === "authenticated") {
+        if (status !== "loading") {
             fetchCart();
-            refreshCart(); // Ensure badge is in sync on load
+            refreshCart();
         }
     }, [status]);
 
     const fetchCart = async () => {
-        const res = await fetch("/api/cart");
-        const data = await res.json();
-        setCart(data);
+        if (status === "authenticated") {
+            try {
+                const res = await fetch("/api/cart");
+                const data = await res.json();
+                setCart(data);
+            } catch (error) {
+                console.error("Failed to fetch cart:", error);
+            }
+        } else if (status === "unauthenticated") {
+            const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+            if (localCart.length > 0) {
+                try {
+                    const productIds = localCart.map((item: any) => item.productId);
+                    const res = await fetch("/api/products/batch", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ productIds }),
+                    });
+                    const products = await res.json();
+
+                    const items = localCart.map((localItem: any) => {
+                        const product = products.find((p: any) => p.id === localItem.productId);
+                        return {
+                            ...localItem,
+                            product
+                        };
+                    }).filter((item: any) => item.product);
+
+                    setCart({ items });
+                } catch (error) {
+                    console.error("Failed to hydrate guest cart:", error);
+                }
+            } else {
+                setCart({ items: [] });
+            }
+        }
         setLoading(false);
     };
 
     const clearCart = async () => {
-        await fetch("/api/cart", { method: "DELETE" });
-        await fetchCart();
-        await refreshCart(); // Update badge
+        if (status === "authenticated") {
+            await fetch("/api/cart", { method: "DELETE" });
+        } else {
+            localStorage.removeItem("guest_cart");
+        }
+        await refreshCart();
+        fetchCart();
     };
 
-    const handlePay = async () => {
+    const initiateCheckout = async (guestEmail?: string, guestName?: string) => {
         setPaying(true);
         try {
             const res = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentMethod: "MIDTRANS" }),
+                body: JSON.stringify({
+                    paymentMethod: "MIDTRANS",
+                    guestEmail,
+                    guestName,
+                    items: status === "unauthenticated" ? cart.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity })) : undefined
+                }),
             });
 
-            if (res.ok) {
-                const orderData = await res.json();
+            const data = await res.json();
 
-                if (orderData.snapToken) {
+            if (res.ok) {
+                if (data.status === "COMPLETED") {
+                    if (status === "unauthenticated") localStorage.removeItem("guest_cart");
+                    router.push(`/checkout/success?orderId=${data.id}${guestEmail ? `&email=${guestEmail}` : ""}`);
+                } else if (data.snapToken) {
                     // @ts-ignore
-                    window.snap.pay(orderData.snapToken, {
+                    window.snap.pay(data.snapToken, {
                         onSuccess: function (result: any) {
-                            router.push("/dashboard?success=true");
-                            refreshCart();
+                            if (status === "unauthenticated") localStorage.removeItem("guest_cart");
+                            router.push(`/checkout/success?orderId=${data.id}${guestEmail ? `&email=${guestEmail}` : ""}`);
                         },
                         onPending: function (result: any) {
-                            router.push("/dashboard?pending=true");
-                            refreshCart();
+                            router.push("/dashboard/orders");
                         },
                         onError: function (result: any) {
-                            alert(dictionary.cart.paymentFailed);
+                            toast.error(dictionary.cart.paymentFailed);
+                            setPaying(false);
                         },
                         onClose: function () {
                             setPaying(false);
-                        }
+                        },
                     });
-                } else if (orderData.status === "COMPLETED") {
-                    // Fallback for immediate success (like TEST mode if we switch it)
-                    router.push("/dashboard?success=true");
-                    refreshCart();
                 }
             } else {
-                const data = await res.json();
-                alert(data.error || dictionary.cart.paymentFailed);
+                toast.error(data.error || dictionary.cart.paymentFailed);
                 setPaying(false);
             }
-        } catch (err) {
-            alert(dictionary.cart.paymentFailed);
+        } catch (error) {
+            console.error("Payment error:", error);
+            toast.error(dictionary.cart.paymentFailed);
             setPaying(false);
         }
+    };
+
+    const handlePay = async () => {
+        if (!agreed) return;
+
+        if (status === "unauthenticated") {
+            setShowGuestModal(true);
+            return;
+        }
+
+        initiateCheckout();
     };
 
     if (loading) return (
@@ -98,12 +150,8 @@ export default function CartPage() {
     );
 
     const totalCents = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
-
-    // Get cashback percentage from session, default to 80% if not set
-    const userPercentage = session?.user?.cashbackPercentage ?? 80.0;
+    const userPercentage = (session?.user as any)?.cashbackPercentage ?? 80.0;
     const cashbackCents = Math.floor(totalCents * (userPercentage / 100));
-
-
 
     return (
         <div className="max-w-4xl mx-auto py-8">
@@ -127,7 +175,6 @@ export default function CartPage() {
             {!cart?.items?.length ? (
                 <div className="group relative text-center py-24 rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 dark:to-black/20 pointer-events-none" />
-
                     <div className="relative z-10 flex flex-col items-center">
                         <div className="h-20 w-20 rounded-3xl bg-white dark:bg-white/5 shadow-xl shadow-slate-200 dark:shadow-black/20 flex items-center justify-center mb-6 text-slate-300 dark:text-slate-600 group-hover:scale-110 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-all duration-500">
                             <ShoppingBag size={40} />
@@ -144,7 +191,7 @@ export default function CartPage() {
                 <div className="grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
                         {cart.items.map((item: any) => (
-                            <div key={item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
+                            <div key={item.productId || item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">{dictionary.cart.quantity}: {item.quantity}</p>
@@ -182,8 +229,9 @@ export default function CartPage() {
                                 </div>
                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% {dictionary.cart.instantReward}</p>
                             </div>
+
                             <div className="flex items-start gap-3 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
-                                <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-white/20'}`}>
+                                <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? "bg-indigo-600 border-indigo-600" : "border-slate-300 dark:border-white/20"}`}>
                                     {agreed && <ArrowRight size={12} className="text-white" />}
                                 </div>
                                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-tight">
@@ -213,6 +261,18 @@ export default function CartPage() {
                     </div>
                 </div>
             )}
+
+            <GuestCheckoutModal
+                isOpen={showGuestModal}
+                onClose={() => {
+                    setShowGuestModal(false);
+                    setPaying(false);
+                }}
+                onSubmit={(email, name) => {
+                    setShowGuestModal(false);
+                    initiateCheckout(email, name);
+                }}
+            />
         </div>
     );
 }
