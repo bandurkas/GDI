@@ -6,7 +6,7 @@ export class UserService {
     static async createUser(email: string, passwordRaw: string, role: Role = "USER") {
         const passwordHash = await bcrypt.hash(passwordRaw, 10);
 
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const user = await tx.user.create({
                 data: {
                     email,
@@ -78,7 +78,7 @@ export class UserService {
 
         // Calculate total spent for each user (only COMPLETED orders)
         // Calculate total spent for each user (only COMPLETED orders)
-        const transformedUsers = users.map(user => ({
+        const transformedUsers = users.map((user: any) => ({
             id: user.id,
             email: user.email,
             role: user.role,
@@ -155,7 +155,7 @@ export class UserService {
     }
 
     static async deleteUser(userId: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             // Delete associated data first
             await tx.wallet.deleteMany({ where: { userId } });
             await tx.cart.deleteMany({ where: { userId } });

@@ -6,7 +6,7 @@ export class OrderService {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) throw new Error("User not found");
 
-        const order = await prisma.$transaction(async (tx) => {
+        const order = await prisma.$transaction(async (tx: any) => {
             // 1. Fetch cart items
             const cart = await tx.cart.findUnique({
                 where: { userId },
@@ -31,7 +31,7 @@ export class OrderService {
                     status: "PENDING", // Always starts as PENDING for Midtrans
                     paymentMethod: paymentMethod === "TEST" ? "TEST" : "MIDTRANS",
                     items: {
-                        create: cart.items.map((item) => ({
+                        create: cart.items.map((item: any) => ({
                             productId: item.productId,
                             productName: item.product.name,
                             priceCents: item.product.priceCents,
@@ -81,7 +81,7 @@ export class OrderService {
     }
 
     static async completeOrder(orderId: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const order = await tx.order.findUnique({
                 where: { id: orderId },
                 include: { items: true },
@@ -185,7 +185,7 @@ export class OrderService {
             });
         }
 
-        const order = await prisma.$transaction(async (tx) => {
+        const order = await prisma.$transaction(async (tx: any) => {
             // 2. Fetch products to get prices
             const productIds = items.map(i => i.productId);
             const products = await tx.product.findMany({
@@ -195,7 +195,7 @@ export class OrderService {
             // 3. Calculate total
             let totalCents = 0;
             const orderItems = items.map(item => {
-                const product = products.find(p => p.id === item.productId);
+                const product = products.find((p: any) => p.id === item.productId);
                 if (!product) throw new Error(`Product ${item.productId} not found`);
                 totalCents += product.priceCents * item.quantity;
                 return {
