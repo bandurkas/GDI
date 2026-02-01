@@ -34,11 +34,11 @@ export class FinancialService {
         ]);
 
         return {
-            totalSpent: orders.reduce((sum: number, o) => sum + o.totalCents, 0),
-            cashbackEarned: cashback.reduce((sum: number, c) => sum + c.amountCents, 0),
+            totalSpent: orders.reduce((sum: number, o: any) => sum + o.totalCents, 0),
+            cashbackEarned: cashback.reduce((sum: number, c: any) => sum + c.amountCents, 0),
             pendingCashback: cashback
                 .filter(c => c.status === "PENDING")
-                .reduce((sum: number, c) => sum + c.amountCents, 0),
+                .reduce((sum: number, c: any) => sum + c.amountCents, 0),
             availableBalance: wallet?.availableBalanceCents || 0,
             pendingBalance: wallet?.pendingBalanceCents || 0,
             totalEarned: wallet?.totalEarnedCents || 0,
@@ -72,11 +72,11 @@ export class FinancialService {
             email: user.email,
             role: user.role,
             createdAt: user.createdAt,
-            totalSpent: user.orders.reduce((sum: number, o) => sum + o.totalCents, 0),
-            cashbackEarned: user.cashbackTransactions.reduce((sum: number, c) => sum + c.amountCents, 0),
+            totalSpent: user.orders.reduce((sum: number, o: any) => sum + o.totalCents, 0),
+            cashbackEarned: user.cashbackTransactions.reduce((sum: number, c: any) => sum + c.amountCents, 0),
             pendingCashback: user.cashbackTransactions
                 .filter(c => c.status === "PENDING")
-                .reduce((sum: number, c) => sum + c.amountCents, 0),
+                .reduce((sum: number, c: any) => sum + c.amountCents, 0),
             availableBalance: user.wallet?.availableBalanceCents || 0,
             pendingBalance: user.wallet?.pendingBalanceCents || 0,
             paidOut: user.wallet?.totalPaidOutCents || 0,
