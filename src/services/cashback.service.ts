@@ -6,7 +6,7 @@ export class CashbackService {
      * This makes the cashback available for withdrawal
      */
     static async approveCashback(orderId: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const cashback = await tx.cashbackTransaction.findUnique({
                 where: { orderId },
             });
@@ -46,7 +46,7 @@ export class CashbackService {
      * Removes cashback and adjusts wallet balances
      */
     static async reverseCashback(orderId: string, reason: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const cashback = await tx.cashbackTransaction.findUnique({
                 where: { orderId },
             });
