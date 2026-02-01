@@ -43,7 +43,7 @@ const en = {
     },
     home: {
         heroTitle: "Building Software for Growth",
-        heroSubtitle: "Join the millions of companies that use Global Digital Informasi to accept payments, embed financial services, and build faster.",
+        heroSubtitle: "We build automated systems that help businesses optimize processes, save time, and work more efficiently",
         badge: "AI-Driven Scale",
         trustedBy: "Trusted by innovative teams",
         aboutTitle: "Strategic Digital Partner for the Future Economy.",

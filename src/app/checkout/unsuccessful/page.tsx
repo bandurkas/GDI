@@ -11,7 +11,7 @@ export default function CheckoutErrorPage() {
 
             <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Checkout Failed</h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg mb-10 leading-relaxed">
-                Something went wrong with your transaction. Please try again or contact support if the issue persists.
+                Sorry, something went wrong, please try again.
             </p>
 
             <div className="space-y-4">

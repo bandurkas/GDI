@@ -3,7 +3,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Package, ArrowRight, UserPlus, LogIn, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Package, ArrowRight, UserPlus, LogIn, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ function SuccessContent() {
     const guestEmail = searchParams.get("email");
 
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [registered, setRegistered] = useState(false);
 
@@ -57,7 +58,7 @@ function SuccessContent() {
                             <CheckCircle2 size={48} />
                         </div>
                         <h1 className="text-4xl font-black mb-2 tracking-tight">Payment Successful!</h1>
-                        <p className="text-emerald-50 font-medium">Your transformation journey has begun.</p>
+                        <p className="text-emerald-50 font-medium">Thanks a lot for your payment, our team will contact you soon.</p>
                     </div>
                 </div>
 
@@ -93,14 +94,23 @@ function SuccessContent() {
                                 </p>
 
                                 <form onSubmit={handleRegister} className="flex flex-col sm:flex-row gap-3">
-                                    <input
-                                        required
-                                        type="password"
-                                        placeholder="Choose a password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="flex-1 bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-white placeholder:text-indigo-200 outline-none focus:ring-2 focus:ring-white/50 transition-all font-medium"
-                                    />
+                                    <div className="flex-1 relative">
+                                        <input
+                                            required
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Choose a password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-white placeholder:text-indigo-200 outline-none focus:ring-2 focus:ring-white/50 transition-all font-medium pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-200 hover:text-white"
+                                        >
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
                                     <button
                                         type="submit"
                                         disabled={loading}
