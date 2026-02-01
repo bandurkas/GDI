@@ -67,7 +67,7 @@ export class FinancialService {
             },
         });
 
-        return users.map(user => ({
+        return users.map((user: any) => ({
             id: user.id,
             email: user.email,
             role: user.role,
