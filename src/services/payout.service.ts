@@ -6,7 +6,7 @@ export class PayoutService {
      * User requests a payout (withdrawal)
      */
     static async requestPayout(userId: string, amountCents: number, method?: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const wallet = await tx.wallet.findUnique({
                 where: { userId },
             });
@@ -98,7 +98,7 @@ export class PayoutService {
      * Returns the amount back to available balance
      */
     static async rejectPayout(payoutId: string, reason: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const payout = await tx.payout.findUnique({
                 where: { id: payoutId },
             });
@@ -147,7 +147,7 @@ export class PayoutService {
      * This is called after the actual payment has been made
      */
     static async processPayout(payoutId: string, receiptUrl: string, notes?: string) {
-        return await prisma.$transaction(async (tx) => {
+        return await prisma.$transaction(async (tx: any) => {
             const payout = await tx.payout.findUnique({
                 where: { id: payoutId },
             });
@@ -259,18 +259,18 @@ export class PayoutService {
 
         // Transform to include calculated daily orders sum (orders on the requested day)
         // Transform to include calculated daily orders sum (orders on the requested day)
-        const transformedPayouts = payouts.map(p => {
+        const transformedPayouts = payouts.map((p: any) => {
             const requestDay = new Date(p.requestedAt);
             requestDay.setHours(0, 0, 0, 0);
             const nextDay = new Date(requestDay);
             nextDay.setDate(nextDay.getDate() + 1);
 
             const dayOrdersSum = p.user.orders
-                .filter(o => {
+                .filter((o: any) => {
                     const d = new Date(o.createdAt);
                     return d >= requestDay && d < nextDay;
                 })
-                .reduce((sum, o) => sum + o.totalCents, 0);
+                .reduce((sum: number, o: any) => sum + o.totalCents, 0);
 
             return {
                 ...p,
