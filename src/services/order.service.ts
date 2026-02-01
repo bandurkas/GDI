@@ -129,7 +129,7 @@ export class OrderService {
             });
 
             return updatedOrder;
-        }).then(async (order) => {
+        }).then(async (order: any) => {
             // 4. Auto-Approve Cashback (Instant Rewards)
             try {
                 const { CashbackService } = await import("./cashback.service");
