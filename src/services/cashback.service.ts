@@ -123,7 +123,7 @@ export class CashbackService {
             transactions: transactions.length,
         };
 
-        transactions.forEach(t => {
+        transactions.forEach((t: any) => {
             summary.total += t.amountCents;
             if (t.status === "PENDING") summary.pending += t.amountCents;
             if (t.status === "AVAILABLE") summary.available += t.amountCents;
