@@ -37,7 +37,7 @@ export class FinancialService {
             totalSpent: orders.reduce((sum: number, o: any) => sum + o.totalCents, 0),
             cashbackEarned: cashback.reduce((sum: number, c: any) => sum + c.amountCents, 0),
             pendingCashback: cashback
-                .filter(c => c.status === "PENDING")
+                .filter((c: any) => c.status === "PENDING")
                 .reduce((sum: number, c: any) => sum + c.amountCents, 0),
             availableBalance: wallet?.availableBalanceCents || 0,
             pendingBalance: wallet?.pendingBalanceCents || 0,
@@ -75,7 +75,7 @@ export class FinancialService {
             totalSpent: user.orders.reduce((sum: number, o: any) => sum + o.totalCents, 0),
             cashbackEarned: user.cashbackTransactions.reduce((sum: number, c: any) => sum + c.amountCents, 0),
             pendingCashback: user.cashbackTransactions
-                .filter(c => c.status === "PENDING")
+                .filter((c: any) => c.status === "PENDING")
                 .reduce((sum: number, c: any) => sum + c.amountCents, 0),
             availableBalance: user.wallet?.availableBalanceCents || 0,
             pendingBalance: user.wallet?.pendingBalanceCents || 0,
