@@ -32,6 +32,7 @@ export function Navbar() {
                             alt="GDI Logo"
                             width={200}
                             height={56}
+                            sizes="(max-width: 768px) 56px, 72px"
                             className="h-14 w-auto md:h-[4.5rem] block dark:hidden"
                             priority={true}
                         />
@@ -40,6 +41,7 @@ export function Navbar() {
                             alt="GDI Logo"
                             width={200}
                             height={56}
+                            sizes="(max-width: 768px) 56px, 72px"
                             className="h-14 w-auto md:h-[4.5rem] hidden dark:block"
                             priority={true}
                         />

@@ -17,15 +17,14 @@ export default async function GDIPage() {
             {/* --- HERO SECTION --- */}
             <div className="relative pt-16 pb-20 lg:pt-24 lg:pb-32 bg-white dark:bg-slate-950 isolate">
 
-                {/* Vibrant Mesh Gradient Background (Stripe-inspired) */}
+                {/* Vibrant Mesh Gradient Background (Optimized for performance) */}
                 <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-slate-950 overflow-hidden pointer-events-none">
                     {/* Grid Pattern */}
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
-                    {/* Base soft gradient: Blue/Cyan/Purple from Logo */}
-                    <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-[#00AEEF] blur-[100px] opacity-20 animate-blob-slow mix-blend-multiply"></div>
-                    <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[80%] rounded-full bg-[#6A5AE0] blur-[100px] opacity-20 animate-blob-slow animation-delay-2000 mix-blend-multiply"></div>
-                    <div className="absolute top-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-[#00C2FF] blur-[100px] opacity-15 animate-blob-slow animation-delay-4000 mix-blend-multiply"></div>
+                    {/* Optimized gradients: 2 blobs instead of 4, reduced blur */}
+                    <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#00AEEF] blur-[80px] opacity-20 animate-blob-slow mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
+                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#6A5AE0] blur-[80px] opacity-20 animate-blob-slow animation-delay-2000 mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-white dark:from-slate-950 to-transparent"></div>
                 </div>
 
