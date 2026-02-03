@@ -6,30 +6,20 @@ export class UserService {
     static async createUser(email: string, passwordRaw: string, role: Role = "USER") {
         const passwordHash = await bcrypt.hash(passwordRaw, 10);
 
-        return await prisma.$transaction(async (tx: any) => {
-            const user = await tx.user.create({
-                data: {
-                    email,
-                    passwordHash,
-                    role,
+        // Optimized: Atomic creation using nested writes
+        // This is faster and ensures all related records are created or none at all
+        return await prisma.user.create({
+            data: {
+                email,
+                passwordHash,
+                role,
+                wallet: {
+                    create: {} // Create empty wallet
                 },
-            });
-
-            // Initialize wallet
-            await tx.wallet.create({
-                data: {
-                    userId: user.id,
-                },
-            });
-
-            // Initialize empty cart
-            await tx.cart.create({
-                data: {
-                    userId: user.id,
-                },
-            });
-
-            return user;
+                cart: {
+                    create: {} // Create empty cart
+                }
+            }
         });
     }
 

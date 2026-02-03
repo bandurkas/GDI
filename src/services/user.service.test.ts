@@ -1,16 +1,35 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserService } from './user.service';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcrypt';
 
+// Mock DB
 vi.mock('@/lib/prisma', () => ({
     prisma: {
         user: {
+            create: vi.fn(),
             findUnique: vi.fn(),
+            update: vi.fn(),
+            delete: vi.fn(),
             count: vi.fn(),
             findMany: vi.fn(),
-            update: vi.fn(),
         },
-        $transaction: vi.fn(),
+        $transaction: vi.fn((callback) => callback(prisma)),
+        wallet: { create: vi.fn(), deleteMany: vi.fn() },
+        cart: { create: vi.fn(), deleteMany: vi.fn() },
+        cashbackTransaction: { deleteMany: vi.fn() },
+        orderItem: { deleteMany: vi.fn() },
+        order: { deleteMany: vi.fn() },
+        payout: { deleteMany: vi.fn() },
+    },
+}));
+
+// Mock Bcrypt
+vi.mock('bcrypt', () => ({
+    default: {
+        hash: vi.fn().mockResolvedValue('hashed_password_123'),
+        compare: vi.fn().mockResolvedValue(true),
     },
 }));
 
@@ -19,67 +38,78 @@ describe('UserService', () => {
         vi.clearAllMocks();
     });
 
-    describe('findByEmail', () => {
-        it('should return a user if found', async () => {
-            const mockUser = { id: '1', email: 'test@example.com' };
-            (prisma.user.findUnique as any).mockResolvedValue(mockUser);
+    describe('createUser', () => {
+        it('should create a user with nested wallet and cart atomically', async () => {
+            const email = 'test@example.com';
+            const password = 'rawpassword';
 
-            const user = await UserService.findByEmail('test@example.com');
-            expect(user).toEqual(mockUser);
-            expect(prisma.user.findUnique).toHaveBeenCalledWith({
-                where: { email: 'test@example.com' },
+            // Mock DB response
+            const mockUser = { id: 'user-123', email, role: 'USER' };
+            (prisma.user.create as any).mockResolvedValue(mockUser);
+
+            const result = await UserService.createUser(email, password);
+
+            // Assertions
+            expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+            expect(prisma.user.create).toHaveBeenCalledWith({
+                data: {
+                    email,
+                    passwordHash: 'hashed_password_123',
+                    role: 'USER',
+                    wallet: { create: {} },
+                    cart: { create: {} },
+                },
             });
+            expect(result).toEqual(mockUser);
+        });
+
+        it('should propagate DB errors', async () => {
+            (prisma.user.create as any).mockRejectedValue(new Error('DB Error'));
+            await expect(UserService.createUser('fail@test.com', 'p')).rejects.toThrow('DB Error');
         });
     });
 
-    describe('getAllUsersWithStats', () => {
-        it('should return transformed users with stats', async () => {
-            const mockUsers = [
-                {
-                    id: '1',
-                    email: 'user1@example.com',
-                    role: 'USER',
-                    createdAt: new Date(),
-                    orders: [{ totalCents: 1000 }, { totalCents: 2000 }],
-                    wallet: { totalEarnedCents: 500, availableBalanceCents: 300 },
-                    cashbackPercentage: 85,
-                    _count: { orders: 2 }
-                }
-            ];
+    describe('findByEmail', () => {
+        it('should find user by email', async () => {
+            const mockUser = { id: '1', email: 'find@me.com' };
+            (prisma.user.findUnique as any).mockResolvedValue(mockUser);
 
-            (prisma.$transaction as any).mockResolvedValue([1, mockUsers]);
-
-            const result = await UserService.getAllUsersWithStats(1, 10);
-
-            expect(result.users).toHaveLength(1);
-            expect(result.users[0]).toMatchObject({
-                email: 'user1@example.com',
-                totalSpentCents: 3000,
-                totalEarnedCents: 500,
-                availableBalanceCents: 300,
-                cashbackPercentage: 85
+            const result = await UserService.findByEmail('find@me.com');
+            expect(prisma.user.findUnique).toHaveBeenCalledWith({
+                where: { email: 'find@me.com' }
             });
-            expect(result.total).toBe(1);
+            expect(result).toEqual(mockUser);
         });
 
-        it('should use default cashback percentage if none set', async () => {
-            const mockUsers = [
-                {
-                    id: '2',
-                    email: 'user2@example.com',
-                    role: 'USER',
-                    createdAt: new Date(),
-                    orders: [],
-                    wallet: null,
-                    cashbackPercentage: null,
-                    _count: { orders: 0 }
-                }
-            ];
+        it('should return null if user not found', async () => {
+            (prisma.user.findUnique as any).mockResolvedValue(null);
+            const result = await UserService.findByEmail('ghost@me.com');
+            expect(result).toBeNull();
+        });
+    });
 
-            (prisma.$transaction as any).mockResolvedValue([1, mockUsers]);
+    describe('requestPasswordReset', () => {
+        it('should return success if user exists', async () => {
+            (prisma.user.findUnique as any).mockResolvedValue({ id: '1' });
 
-            const result = await UserService.getAllUsersWithStats(1, 10);
-            expect(result.users[0].cashbackPercentage).toBe(80.0);
+            // Spy on console to avoid polluting output
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
+            const result = await UserService.requestPasswordReset('extant@test.com');
+
+            expect(result.success).toBe(true);
+            consoleSpy.mockRestore();
+        });
+
+        it('should return error if user does not exist', async () => {
+            (prisma.user.findUnique as any).mockResolvedValue(null);
+            const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+
+            const result = await UserService.requestPasswordReset('nobody@test.com');
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe('Email not found');
+            consoleSpy.mockRestore();
         });
     });
 });

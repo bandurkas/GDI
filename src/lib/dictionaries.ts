@@ -164,6 +164,9 @@ const en = {
         backToSignIn: "Back to sign in",
         resetLinkSent: "If an account exists for this email, you will receive a reset link shortly.",
         errorEmailNotFound: "No account found with that email address",
+        confirmPasswordLabel: "Confirm Password",
+        passwordMatchError: "Passwords do not match",
+        passwordComplexityError: "Password must be at least 8 characters and include a number",
     },
     cart: {
         title: "Your Shopping Cart",
@@ -534,6 +537,9 @@ const id: Dictionary = {
         backToSignIn: "Kembali ke halaman masuk",
         resetLinkSent: "Jika akun tersedia untuk email ini, Anda akan segera menerima tautan atur ulang.",
         errorEmailNotFound: "Akun dengan alamat email tersebut tidak ditemukan",
+        confirmPasswordLabel: "Konfirmasi Kata Sandi",
+        passwordMatchError: "Kata sandi tidak cocok",
+        passwordComplexityError: "Kata sandi minimal 8 karakter dan mengandung angka",
     },
     cart: {
         title: "Keranjang Belanja Anda",
