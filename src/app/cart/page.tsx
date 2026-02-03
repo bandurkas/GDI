@@ -156,7 +156,7 @@ export default function CartPage() {
     return (
         <div className="max-w-4xl mx-auto py-8">
             <Script
-                src="https://app.sandbox.midtrans.com/snap/snap.js"
+                src="https://app.midtrans.com/snap/snap.js"
                 data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
             />
             <div className="flex items-center justify-between mb-8">
