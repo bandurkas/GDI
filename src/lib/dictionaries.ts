@@ -97,10 +97,78 @@ const en = {
             features: ["Kubernetes Management", "Multi-cloud Strategy", "Security Compliance (SOC2)"]
         },
         cases: [
-            { name: "FinTech", desc: "Automating loan approvals with 99% accuracy." },
-            { name: "Education", desc: "Personalized learning paths for 50k+ students." },
-            { name: "E-commerce", desc: "Dynamic pricing engines driving 30% revenue uplift." },
-            { name: "Logistics", desc: "Route optimization saving 1M miles annually." }
+            {
+                name: "FinTech",
+                desc: "Automating loan approvals with 99% accuracy.",
+                title: "Automating Loan Approvals with 99% Accuracy",
+                problem: "Manual risk assessment took 48+ hours per application with high error rates, causing customer churn and operational bottlenecks.",
+                solution: "We deployed a custom ML model analyzing 500+ data points in real-time, integrating directly with credit bureaus and internal history.",
+                results: [
+                    { label: "Accuracy", value: "99.2%" },
+                    { label: "Processing Time", value: "-70%" },
+                    { label: "OpEx Saving", value: "45%" }
+                ],
+                steps: [
+                    { title: "Ingest", desc: "Real-time data collection" },
+                    { title: "Analyze", desc: "ML Feature extraction" },
+                    { title: "Score", desc: "Risk probability calculation" },
+                    { title: "Decide", desc: "Instant approval" }
+                ]
+            },
+            {
+                name: "Education",
+                desc: "Personalized learning paths for 50k+ students.",
+                title: "Adaptive Learning for 50k+ Students",
+                problem: "One-size-fits-all curriculum left advanced students bored and struggling students behind, leading to poor retention.",
+                solution: "An AI engine that adapts curriculum difficulty in real-time based on student performance and engagement metrics.",
+                results: [
+                    { label: "Retention", value: "+40%" },
+                    { label: "Avg Grade", value: "+25%" },
+                    { label: "Users", value: "50k+" }
+                ],
+                steps: [
+                    { title: "Assess", desc: "Initial knowledge check" },
+                    { title: "Generate", desc: "Custom path creation" },
+                    { title: "Monitor", desc: "Live progress tracking" },
+                    { title: "Adapt", desc: "Dynamic difficulty adj." }
+                ]
+            },
+            {
+                name: "E-commerce",
+                desc: "Dynamic pricing engines driving 30% revenue uplift.",
+                title: "Dynamic Pricing Engine for Retail",
+                problem: "Static pricing strategies resulted in lost margins during peak demand and low conversion during off-peak hours.",
+                solution: "A reinforcement learning model that optimizes pricing every 15 minutes based on demand, inventory, and competitor data.",
+                results: [
+                    { label: "Revenue", value: "+30%" },
+                    { label: "Margin", value: "+15%" },
+                    { label: "Updates", value: "Real-time" }
+                ],
+                steps: [
+                    { title: "Monitor", desc: "Market data ingest" },
+                    { title: "Demand", desc: "Elasticity modeling" },
+                    { title: "Price", desc: "Optimal price calc" },
+                    { title: "Sync", desc: "Storefront update" }
+                ]
+            },
+            {
+                name: "Logistics",
+                desc: "Route optimization saving 1M miles annually.",
+                title: "AI Route Optimization Scale",
+                problem: "Inefficient routing caused excessive fuel consumption and missed delivery windows for a national fleet.",
+                solution: "Graph-neural-network based routing engine considering traffic, weather, vehicle capacity, and delivery windows.",
+                results: [
+                    { label: "Fuel Cost", value: "-20%" },
+                    { label: "Miles Saved", value: "1M+" },
+                    { label: "Deliveries", value: "+25%" }
+                ],
+                steps: [
+                    { title: "Batch", desc: "Order grouping" },
+                    { title: "Calculate", desc: "Route finding" },
+                    { title: "Assign", desc: "Driver allocation" },
+                    { title: "Track", desc: "Live adjustments" }
+                ]
+            }
         ]
     },
     dashboard: {
@@ -470,10 +538,78 @@ const id: Dictionary = {
             features: ["Manajemen Kubernetes", "Strategi Multi-cloud", "Kepatuhan Keamanan (SOC2)"]
         },
         cases: [
-            { name: "FinTech", desc: "Mengotomatiskan persetujuan pinjaman dengan akurasi 99%." },
-            { name: "Pendidikan", desc: "Jalur pembelajaran yang dipersonalisasi untuk 50 ribu+ siswa." },
-            { name: "E-commerce", desc: "Mesin harga dinamis mendorong peningkatan pendapatan 30%." },
-            { name: "Logistik", desc: "Optimalisasi rute menghemat 1 juta mil setiap tahun." }
+            {
+                name: "FinTech",
+                desc: "Mengotomatiskan persetujuan pinjaman dengan akurasi 99%.",
+                title: "Otomatisasi Persetujuan Pinjaman Akurasi 99%",
+                problem: "Penilaian risiko manual memakan waktu 48+ jam dengan tingkat kesalahan manusia yang tinggi.",
+                solution: "Kami menerapkan model ML kustom yang menganalisis 500+ titik data secara real-time.",
+                results: [
+                    { label: "Akurasi", value: "99.2%" },
+                    { label: "Waktu Proses", value: "-70%" },
+                    { label: "Hemat Biaya", value: "45%" }
+                ],
+                steps: [
+                    { title: "Ingest", desc: "Pengumpulan data" },
+                    { title: "Analisis", desc: "Ekstraksi fitur" },
+                    { title: "Skor", desc: "Hitung risiko" },
+                    { title: "Putusan", desc: "Persetujuan instan" }
+                ]
+            },
+            {
+                name: "Pendidikan",
+                desc: "Jalur pembelajaran yang dipersonalisasi untuk 50 ribu+ siswa.",
+                title: "Pembelajaran Adaptif untuk 50rb+ Siswa",
+                problem: "Kurikulum standar membuat siswa berprestasi bosan dan siswa yang kesulitan tertinggal.",
+                solution: "Mesin AI yang mengadaptasi tingkat kesulitan kurikulum secara real-time berdasarkan kinerja siswa.",
+                results: [
+                    { label: "Retensi", value: "+40%" },
+                    { label: "Nilai Rata2", value: "+25%" },
+                    { label: "Pengguna", value: "50rb+" }
+                ],
+                steps: [
+                    { title: "Nilai", desc: "Cek pengetahuan awal" },
+                    { title: "Generate", desc: "Buat jalur kustom" },
+                    { title: "Pantau", desc: "Pelacakan progres" },
+                    { title: "Adaptasi", desc: "Penyesuaian materi" }
+                ]
+            },
+            {
+                name: "E-commerce",
+                desc: "Mesin harga dinamis mendorong peningkatan pendapatan 30%.",
+                title: "Mesin Harga Dinamis untuk Ritel",
+                problem: "Strategi harga statis mengakibatkan hilangnya margin saat permintaan puncak.",
+                solution: "Model reinforcement learning yang mengoptimalkan harga setiap 15 menit.",
+                results: [
+                    { label: "Pendapatan", value: "+30%" },
+                    { label: "Margin", value: "+15%" },
+                    { label: "Pembaruan", value: "Real-time" }
+                ],
+                steps: [
+                    { title: "Pantau", desc: "Data pasar" },
+                    { title: "Permintaan", desc: "Model elastisitas" },
+                    { title: "Harga", desc: "Hitung optimal" },
+                    { title: "Sinkron", desc: "Update toko" }
+                ]
+            },
+            {
+                name: "Logistik",
+                desc: "Optimalisasi rute menghemat 1 juta mil setiap tahun.",
+                title: "Skala Optimalisasi Rute AI",
+                problem: "Perutean yang tidak efisien menyebabkan konsumsi bahan bakar berlebih.",
+                solution: "Mesin perutean berbasis Graph-neural-network mempertimbangkan lalu lintas dan cuaca.",
+                results: [
+                    { label: "Biaya BBM", value: "-20%" },
+                    { label: "Miles Hemat", value: "1Jt+" },
+                    { label: "Pengiriman", value: "+25%" }
+                ],
+                steps: [
+                    { title: "Batch", desc: "Pengelompokan pesanan" },
+                    { title: "Hitung", desc: "Pencarian rute" },
+                    { title: "Tugas", desc: "Alokasi pengemudi" },
+                    { title: "Lacak", desc: "Penyesuaian live" }
+                ]
+            }
         ]
     },
     dashboard: {
