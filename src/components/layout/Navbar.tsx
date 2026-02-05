@@ -1,7 +1,7 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingCart, User, LogOut, Shield, Menu, X, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -15,11 +15,20 @@ export function Navbar() {
     const { itemsCount } = useCart();
     const { dictionary, language, switchLanguage } = useLanguage();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const handleLogout = async () => {
+        setIsMobileMenuOpen(false);
+        const data = await signOut({ redirect: false, callbackUrl: "/" });
+        router.push(data.url);
+        router.refresh();
+    };
 
     // Close mobile menu when route changes
     useEffect(() => {
         setIsMobileMenuOpen(false);
-    }, []);
+    }, [pathname]);
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-colors duration-300">
@@ -125,7 +134,7 @@ export function Navbar() {
                                 )}
 
                                 <button
-                                    onClick={() => signOut()}
+                                    onClick={handleLogout}
                                     className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-2"
                                 >
                                     <LogOut size={18} />
@@ -263,10 +272,7 @@ export function Navbar() {
 
                                     <div className="pt-4 mt-2 border-t border-slate-100 dark:border-white/5">
                                         <button
-                                            onClick={() => {
-                                                signOut();
-                                                setIsMobileMenuOpen(false);
-                                            }}
+                                            onClick={handleLogout}
                                             className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 font-semibold transition-colors text-left"
                                         >
                                             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500">
