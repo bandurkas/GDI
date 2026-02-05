@@ -20,8 +20,8 @@ export function Navbar() {
 
     const handleLogout = async () => {
         setIsMobileMenuOpen(false);
-        const data = await signOut({ redirect: false, callbackUrl: "/" });
-        router.push(data.url);
+        await signOut({ redirect: false, callbackUrl: "/" });
+        router.push("/");
         router.refresh();
     };
 
