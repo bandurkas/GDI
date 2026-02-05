@@ -58,9 +58,10 @@ export function Footer() {
                             {dictionary.footer.solutions}
                         </h3>
                         <ul className="space-y-4">
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Start AI Pack</Link></li>
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Enterprise AI</Link></li>
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Cloud Infrastructure</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.startAi.name}</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.middleScale.name}</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.autoPlatform.name}</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.products.entAssistant.name}</Link></li>
                         </ul>
                     </div>
 
@@ -71,7 +72,7 @@ export function Footer() {
                         </h3>
                         <ul className="space-y-4">
                             <li><Link href="/" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.common.aboutUs}</Link></li>
-                            <li><Link href="/" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.common.ourMission}</Link></li>
+
                             <li><Link href="/privacy" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.footer.privacy}</Link></li>
                             <li><Link href="/terms" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.footer.terms}</Link></li>
                             <li><Link href="/refund" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{dictionary.footer.refund}</Link></li>
@@ -86,11 +87,15 @@ export function Footer() {
                         <ul className="space-y-4">
                             <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
                                 <Mail size={16} className="text-slate-400" />
-                                <span>info@gdiconsult.online</span>
+                                <a href="mailto:info@gdiconsult.online" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
+                                    info@gdiconsult.online
+                                </a>
                             </li>
                             <li className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
                                 <Phone size={16} className="text-slate-400" />
-                                <span>+62 812 1901 04 08</span>
+                                <a href="https://wa.me/6281219010408" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
+                                    +62 812 1901 04 08
+                                </a>
                             </li>
                             <li className="flex items-start gap-3 text-slate-500 dark:text-slate-400 text-sm">
                                 <MapPin size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />

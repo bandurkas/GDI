@@ -29,15 +29,18 @@ export default function CaseModal({ isOpen, onClose, caseStudy }: CaseModalProps
             document.body.style.overflow = "hidden";
         } else {
             const timer = setTimeout(() => setVisible(false), 300);
-            document.body.style.overflow = "unset";
             return () => clearTimeout(timer);
         }
+
+        return () => {
+            document.body.style.overflow = "unset";
+        };
     }, [isOpen]);
 
     if (!visible && !isOpen) return null;
 
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}>
+        <div className={`fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}>
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
@@ -46,19 +49,21 @@ export default function CaseModal({ isOpen, onClose, caseStudy }: CaseModalProps
 
             {/* Modal Content */}
             <div
-                className={`relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 ${isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-8"}`}
+                className={`relative w-full max-w-4xl max-h-[90vh] md:max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 flex flex-col ${isOpen ? "translate-y-0" : "translate-y-full md:translate-y-8 scale-95"}`}
             >
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-slate-800 rounded-full transition-colors backdrop-blur-md"
-                >
-                    <X size={20} className="text-slate-900 dark:text-white" />
-                </button>
+                {/* Close Button Mobile - Sticky Header */}
+                <div className="sticky top-0 right-0 left-0 p-4 flex justify-end bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-20 border-b border-slate-100 dark:border-white/5 md:absolute md:bg-transparent md:border-none md:p-0 md:top-4 md:right-4">
+                    <button
+                        onClick={onClose}
+                        className="p-2 bg-slate-100 dark:bg-black/20 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    >
+                        <X size={20} className="text-slate-900 dark:text-white" />
+                    </button>
+                </div>
 
                 {caseStudy && (
-                    <div className="relative z-0 max-h-[85vh] overflow-y-auto">
-                        <div className="p-8 md:p-12">
+                    <div className="relative z-0 overflow-y-auto custom-scrollbar">
+                        <div className="p-6 md:p-12 pt-0 md:pt-12">
 
                             {/* Brand Logo */}
                             <div className="mb-8 opacity-50 grayscale hover:grayscale-0 transition-all">

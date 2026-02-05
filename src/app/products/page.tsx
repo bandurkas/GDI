@@ -175,25 +175,23 @@ export default function ProductsPage() {
                 </ul>
               </div>
 
-              <div className="flex items-center gap-4 pt-4">
-                <div className="flex-1 flex gap-2">
-                  <button
-                    onClick={() => handleAddToCart(item.id)}
-                    disabled={loading === item.id}
-                    className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed tracking-tight tabular-nums"
-                  >
-                    {loading === item.id ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      item.price
-                    )}
-                  </button>
-                </div>
+              <div className="flex items-center gap-2 md:gap-3 pt-4">
+                <button
+                  onClick={() => handleAddToCart(item.id)}
+                  disabled={loading === item.id}
+                  className="flex-1 py-3 px-2.5 md:px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all disabled:opacity-70 disabled:cursor-not-allowed tracking-tight tabular-nums"
+                >
+                  {loading === item.id ? (
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    item.price
+                  )}
+                </button>
 
                 {/* Renamed 'Architecture' to 'What is included' */}
                 <button
                   onClick={() => openDrawer(item.id)}
-                  className="py-3 px-4 bg-transparent border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                  className="flex-1 py-3 px-2.5 md:px-4 bg-transparent border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-bold text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors whitespace-nowrap"
                 >
                   {dictionary.products.whatIncluded}
                 </button>
@@ -212,9 +210,10 @@ export default function ProductsPage() {
             <p className="text-slate-500 dark:text-slate-400">Strategic implementation success stories across industries.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Mobile: Horizontal Scroll Snap | Desktop: Grid */}
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
             {cases.map((caseStudy, idx) => (
-              <div key={idx} className="p-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 hover:border-indigo-500/50 transition-colors flex flex-col">
+              <div key={idx} className="min-w-[85vw] md:min-w-0 snap-center md:snap-align-none p-8 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 hover:border-indigo-500/50 transition-colors flex flex-col">
                 <div className="text-sm font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mb-2">{caseStudy.name}</div>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 flex-1 min-h-[40px]">{caseStudy.desc}</p>
 
