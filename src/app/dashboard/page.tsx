@@ -31,6 +31,7 @@ interface DashboardData {
         id: string;
         createdAt: string;
         totalCents: number;
+        status: string;
         items: Array<{
             productName: string;
         }>;
@@ -397,8 +398,13 @@ export default function DashboardPage() {
                                         <div className="col-span-2 text-right">
                                             <p className="text-sm font-black text-white tracking-tight tabular-nums">{formatCurrency(order.totalCents * 100)}</p>
                                             <div className="mt-1 inline-flex">
-                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
-                                                    {dictionary.common.completed}
+                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED"
+                                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/20"
+                                                    : order.status === "PENDING"
+                                                        ? "bg-blue-500/20 text-blue-400 border-blue-500/20"
+                                                        : "bg-slate-500/20 text-slate-400 border-slate-500/20"
+                                                    }`}>
+                                                    {order.status || dictionary.common.completed}
                                                 </span>
                                             </div>
                                         </div>

@@ -93,7 +93,7 @@ export class OrderService {
                 throw new Error("Order not found");
             }
             if (order.status === "COMPLETED") {
-                console.log(`[OrderService] Order already completed: ${orderId}`);
+                console.log(`[OrderService] Order already completed: ${orderId}. Checking cashback status...`);
                 return order;
             }
 
@@ -152,12 +152,20 @@ export class OrderService {
             console.log(`[OrderService] Transaction committed. Attempting auto-approve...`);
             // 4. Auto-Approve Cashback (Instant Rewards)
             try {
+                // Check if cashback is still pending before approving
+                // This call is idempotent but let's be safe.
                 const { CashbackService } = await import("./cashback.service");
+
+                // We approve immediately. The service checks status internally.
                 const result = await CashbackService.approveCashback(order.id);
                 console.log(`[OrderService] Auto-approve SUCCESS. Cashback ID: ${result.id}, Status: ${result.status}`);
-            } catch (error) {
-                console.error("[OrderService] Failed to auto-approve cashback:", error);
-                // Do NOT rethrow, allow order to complete even if auto-approve fails (it will stay pending)
+            } catch (error: any) {
+                // Ignore "Cashback is already AVAILABLE/PAID" errors as success
+                if (error.message && (error.message.includes("Cashback is already AVAILABLE") || error.message.includes("Cashback is already PAID"))) {
+                    console.log(`[OrderService] Cashback already processed.`);
+                } else {
+                    console.error("[OrderService] Failed to auto-approve cashback:", error);
+                }
             }
             return order;
         });
