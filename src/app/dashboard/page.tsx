@@ -12,6 +12,7 @@ interface DashboardData {
     wallet: {
         availableBalanceCents: number;
         totalEarnedCents: number;
+        pendingBalanceCents: number;
     };
     payouts: Array<{
         id: string;
@@ -191,6 +192,11 @@ export default function DashboardPage() {
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{dictionary.dashboard.cashback}</p>
                                 <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">{formatCurrency((data.wallet.availableBalanceCents || 0) * 100)}</p>
+                                {(data.wallet.pendingBalanceCents || 0) > 0 && (
+                                    <p className="text-xs font-bold text-amber-500 mt-1">
+                                        + {formatCurrency(data.wallet.pendingBalanceCents * 100)} Pending
+                                    </p>
+                                )}
                             </div>
                         </div>
 
