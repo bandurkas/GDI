@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatUSD } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardData {
@@ -192,10 +192,18 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{dictionary.dashboard.cashback}</p>
-                                <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">{formatCurrency((data.wallet.availableBalanceCents || 0) * 100)}</p>
+                                <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
+                                    {formatCurrency((data.wallet.availableBalanceCents || 0) * 100)}
+                                    <span className="text-sm text-slate-400 font-medium ml-2">
+                                        (~{formatUSD((data.wallet.availableBalanceCents || 0) * 100)})
+                                    </span>
+                                </p>
                                 {(data.wallet.pendingBalanceCents || 0) > 0 && (
                                     <p className="text-xs font-bold text-amber-500 mt-1">
-                                        + {formatCurrency(data.wallet.pendingBalanceCents * 100)} Pending
+                                        + {formatCurrency(data.wallet.pendingBalanceCents * 100)}
+                                        <span className="opacity-75 ml-1">
+                                            (~{formatUSD(data.wallet.pendingBalanceCents * 100)})
+                                        </span> Pending
                                     </p>
                                 )}
                             </div>
@@ -207,7 +215,12 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500 uppercase tracking-widest">{dictionary.dashboard.totalBills}</p>
-                                <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight tabular-nums">{formatCurrency((data.totalBills || 0) * 100)}</p>
+                                <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight tabular-nums">
+                                    {formatCurrency((data.totalBills || 0) * 100)}
+                                    <span className="text-sm text-emerald-600/60 dark:text-emerald-500/60 font-medium ml-2">
+                                        (~{formatUSD((data.totalBills || 0) * 100)})
+                                    </span>
+                                </p>
                             </div>
                         </div>
                     </div>
