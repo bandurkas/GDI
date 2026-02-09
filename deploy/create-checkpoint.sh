@@ -21,7 +21,8 @@ mkdir -p "$BACKUP_DIR"
 
 # 1. Backup Database
 echo "[1/6] Backing up database..."
-    pg_dump gdi_production > "$BACKUP_DIR/database.sql"
+if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw gdi_production; then
+    sudo -u postgres pg_dump gdi_production > "$BACKUP_DIR/database.sql"
     echo "✓ Database backed up: $(du -h $BACKUP_DIR/database.sql | cut -f1)"
 else
     echo "⚠️  Database not found (this may be first deployment)"
