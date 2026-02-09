@@ -9,7 +9,7 @@ echo "Starting at: $(date)"
 echo ""
 
 # Configuration
-APP_DIR="/var/www/electric-sojourner"
+APP_DIR="/root/electric-sojourner"
 DEPLOY_LOG="/root/deploy_$(date +%Y%m%d_%H%M%S).log"
 
 # Log everything
@@ -101,7 +101,7 @@ echo ""
 
 # 8. Start application
 echo "[8/8] Starting application..."
-pm2 restart electric-sojourner || pm2 start npm --name "electric-sojourner" -- start
+pm2 restart electric-sojourner || pm2 start npm --name "electric-sojourner" -- start -- -p 3001
 pm2 save
 echo "✓ Application started"
 echo ""
@@ -112,7 +112,7 @@ sleep 10
 
 # Test health endpoint
 echo "Testing application..."
-HEALTH_CHECK=$(curl -s http://localhost:3000/api/health || echo "FAILED")
+HEALTH_CHECK=$(curl -s http://localhost:3001/api/health || echo "FAILED")
 
 if echo "$HEALTH_CHECK" | grep -q "ok"; then
     echo "✓ Health check: PASSED"

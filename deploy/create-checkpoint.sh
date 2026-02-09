@@ -10,7 +10,7 @@ echo ""
 
 # Configuration
 BACKUP_DIR="/root/backups/checkpoint_$(date +%Y%m%d_%H%M%S)"
-APP_DIR="/var/www/electric-sojourner"
+APP_DIR="/root/electric-sojourner"
 
 echo "Creating checkpoint backup..."
 echo "Backup location: $BACKUP_DIR"
@@ -21,8 +21,7 @@ mkdir -p "$BACKUP_DIR"
 
 # 1. Backup Database
 echo "[1/6] Backing up database..."
-if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw electric_sojourner; then
-    pg_dump electric_sojourner > "$BACKUP_DIR/database.sql"
+    pg_dump gdi_production > "$BACKUP_DIR/database.sql"
     echo "✓ Database backed up: $(du -h $BACKUP_DIR/database.sql | cut -f1)"
 else
     echo "⚠️  Database not found (this may be first deployment)"
@@ -57,8 +56,8 @@ echo ""
 
 # 4. Backup Nginx Configuration
 echo "[4/6] Backing up Nginx configuration..."
-if [ -f "/etc/nginx/sites-available/electric-sojourner" ]; then
-    cp "/etc/nginx/sites-available/electric-sojourner" "$BACKUP_DIR/nginx.conf"
+if [ -f "/etc/nginx/sites-available/gdi" ]; then
+    cp "/etc/nginx/sites-available/gdi" "$BACKUP_DIR/nginx.conf"
     echo "✓ Nginx config backed up"
 else
     echo "⚠️  Nginx config not found (this may be first deployment)"
@@ -100,7 +99,7 @@ echo "========================================="
 echo ""
 
 BACKUP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="/var/www/electric-sojourner"
+APP_DIR="/root/electric-sojourner"
 
 echo "Restoring from: $BACKUP_DIR"
 echo ""
@@ -119,10 +118,10 @@ echo "✓ Application stopped"
 # Restore database
 if [ -f "$BACKUP_DIR/database.sql" ]; then
     echo "[2/5] Restoring database..."
-    sudo -u postgres psql -c "DROP DATABASE IF EXISTS electric_sojourner;"
-    sudo -u postgres psql -c "CREATE DATABASE electric_sojourner;"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE electric_sojourner TO appuser;"
-    psql -U appuser -d electric_sojourner < "$BACKUP_DIR/database.sql"
+    sudo -u postgres psql -c "DROP DATABASE IF EXISTS gdi_production;"
+    sudo -u postgres psql -c "CREATE DATABASE gdi_production;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE gdi_production TO appuser;"
+    sudo -u postgres psql -d gdi_production < "$BACKUP_DIR/database.sql"
     echo "✓ Database restored"
 else
     echo "[2/5] ⚠️  No database backup found"
@@ -152,8 +151,8 @@ fi
 # Restore Nginx config
 if [ -f "$BACKUP_DIR/nginx.conf" ]; then
     echo "[5/5] Restoring Nginx configuration..."
-    cp "$BACKUP_DIR/nginx.conf" "/etc/nginx/sites-available/electric-sojourner"
-    ln -sf "/etc/nginx/sites-available/electric-sojourner" "/etc/nginx/sites-enabled/"
+    cp "$BACKUP_DIR/nginx.conf" "/etc/nginx/sites-available/gdi"
+    ln -sf "/etc/nginx/sites-available/gdi" "/etc/nginx/sites-enabled/"
     nginx -t && systemctl reload nginx
     echo "✓ Nginx config restored"
 else
@@ -171,7 +170,7 @@ npm run build
 # Restart application
 echo ""
 echo "Restarting application..."
-pm2 restart electric-sojourner || pm2 start npm --name "electric-sojourner" -- start
+pm2 restart electric-sojourner || pm2 start npm --name "electric-sojourner" -- start -- -p 3001
 pm2 save
 
 echo ""
@@ -180,7 +179,7 @@ echo "  RESTORE COMPLETE!"
 echo "========================================="
 echo ""
 echo "Application restored from checkpoint"
-echo "Please verify: curl http://localhost:3000/api/health"
+echo "Please verify: curl http://localhost:3001/api/health"
 RESTORE_SCRIPT
 
 chmod +x "$BACKUP_DIR/RESTORE.sh"

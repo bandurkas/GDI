@@ -13,7 +13,7 @@ cd /var/www/electric-sojourner
 # Start application with PM2
 echo "[1/5] Starting application with PM2..."
 pm2 delete electric-sojourner 2>/dev/null || true  # Delete if exists
-pm2 start npm --name "electric-sojourner" -- start
+pm2 start npm --name "electric-sojourner" -- start -- -p 3001
 
 echo "Waiting for application to start..."
 sleep 10
@@ -45,7 +45,7 @@ sleep 5
 
 # Test health endpoint
 echo "Testing health endpoint..."
-HEALTH_CHECK=$(curl -s http://localhost:3000/api/health || echo "FAILED")
+HEALTH_CHECK=$(curl -s http://localhost:3001/api/health || echo "FAILED")
 if echo "$HEALTH_CHECK" | grep -q "ok"; then
     echo "✓ Health check: PASSED"
 else
@@ -60,7 +60,7 @@ echo ""
 
 # Seed database if needed
 echo "[5/5] Seeding database..."
-curl -X GET http://localhost:3000/api/seed 2>/dev/null || echo "⚠️  Seed endpoint not accessible (may be protected)"
+curl -X GET http://localhost:3001/api/seed 2>/dev/null || echo "⚠️  Seed endpoint not accessible (may be protected)"
 echo "✓ Database seeding attempted"
 echo ""
 
@@ -83,7 +83,7 @@ echo ""
 
 # Test 1: Health Check
 echo "Test 1: Health Check (local)"
-curl -f http://localhost:3000/api/health > /dev/null 2>&1 && echo "  ✓ PASS" || echo "  ❌ FAIL"
+curl -f http://localhost:3001/api/health > /dev/null 2>&1 && echo "  ✓ PASS" || echo "  ❌ FAIL"
 
 # Test 2: Health Check (HTTPS)
 if [ ! -z "$DOMAIN" ]; then
