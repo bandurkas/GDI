@@ -50,28 +50,28 @@ Deploys code, installs dependencies, runs migrations, builds app
 
 ```bash
 # Option A: Using Git
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 git clone YOUR_REPO_URL .
 
 # Option B: Using SCP (from local machine)
 tar --exclude='node_modules' --exclude='.next' -czf deploy.tar.gz .
 scp deploy.tar.gz root@YOUR_VPS_IP:/var/www/electric-sojourner/
 ssh root@YOUR_VPS_IP
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 tar -xzf deploy.tar.gz
 ```
 
 **Create .env file:**
 
 ```bash
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 nano .env
 ```
 
 Paste this (replace with your values):
 
 ```env
-DATABASE_URL="postgresql://appuser:YOUR_PASSWORD@localhost:5432/electric_sojourner?connection_limit=20&pool_timeout=20"
+DATABASE_URL="postgresql://appuser:YOUR_PASSWORD@localhost:5432/gdi_production?connection_limit=20&pool_timeout=20"
 NEXTAUTH_URL="https://yourdomain.com"
 NEXTAUTH_SECRET="YOUR_GENERATED_SECRET"
 MIDTRANS_SERVER_KEY="your-production-server-key"
@@ -178,10 +178,10 @@ pm2 restart electric-sojourner
 
 ```bash
 # Backup database
-pg_dump electric_sojourner > /root/backup_$(date +%Y%m%d).sql
+pg_dump gdi_production > /root/backup_$(date +%Y%m%d).sql
 
 # Backup application
-tar -czf /root/app_backup_$(date +%Y%m%d).tar.gz /var/www/electric-sojourner
+tar -czf /root/app_backup_$(date +%Y%m%d).tar.gz /root/electric-sojourner
 ```
 
 ---
@@ -254,7 +254,7 @@ sudo certbot delete --cert-name yourdomain.com
 
 ### Rollback Phase 3 (App Deployment)
 ```bash
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 rm -rf node_modules .next
 ```
 

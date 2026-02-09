@@ -87,6 +87,9 @@ echo "[7/8] Building application..."
 echo "This may take 5-10 minutes..."
 if npm run build; then
     echo "✓ Build successful"
+    # Cleanup dev dependencies to save space
+    npm prune --production
+    echo "✓ Dev dependencies pruned"
 else
     echo "❌ Build failed!"
     echo ""

@@ -8,7 +8,7 @@ echo "========================================="
 echo "Starting at: $(date)"
 echo ""
 
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 
 # Check if .env exists
 echo "[1/7] Checking environment file..."
@@ -86,8 +86,8 @@ echo ""
 
 # Set permissions
 echo "[7/7] Setting permissions..."
-chown -R $USER:$USER /var/www/electric-sojourner
-chmod -R 755 /var/www/electric-sojourner
+chown -R $USER:$USER /root/electric-sojourner
+chmod -R 755 /root/electric-sojourner
 echo "✓ Permissions set"
 echo ""
 
@@ -96,7 +96,7 @@ echo "  PHASE 3 COMPLETE!"
 echo "========================================="
 echo "Completed at: $(date)"
 echo ""
-echo "Application deployed to: /var/www/electric-sojourner"
+echo "Application deployed to: /root/electric-sojourner"
 echo ""
 echo "Validation:"
 [ -d ".next" ] && echo "  ✓ Build output: exists (.next/)" || echo "  ❌ Build output: missing"

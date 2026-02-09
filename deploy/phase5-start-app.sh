@@ -8,7 +8,7 @@ echo "========================================="
 echo "Starting at: $(date)"
 echo ""
 
-cd /var/www/electric-sojourner
+cd /root/electric-sojourner
 
 # Start application with PM2
 echo "[1/5] Starting application with PM2..."
@@ -46,7 +46,7 @@ sleep 5
 # Test health endpoint
 echo "Testing health endpoint..."
 HEALTH_CHECK=$(curl -s http://localhost:3001/api/health || echo "FAILED")
-if echo "$HEALTH_CHECK" | grep -q "ok"; then
+if echo "$HEALTH_CHECK" | grep -E -q "ok|healthy"; then
     echo "✓ Health check: PASSED"
 else
     echo "❌ Health check: FAILED"
@@ -74,7 +74,7 @@ pm2 status
 echo ""
 
 # Get domain from Nginx config
-DOMAIN=$(grep "server_name" /etc/nginx/sites-available/electric-sojourner | awk '{print $2}' | sed 's/;//' | head -n1)
+DOMAIN=$(grep "server_name" /etc/nginx/sites-available/gdi | awk '{print $2}' | sed 's/;//' | head -n1)
 
 echo "========================================="
 echo "  PRODUCTION VALIDATION TESTS"
@@ -160,8 +160,8 @@ echo "  Full restart:  pm2 restart all && sudo systemctl restart postgresql ngin
 echo ""
 
 echo "Backup Commands:"
-echo "  Database:      pg_dump electric_sojourner > backup_\$(date +%Y%m%d).sql"
-echo "  Application:   tar -czf app_backup_\$(date +%Y%m%d).tar.gz /var/www/electric-sojourner"
+echo "  Database:      pg_dump gdi_production > backup_\$(date +%Y%m%d).sql"
+echo "  Application:   tar -czf app_backup_\$(date +%Y%m%d).tar.gz /root/electric-sojourner"
 echo ""
 
 echo "========================================="
