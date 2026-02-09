@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { UserService } from "@/services/user.service";
 import { PASSWORD_REGEX, PASSWORD_REQUIREMENT_MSG_EN } from "@/lib/constants";
+import { checkRateLimit, getClientIP } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+    // Rate limiting check
+    const ip = getClientIP(req.headers);
+    if (!checkRateLimit(ip)) {
+        return NextResponse.json(
+            { error: "Too many registration attempts. Please try again later." },
+            { status: 429 }
+        );
+    }
+
     try {
         const { email, password } = await req.json();
 

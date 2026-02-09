@@ -32,6 +32,7 @@ export class UserService {
     static async getAllUsersWithStats(page: number = 1, limit: number = 10) {
         const skip = (page - 1) * limit;
 
+        // Get users with basic info and wallet
         const [total, users] = await prisma.$transaction([
             prisma.user.count(),
             prisma.user.findMany({
@@ -43,42 +44,42 @@ export class UserService {
                     email: true,
                     role: true,
                     createdAt: true,
-                    _count: {
-                        select: {
-                            orders: {
-                                where: { status: "COMPLETED" }
-                            }
-                        },
-                    },
-                    orders: {
-                        where: { status: "COMPLETED" },
-                        select: {
-                            totalCents: true,
-                            status: true,
-                        },
-                    },
                     wallet: true,
-                    cashbackTransactions: {
-                        select: { amountCents: true, status: true },
-                    },
                     cashbackPercentage: true,
                 },
             }),
         ]);
 
-        // Calculate total spent for each user (only COMPLETED orders)
-        // Calculate total spent for each user (only COMPLETED orders)
-        const transformedUsers = users.map((user: any) => ({
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            createdAt: user.createdAt,
-            _count: user._count,
-            totalSpentCents: user.orders.reduce((sum: number, order: { totalCents: number }) => sum + order.totalCents, 0),
-            totalEarnedCents: user.wallet?.totalEarnedCents || 0,
-            availableBalanceCents: user.wallet?.availableBalanceCents || 0,
-            cashbackPercentage: user.cashbackPercentage ?? 80.0,
-        }));
+        // Get order aggregates efficiently (single query)
+        const orderStats = await prisma.order.groupBy({
+            by: ['userId'],
+            where: {
+                userId: { in: users.map(u => u.id) },
+                status: 'COMPLETED'
+            },
+            _sum: {
+                totalCents: true
+            },
+            _count: true
+        });
+
+        // Map stats to users
+        const transformedUsers = users.map((user: any) => {
+            const stats = orderStats.find(s => s.userId === user.id);
+            return {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                createdAt: user.createdAt,
+                _count: {
+                    orders: stats?._count || 0
+                },
+                totalSpentCents: stats?._sum.totalCents || 0,
+                totalEarnedCents: user.wallet?.totalEarnedCents || 0,
+                availableBalanceCents: user.wallet?.availableBalanceCents || 0,
+                cashbackPercentage: user.cashbackPercentage ?? 80.0,
+            };
+        });
 
         return { users: transformedUsers, total };
     }

@@ -3,6 +3,16 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+    throw new Error(
+        "❌ NEXTAUTH_SECRET environment variable is required!\n" +
+        "Generate one with: openssl rand -base64 32\n" +
+        "Add it to your .env file: NEXTAUTH_SECRET=your-generated-secret"
+    );
+}
+
+
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -67,6 +77,8 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
+        maxAge: 24 * 60 * 60, // 24 hours
+        updateAge: 60 * 60,    // Refresh token every hour
     },
-    secret: process.env.NEXTAUTH_SECRET || "fallback-secret-change-me",
+    secret: process.env.NEXTAUTH_SECRET,
 };

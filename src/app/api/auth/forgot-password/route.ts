@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { UserService } from "@/services/user.service";
+import { checkRateLimit, getClientIP } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+    // Rate limiting check
+    const ip = getClientIP(req.headers);
+    if (!checkRateLimit(ip)) {
+        return NextResponse.json(
+            { error: "Too many password reset requests. Please try again later." },
+            { status: 429 }
+        );
+    }
+
     try {
         const { email } = await req.json();
 

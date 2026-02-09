@@ -15,16 +15,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const body = await req.json();
         const { name, role } = body;
 
-        // Perform update
-        const updatedUser = await UserService.updateProfile(id, { name });
-
+        // Update role if provided
         if (role) {
-            // If role is being updated
-            await (UserService as any).updateRole(id, role);
+            await UserService.updateRole(id, role);
         }
+
+        // Update profile if name provided
+        if (name) {
+            await UserService.updateProfile(id, { name });
+        }
+
+        // Fetch updated user
+        const updatedUser = await UserService.findById(id);
 
         return NextResponse.json({ success: true, user: updatedUser });
     } catch (error) {
+        console.error("Update user error:", error);
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }
@@ -43,12 +49,10 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
             return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
         }
 
-        // Ideally, we'd check if it's the last super admin, but policy says manual assignment.
-        // We'll proceed with deletion as requested.
-
-        await (UserService as any).deleteUser(id);
+        await UserService.deleteUser(id);
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error("Delete user error:", error);
         return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
     }
 }

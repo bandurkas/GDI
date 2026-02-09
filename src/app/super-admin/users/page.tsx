@@ -102,6 +102,61 @@ function PwdResetModal({ isOpen, onClose, user, onReset }: { isOpen: boolean, on
     );
 }
 
+function RoleChangeModal({ isOpen, onClose, user, onRoleChange }: { isOpen: boolean, onClose: () => void, user: ManagedUser | null, onRoleChange: (id: string, role: string) => void }) {
+    const [role, setRole] = useState(user?.role || "USER");
+
+    if (!isOpen || !user) return null;
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onRoleChange(user.id, role);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Change User Role</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full"><XCircle size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <p className="text-sm text-slate-500">Changing role for <span className="font-bold text-slate-900 dark:text-white">{user.email}</span></p>
+
+                    <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4">
+                        <p className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-2">⚠️ Current Role</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">{user.role}</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">New Role</label>
+                        <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+                            <option value="USER">USER - Regular customer access</option>
+                            <option value="ADMIN">ADMIN - Admin panel access</option>
+                            <option value="SUPER_ADMIN">SUPER_ADMIN - Full system control</option>
+                        </select>
+                    </div>
+
+                    <div className="bg-indigo-50 dark:bg-indigo-500/5 border border-indigo-200 dark:border-indigo-500/20 rounded-xl p-4">
+                        <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400">Role Permissions:</p>
+                        <ul className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                            <li>• <strong>USER:</strong> Can shop and earn commissions</li>
+                            <li>• <strong>ADMIN:</strong> + Manage payouts & view reports</li>
+                            <li>• <strong>SUPER_ADMIN:</strong> + Manage all users & roles</li>
+                        </ul>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-6">
+                        <button type="button" onClick={onClose} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-sm">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 text-sm flex items-center gap-2 shadow-lg shadow-indigo-500/20">
+                            <Shield size={18} /> Update Role
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 // --- Main Page ---
 
 export default function SuperAdminUsersPage() {
@@ -116,6 +171,7 @@ export default function SuperAdminUsersPage() {
     // Modals
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isPwdResetOpen, setIsPwdResetOpen] = useState(false);
+    const [isRoleChangeOpen, setIsRoleChangeOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
 
     const router = useRouter();
@@ -181,6 +237,25 @@ export default function SuperAdminUsersPage() {
             }
             toast.success("Password reset successfully");
             setIsPwdResetOpen(false);
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+    const handleRoleChange = async (id: string, newRole: string) => {
+        try {
+            const res = await fetch(`/api/super-admin/users/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: newRole }),
+            });
+            if (!res.ok) {
+                const json = await res.json();
+                throw new Error(json.error || "Failed to update role");
+            }
+            toast.success(`Role updated to ${newRole} successfully`);
+            setIsRoleChangeOpen(false);
+            fetchUsers(page);
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -278,8 +353,8 @@ export default function SuperAdminUsersPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase ${user.role === 'SUPER_ADMIN' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' :
-                                                    user.role === 'ADMIN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                                                        'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                                user.role === 'ADMIN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                    'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
                                                 }`}>
                                                 {user.role}
                                             </span>
@@ -305,6 +380,13 @@ export default function SuperAdminUsersPage() {
                                                     <>
                                                         <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
                                                         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right overflow-hidden">
+                                                            <button
+                                                                onClick={() => { setSelectedUser(user); setIsRoleChangeOpen(true); setOpenMenuId(null); }}
+                                                                className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors"
+                                                            >
+                                                                <Shield size={16} className="text-indigo-500" />
+                                                                Change Role
+                                                            </button>
                                                             <button
                                                                 onClick={() => { setSelectedUser(user); setIsPwdResetOpen(true); setOpenMenuId(null); }}
                                                                 className="w-full text-left px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors"
@@ -361,6 +443,12 @@ export default function SuperAdminUsersPage() {
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
                 onCreate={handleCreate}
+            />
+            <RoleChangeModal
+                isOpen={isRoleChangeOpen}
+                onClose={() => setIsRoleChangeOpen(false)}
+                user={selectedUser}
+                onRoleChange={handleRoleChange}
             />
             <PwdResetModal
                 isOpen={isPwdResetOpen}
