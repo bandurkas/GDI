@@ -177,15 +177,15 @@ export default function DashboardPage() {
 
 
     return (
-        <div className="space-y-10 py-8 max-w-6xl mx-auto">
+        <div className="space-y-10 py-8 px-4 sm:px-6 max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.dashboard.title}</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">{dictionary.dashboard.welcome} <span className="font-bold text-indigo-600 dark:text-indigo-400">{session?.user?.email}</span></p>
+                    <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.dashboard.title}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">{dictionary.dashboard.welcome} <span className="font-bold text-indigo-600 dark:text-indigo-400 break-all">{session?.user?.email}</span></p>
                 </div>
 
                 {data?.wallet && (
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                         <div className="bg-white dark:bg-slate-900 px-6 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
                             <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-600 dark:text-indigo-400">
                                 <Wallet size={24} />
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 {/* Left Column: Actions */}
                 <div className="lg:col-span-1 space-y-8">
                     {/* Request Payout Card */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden group">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-32 bg-indigo-50 dark:bg-indigo-950/20 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30"></div>
 
                         <div className="relative">
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                 {/* Right Column: History & Orders */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Payout History */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center gap-3 mb-8">
                             <Clock className="text-indigo-600 dark:text-indigo-400" size={24} />
                             <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.payoutHistory}</h3>
@@ -368,7 +368,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Purchased Services (Full Width) */}
-            <div className="bg-slate-900 dark:bg-black rounded-3xl p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 dark:border-slate-800 overflow-hidden relative">
+            <div className="bg-slate-900 dark:bg-black rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 dark:border-slate-800 overflow-hidden relative">
                 {/* Decorative background elements specific to dark theme card */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
