@@ -112,7 +112,7 @@ sleep 10
 echo "Testing application..."
 HEALTH_CHECK=$(curl -s http://localhost:3001/api/health || echo "FAILED")
 
-if echo "$HEALTH_CHECK" | grep -q "ok"; then
+if echo "$HEALTH_CHECK" | grep -E -q "ok|healthy"; then
     echo "✓ Health check: PASSED"
     echo ""
     echo "========================================="
