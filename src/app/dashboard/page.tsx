@@ -387,31 +387,48 @@ export default function DashboardPage() {
                 ) : (
                     <>
                         <div className="space-y-4 relative z-10">
-                            <div className="grid grid-cols-12 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 pb-2">
+                            <div className="hidden sm:grid grid-cols-12 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 pb-2">
                                 <div className="col-span-6">Service</div>
                                 <div className="col-span-3">Date</div>
                                 <div className="col-span-2 text-right">Total</div>
                                 <div className="col-span-1 text-center">Action</div>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-4 sm:space-y-2">
                                 {data.orders.map((order) => (
-                                    <div key={order.id} className="grid grid-cols-12 items-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl transition-all group">
-                                        <div className="col-span-6">
-                                            <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
-                                                {order.items[0]?.productName || dictionary.common.unknownService}
-                                                {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
-                                            </p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Order ID: #{order.id.slice(-8)}</p>
+                                    <div key={order.id} className="relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center p-5 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl transition-all group gap-4 sm:gap-0">
+
+                                        {/* Mobile: Top Row (Service + Amount) | Desktop: Service Col */}
+                                        <div className="w-full sm:col-span-6">
+                                            <div className="flex justify-between items-start gap-4 mb-1 sm:mb-0">
+                                                <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+                                                    {order.items[0]?.productName || dictionary.common.unknownService}
+                                                    {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
+                                                </p>
+                                                {/* Mobile Amount */}
+                                                <p className="sm:hidden text-sm font-black text-white tracking-tight tabular-nums whitespace-nowrap">
+                                                    {formatCurrency(order.totalCents * 100)}
+                                                </p>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500">Order ID: #{order.id.slice(-8)}</p>
                                         </div>
-                                        <div className="col-span-3 flex items-center gap-2 text-xs font-medium text-slate-400">
-                                            <Clock size={12} className="text-slate-600" />
+
+                                        {/* Desktop: Date Col */}
+                                        <div className="w-full sm:col-span-3 flex items-center gap-2 text-xs font-medium text-slate-400">
+                                            <Clock size={12} className="text-slate-600 hidden sm:block" />
+                                            <span className="sm:hidden text-[10px] font-bold uppercase tracking-widest text-slate-600 mr-2">Date:</span>
                                             {new Date(order.createdAt).toLocaleDateString()}
                                         </div>
-                                        <div className="col-span-2 text-right">
-                                            <p className="text-sm font-black text-white tracking-tight tabular-nums">{formatCurrency(order.totalCents * 100)}</p>
-                                            <div className="mt-1 inline-flex">
-                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED"
+
+                                        {/* Mobile: Status | Desktop: Amount + Status */}
+                                        <div className="w-full sm:col-span-2 flex items-center justify-between sm:block sm:text-right">
+                                            {/* Desktop Amount */}
+                                            <p className="hidden sm:block text-sm font-black text-white tracking-tight tabular-nums">
+                                                {formatCurrency(order.totalCents * 100)}
+                                            </p>
+
+                                            <div className="mt-0 sm:mt-1 inline-flex">
+                                                <span className={`px-2 py-1 sm:px-1.5 sm:py-0.5 rounded text-[10px] sm:text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED"
                                                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/20"
                                                     : order.status === "PENDING"
                                                         ? "bg-blue-500/20 text-blue-400 border-blue-500/20"
@@ -421,7 +438,9 @@ export default function DashboardPage() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="col-span-1 flex justify-center">
+
+                                        {/* Desktop: Action | Mobile: Absolute/Hidden */}
+                                        <div className="sm:col-span-1 flex justify-center hidden sm:flex">
                                             <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors">
                                                 <ExternalLink size={16} />
                                             </button>

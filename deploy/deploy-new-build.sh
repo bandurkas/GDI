@@ -42,9 +42,10 @@ cd "$APP_DIR"
 # 1. Pull latest code
 echo "[1/8] Pulling latest code from git..."
 if [ -d ".git" ]; then
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
     git fetch origin
-    git pull origin main
-    echo "✓ Code updated"
+    git pull origin "$CURRENT_BRANCH"
+    echo "✓ Code updated (branch: $CURRENT_BRANCH)"
 else
     echo "⚠️  Not a git repository. Assuming code is already uploaded."
 fi
