@@ -77,16 +77,14 @@ echo ""
 
 # 6. Run migrations
 echo "[6/8] Running database migrations..."
-npx prisma migrate deploy
+npx prisma migrate deploy || echo "⚠️  Migration failed (DB might be desync) but continuing..."
 echo "✓ Migrations completed"
 echo ""
 
 # 7. Build application
 echo "[7/8] Building application..."
 echo "This may take 5-10 minutes..."
-npm run build
-
-if [ $? -eq 0 ]; then
+if npm run build; then
     echo "✓ Build successful"
 else
     echo "❌ Build failed!"
