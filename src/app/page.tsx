@@ -22,9 +22,13 @@ export default async function GDIPage() {
                     {/* Grid Pattern */}
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
-                    {/* Optimized gradients: 2 blobs instead of 4, reduced blur */}
-                    <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#00AEEF] blur-[80px] opacity-20 animate-blob-slow mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
-                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#6A5AE0] blur-[80px] opacity-20 animate-blob-slow animation-delay-2000 mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
+                    {/* Optimized gradients: Static on mobile, Animated on desktop */}
+                    <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#00AEEF] blur-[60px] md:blur-[80px] opacity-10 md:opacity-20 hidden md:block animate-blob-slow mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
+                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#6A5AE0] blur-[60px] md:blur-[80px] opacity-10 md:opacity-20 hidden md:block animate-blob-slow animation-delay-2000 mix-blend-multiply [will-change:transform] [contain:layout_style_paint]"></div>
+
+                    {/* Simple mobile gradient fallback */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-transparent dark:from-indigo-950/20 md:hidden"></div>
+
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-white dark:from-slate-950 to-transparent"></div>
                 </div>
 
