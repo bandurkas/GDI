@@ -15,8 +15,11 @@ export class PayoutService {
                 throw new Error("Wallet not found");
             }
 
-            if (wallet.availableBalanceCents < amountCents) {
-                throw new Error(`Insufficient balance. Available: ${formatCurrency(wallet.availableBalanceCents)}, Requested: ${formatCurrency(amountCents)}`);
+            // DB stores IDR, but we work in Cents. Multiply DB value by 100 to get Cents for comparison.
+            const availableCents = wallet.availableBalanceCents * 100;
+
+            if (availableCents < amountCents) {
+                throw new Error(`Insufficient balance. Available: ${formatCurrency(availableCents)}, Requested: ${formatCurrency(amountCents)}`);
             }
 
             if (amountCents < 100000000) { // Minimum Rp 1.000.000
@@ -37,8 +40,9 @@ export class PayoutService {
             await tx.wallet.update({
                 where: { userId },
                 data: {
-                    pendingBalanceCents: { increment: amountCents },
-                    availableBalanceCents: { decrement: amountCents },
+                    // DB stores IDR for both balances
+                    pendingBalanceCents: { increment: Math.floor(amountCents / 100) },
+                    availableBalanceCents: { decrement: Math.floor(amountCents / 100) },
                 },
             });
 
