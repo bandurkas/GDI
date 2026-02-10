@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight, Filter, ArrowUp, ArrowDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { Clock } from "lucide-react";
 
 interface AdminPayout {
     id: string;
@@ -253,10 +254,111 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
     );
 }
 
+// --- NewUsersModal Component ---
+function NewUsersModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (isOpen) {
+            setLoading(true);
+            fetch(`/api/admin/financial?stats=new_users&t=${Date.now()}`)
+                .then(res => res.json())
+                .then(data => setUsers(data))
+                .catch(err => toast.error("Failed to load users"))
+                .finally(() => setLoading(false));
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-5xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[85vh] transform transition-all scale-100">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-20">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <UserPlus size={24} className="text-purple-600" />
+                            New Users
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium">Registered within the last 24 hours</p>
+                    </div>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-full transition-all"><XCircle size={24} /></button>
+                </div>
+
+                <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400">
+                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent"></div>
+                            <span className="text-xs font-bold uppercase tracking-widest">Loading Data...</span>
+                        </div>
+                    ) : users.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400">
+                            <Users size={48} className="opacity-20" />
+                            <span className="text-sm font-medium">No new users joined today.</span>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-slate-50 dark:bg-slate-950/50 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
+                                <tr>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">User Details</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total Spent</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Recent Purchases</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {users.map((user, idx) => (
+                                    <tr key={idx} className="group hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold text-xs">
+                                                    {user.email.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-sm text-slate-900 dark:text-white">{user.email}</div>
+                                                    <div className="text-[10px] font-mono text-slate-400 mt-0.5 flex items-center gap-1">
+                                                        <Clock size={10} />
+                                                        {new Date(user.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <span className={`font-black text-sm ${user.totalSpent > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                                                {formatCurrency(user.totalSpent)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs">
+                                            {user.items && user.items.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.items.map((item: string, i: number) => (
+                                                        <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm">
+                                                            {item}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-400 italic text-[10px] uppercase tracking-wide">No purchases yet</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950/50 p-4 border-t border-slate-100 dark:border-slate-800 text-center">
+                    <button onClick={onClose} className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white uppercase tracking-widest transition-colors">Close</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminPage() {
     const { dictionary } = useLanguage();
     const { data: session, status } = useSession();
-    const [activeTab, setActiveTab] = useState<"users" | "payouts">("payouts");
+    const [activeTab, setActiveTab] = useState<"users" | "payouts">("users");
     const [data, setData] = useState<any[]>([]);
     const [dailyStats, setDailyStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -273,8 +375,83 @@ export default function AdminPage() {
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
+    // New Users List Modal
+    const [isNewUsersModalOpen, setIsNewUsersModalOpen] = useState(false);
+
     // Dropdown State
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+    // Filter & Sort State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [roleFilter, setRoleFilter] = useState("ALL");
+    const [sortBy, setSortBy] = useState("createdAt");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (activeTab === "users") fetchData("users", 1);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, roleFilter, sortBy, sortDir]);
+
+    const handleSort = (column: string) => {
+        if (sortBy === column) {
+            setSortDir(sortDir === "asc" ? "desc" : "asc");
+        } else {
+            setSortBy(column);
+            // Default sort direction: Numeric -> High to Low (desc), Text -> A to Z (asc)
+            if (["totalSpent", "earned", "balance", "cashbackPercentage"].includes(column)) {
+                setSortDir("desc");
+            } else {
+                setSortDir("asc");
+            }
+        }
+    };
+
+    // Professional Local Sorting Layer (for instant feedback and "no re-fetching" if possible)
+    const sortedData = useMemo(() => {
+        if (activeTab !== "users" || !data) return data;
+
+        return [...data].sort((a, b) => {
+            let valA: number = 0;
+            let valB: number = 0;
+
+            switch (sortBy) {
+                case "cashbackPercentage":
+                    valA = a.cashbackPercentage ?? 0;
+                    valB = b.cashbackPercentage ?? 0;
+                    break;
+                case "totalSpent":
+                    valA = a.totalSpentCents ?? 0;
+                    valB = b.totalSpentCents ?? 0;
+                    break;
+                case "earned":
+                    valA = a.totalEarnedCents ?? 0;
+                    valB = b.totalEarnedCents ?? 0;
+                    break;
+                case "balance":
+                    valA = a.availableBalanceCents ?? 0;
+                    valB = b.availableBalanceCents ?? 0;
+                    break;
+                case "role":
+                    return sortDir === "asc" ? (a.role || "").localeCompare(b.role || "") : (b.role || "").localeCompare(a.role || "");
+                case "createdAt":
+                    // Handle default sort by creation date
+                    valA = new Date(a.createdAt).getTime();
+                    valB = new Date(b.createdAt).getTime();
+                    break;
+                case "email":
+                    // Handle email sorting if triggered
+                    return sortDir === "asc" ? (a.email || "").localeCompare(b.email || "") : (b.email || "").localeCompare(a.email || "");
+                default:
+                    // Fallback: maintain current order
+                    return 0;
+            }
+
+            return sortDir === "asc" ? valA - valB : valB - valA;
+        });
+    }, [data, sortBy, sortDir, activeTab]);
 
     const router = useRouter();
 
@@ -320,6 +497,17 @@ export default function AdminPage() {
             let endpoint = `/api/admin?type=${type}&page=${pageNum}&limit=10`;
             if (type === "payouts") {
                 endpoint = `/api/admin/payouts?page=${pageNum}&limit=10`;
+            } else if (type === "users") {
+                const params = new URLSearchParams({
+                    type: "users",
+                    page: pageNum.toString(),
+                    limit: "10",
+                    sortBy,
+                    sortDir
+                });
+                if (searchQuery) params.append("search", searchQuery);
+                if (roleFilter !== "ALL") params.append("role", roleFilter);
+                endpoint = `/api/admin?${params.toString()}`;
             }
 
             // Add timestamp to prevent caching
@@ -476,13 +664,19 @@ export default function AdminPage() {
                             <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{dailyStats.totalCustomers}</p>
                         </div>
 
-                        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-purple-100 dark:hover:border-purple-900/50 group">
+                        <div
+                            onClick={() => setIsNewUsersModalOpen(true)}
+                            className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-purple-100 dark:hover:border-purple-900/50 group cursor-pointer active:scale-95"
+                        >
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 dark:text-slate-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">New Users</p>
                                 <UserPlus size={16} className="text-purple-500/70 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
                             </div>
                             <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{dailyStats.newCustomersToday}</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Joined Today</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1 flex items-center gap-1 group-hover:text-purple-500 transition-colors">
+                                Joined Today
+                                <ArrowUpRight size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </p>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-amber-100 dark:hover:border-amber-900/50 group">
@@ -535,6 +729,37 @@ export default function AdminPage() {
                         </button>
                     </nav>
                 </div>
+                {/* Users Toolbar */}
+                {activeTab === "users" && (
+                    <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="relative w-full sm:max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search users by email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            />
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                <Filter size={16} />
+                                <span>Filter:</span>
+                            </div>
+                            <select
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                                className="px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                            >
+                                <option value="ALL">All Roles</option>
+                                <option value="USER">User</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                )}
+
                 {/* Content */}
                 <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
@@ -553,12 +778,41 @@ export default function AdminPage() {
                                         </>
                                     ) : activeTab === "users" ? (
                                         <>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.allUsers}</th>
-                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.role}</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.cashbackPercent}</th>
-                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.totalSpent}</th>
-                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Earned</th>
-                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.availableBalance}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                <div className="flex items-center gap-1">
+                                                    {dictionary.admin.allUsers}
+                                                </div>
+                                            </th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group select-none" onClick={() => handleSort("role")}>
+                                                <div className="flex items-center gap-1">
+                                                    {dictionary.admin.role}
+                                                    {sortBy === "role" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                                </div>
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group select-none" onClick={() => handleSort("cashbackPercentage")}>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {dictionary.admin.cashbackPercent}
+                                                    {sortBy === "cashbackPercentage" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                                </div>
+                                            </th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group select-none" onClick={() => handleSort("totalSpent")}>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {dictionary.admin.totalSpent}
+                                                    {sortBy === "totalSpent" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                                </div>
+                                            </th>
+                                            <th className="hidden lg:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group select-none" onClick={() => handleSort("earned")}>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    Earned
+                                                    {sortBy === "earned" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                                </div>
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group select-none" onClick={() => handleSort("balance")}>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {dictionary.admin.availableBalance}
+                                                    {sortBy === "balance" && (sortDir === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />)}
+                                                </div>
+                                            </th>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
                                     ) : null}
@@ -574,7 +828,7 @@ export default function AdminPage() {
                                         <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{dictionary.admin.noPayouts}</td>
                                     </tr>
                                 ) : (
-                                    data.map((item: any) => (
+                                    (activeTab === "users" ? sortedData : data).map((item: any) => (
                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             {activeTab === "payouts" ? (
                                                 <>
@@ -721,6 +975,11 @@ export default function AdminPage() {
                     onClose={() => setIsUserModalOpen(false)}
                     user={selectedUser}
                     onUpdate={handleUserUpdate}
+                />
+
+                <NewUsersModal
+                    isOpen={isNewUsersModalOpen}
+                    onClose={() => setIsNewUsersModalOpen(false)}
                 />
             </div>
         </div>
