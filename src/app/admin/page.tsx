@@ -414,6 +414,31 @@ export default function AdminPage() {
         if (activeTab !== "users" || !data) return data;
 
         return [...data].sort((a, b) => {
+            // If searching, prioritize relevance (exact matches, then starts-with, then contains)
+            if (searchQuery && searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const aEmail = (a.email || "").toLowerCase();
+                const bEmail = (b.email || "").toLowerCase();
+                const aName = (a.name || "").toLowerCase();
+                const bName = (b.name || "").toLowerCase();
+
+                // Calculate relevance scores
+                const aScore =
+                    (aEmail === query || aName === query) ? 1000 :  // Exact match
+                        (aEmail.startsWith(query) || aName.startsWith(query)) ? 100 :  // Starts with
+                            (aEmail.includes(query) || aName.includes(query)) ? 10 : 0;  // Contains
+
+                const bScore =
+                    (bEmail === query || bName === query) ? 1000 :
+                        (bEmail.startsWith(query) || bName.startsWith(query)) ? 100 :
+                            (bEmail.includes(query) || bName.includes(query)) ? 10 : 0;
+
+                if (aScore !== bScore) {
+                    return bScore - aScore; // Higher score first
+                }
+                // If same relevance, fall through to normal sorting
+            }
+
             let valA: number = 0;
             let valB: number = 0;
 
@@ -451,7 +476,7 @@ export default function AdminPage() {
 
             return sortDir === "asc" ? valA - valB : valB - valA;
         });
-    }, [data, sortBy, sortDir, activeTab]);
+    }, [data, sortBy, sortDir, activeTab, searchQuery]);
 
     const router = useRouter();
 
