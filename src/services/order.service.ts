@@ -136,13 +136,14 @@ export class OrderService {
                 create: {
                     userId: order.userId,
                     availableBalanceCents: 0,
-                    pendingBalanceCents: cashbackAmount,
-                    totalEarnedCents: cashbackAmount,
+                    // DB stores IDR, so divide cents by 100
+                    pendingBalanceCents: Math.floor(cashbackAmount / 100),
+                    totalEarnedCents: Math.floor(cashbackAmount / 100),
                     totalPaidOutCents: 0,
                 },
                 update: {
-                    pendingBalanceCents: { increment: cashbackAmount },
-                    totalEarnedCents: { increment: cashbackAmount },
+                    pendingBalanceCents: { increment: Math.floor(cashbackAmount / 100) },
+                    totalEarnedCents: { increment: Math.floor(cashbackAmount / 100) },
                 },
             });
             console.log(`[OrderService] Updated wallet pending balance. New pending: ${wallet.pendingBalanceCents}`);

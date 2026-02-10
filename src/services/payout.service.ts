@@ -130,8 +130,8 @@ export class PayoutService {
             await tx.wallet.update({
                 where: { userId: payout.userId },
                 data: {
-                    pendingBalanceCents: { decrement: payout.amountCents },
-                    availableBalanceCents: { increment: payout.amountCents },
+                    pendingBalanceCents: { decrement: Math.floor(payout.amountCents / 100) },
+                    availableBalanceCents: { increment: Math.floor(payout.amountCents / 100) },
                 },
             });
 
@@ -180,8 +180,8 @@ export class PayoutService {
             await tx.wallet.update({
                 where: { userId: payout.userId },
                 data: {
-                    pendingBalanceCents: { decrement: payout.amountCents },
-                    totalPaidOutCents: { increment: payout.amountCents },
+                    pendingBalanceCents: { decrement: Math.floor(payout.amountCents / 100) },
+                    totalPaidOutCents: { increment: Math.floor(payout.amountCents / 100) },
                 },
             });
 
