@@ -188,4 +188,37 @@ export class FinancialService {
             activeCustomersCount: activeCustomersCount,
         };
     }
+
+    /**
+     * Get details of new users registered in the last 24 hours
+     */
+    static async getNewUsersDetails() {
+        const last24Hours = new Date();
+        last24Hours.setHours(last24Hours.getHours() - 24);
+
+        const users = await prisma.user.findMany({
+            where: { createdAt: { gte: last24Hours } },
+            include: {
+                orders: {
+                    where: { status: 'COMPLETED' },
+                    select: {
+                        totalCents: true,
+                        items: {
+                            select: { productName: true, quantity: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return users.map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            createdAt: u.createdAt,
+            totalSpent: u.orders.reduce((sum: number, o: any) => sum + o.totalCents, 0),
+            items: u.orders.flatMap((o: any) => o.items.map((i: any) => `${i.quantity}x ${i.productName}`))
+        }));
+    }
 }
