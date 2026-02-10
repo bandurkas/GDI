@@ -17,6 +17,17 @@ export async function GET(req: Request) {
             return NextResponse.json(dailyStats);
         }
 
+        if (url.searchParams.get("stats") === "new_users") {
+            const users = await FinancialService.getNewUsersDetails();
+            return NextResponse.json(users, {
+                headers: {
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+        }
+
         const metrics = await FinancialService.getAllUsersFinancialMetrics();
         return NextResponse.json(metrics);
     } catch (error) {

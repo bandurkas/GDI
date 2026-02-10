@@ -262,7 +262,13 @@ function NewUsersModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
     useEffect(() => {
         if (isOpen) {
             setLoading(true);
-            fetch(`/api/admin/financial?stats=new_users&t=${Date.now()}`)
+            fetch(`/api/admin/financial?stats=new_users&t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
+            })
                 .then(res => res.json())
                 .then(data => setUsers(data))
                 .catch(err => toast.error("Failed to load users"))
