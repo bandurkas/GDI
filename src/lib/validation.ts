@@ -41,8 +41,8 @@ export const PayoutRequestSchema = z.object({
     amountCents: z.number()
         .int("Amount must be a whole number")
         .positive("Amount must be positive")
-        .min(1000000, "Minimum withdrawal is Rp 10,000") // 10k IDR in cents
-        .max(1000000000, "Maximum withdrawal is Rp 10,000,000"), // 10M IDR
+        .min(100000000, "Minimum withdrawal is Rp 1,000,000") // 10k IDR in cents
+        .max(10000000000, "Maximum withdrawal is Rp 100,000,000"), // 10M IDR
 });
 
 export type PayoutRequestInput = z.infer<typeof PayoutRequestSchema>;

@@ -150,16 +150,16 @@ export default function DashboardPage() {
         }
 
         const cents = idrAmount * 100;
-        const MIN_CENTS = 1000000;
-        const MAX_CENTS = 1000000000;
+        const MIN_CENTS = 100000000; // Rp 1,000,000
+        const MAX_CENTS = 10000000000; // Rp 100,000,000
 
         if (cents < MIN_CENTS) {
-            setPayoutError(`Minimum withdrawal is Rp 10.000 (~$0.62)`);
+            setPayoutError(`Minimum withdrawal is Rp 1.000.000 (~$62.50)`);
             setPayoutLoading(false);
             return;
         }
         if (cents > MAX_CENTS) {
-            setPayoutError(`Maximum withdrawal is Rp 10.000.000 (~$625)`);
+            setPayoutError(`Maximum withdrawal is Rp 100.000.000 (~$6,250)`);
             setPayoutLoading(false);
             return;
         }
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Minimum: Rp 10.000 (~$0.62) • Maximum: Rp 10.000.000 (~$625)</p>
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Minimum: Rp 1.000.000 (~$62.50) • Maximum: Rp 100.000.000 (~$6,250)</p>
                                 </div>
 
                                 {payoutError && (

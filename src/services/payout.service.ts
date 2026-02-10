@@ -16,11 +16,11 @@ export class PayoutService {
             }
 
             if (wallet.availableBalanceCents < amountCents) {
-                throw new Error(`Insufficient balance. Available: ${formatCurrency(wallet.availableBalanceCents * 100)}, Requested: ${formatCurrency(amountCents * 100)}`);
+                throw new Error(`Insufficient balance. Available: ${formatCurrency(wallet.availableBalanceCents)}, Requested: ${formatCurrency(amountCents)}`);
             }
 
-            if (amountCents < 10000) { // Minimum Rp 10.000
-                throw new Error("Minimum payout amount is Rp 10.000");
+            if (amountCents < 100000000) { // Minimum Rp 1.000.000
+                throw new Error("Minimum payout amount is Rp 1.000.000");
             }
 
             // Create payout request
