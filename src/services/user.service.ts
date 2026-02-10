@@ -29,16 +29,108 @@ export class UserService {
         });
     }
 
-    static async getAllUsersWithStats(page: number = 1, limit: number = 10) {
+    static async getAllUsersWithStats(
+        page: number = 1,
+        limit: number = 10,
+        search?: string,
+        role?: string,
+        sortBy: string = 'createdAt',
+        sortDir: 'asc' | 'desc' = 'desc'
+    ) {
         const skip = (page - 1) * limit;
+
+        // Build Where Clause
+        const where: any = {};
+        if (search) {
+            where.OR = [
+                { email: { contains: search, mode: 'insensitive' } },
+                { name: { contains: search, mode: 'insensitive' } },
+                { id: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+        if (role && role !== 'ALL') {
+            where.role = role as Role;
+        }
+
+        // Special handling for 'totalSpent' (Computed Field)
+        if (sortBy === 'totalSpent') {
+            // Fetch all matching users (lightweight select)
+            const allUsers = await prisma.user.findMany({
+                where,
+                select: {
+                    id: true,
+                    email: true,
+                    role: true,
+                    createdAt: true,
+                    wallet: true,
+                    cashbackPercentage: true,
+                },
+            });
+
+            // Fetch aggregates for all matching users
+            const orderStats = await prisma.order.groupBy({
+                by: ['userId'],
+                where: {
+                    userId: { in: allUsers.map(u => u.id) },
+                    status: 'COMPLETED'
+                },
+                _sum: { totalCents: true },
+                _count: true
+            });
+
+            // Merge and Map
+            const mapped = allUsers.map(u => {
+                const stats = orderStats.find(s => s.userId === u.id);
+                return {
+                    id: u.id,
+                    email: u.email,
+                    role: u.role,
+                    createdAt: u.createdAt,
+                    _count: { orders: stats?._count || 0 },
+                    totalSpentCents: stats?._sum.totalCents || 0,
+                    totalEarnedCents: u.wallet?.totalEarnedCents || 0,
+                    availableBalanceCents: u.wallet?.availableBalanceCents || 0,
+                    cashbackPercentage: u.cashbackPercentage ?? 80.0,
+                    wallet: u.wallet // Keep wallet for consistency if needed
+                };
+            });
+
+            // Sort in memory
+            mapped.sort((a, b) => {
+                const valA = a.totalSpentCents;
+                const valB = b.totalSpentCents;
+                return sortDir === 'asc' ? valA - valB : valB - valA;
+            });
+
+            // Paginate
+            const paginated = mapped.slice(skip, skip + limit);
+            return { users: paginated, total: allUsers.length };
+        }
+
+        // Build OrderBy Clause for DB Sorting
+        let orderBy: any[] = [];
+        if (sortBy) {
+            if (sortBy === 'email') orderBy.push({ email: sortDir });
+            else if (sortBy === 'createdAt') orderBy.push({ createdAt: sortDir });
+            else if (sortBy === 'role') orderBy.push({ role: sortDir });
+            else if (sortBy === 'cashbackPercentage') orderBy.push({ cashbackPercentage: sortDir });
+            else if (sortBy === 'balance') orderBy.push({ wallet: { availableBalanceCents: sortDir } });
+            else if (sortBy === 'earned') orderBy.push({ wallet: { totalEarnedCents: sortDir } });
+        }
+        // Fallback or ensure createdAt is used if nothing else
+        if (orderBy.length === 0) orderBy.push({ createdAt: 'desc' });
+
+        // Always add ID as tie-breaker for stable sort
+        orderBy.push({ id: 'asc' });
 
         // Get users with basic info and wallet
         const [total, users] = await prisma.$transaction([
-            prisma.user.count(),
+            prisma.user.count({ where }),
             prisma.user.findMany({
+                where,
                 skip,
                 take: limit,
-                orderBy: { createdAt: "desc" },
+                orderBy,
                 select: {
                     id: true,
                     email: true,

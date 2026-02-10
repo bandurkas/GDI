@@ -15,10 +15,14 @@ export async function GET(req: Request) {
     const type = searchParams.get("type");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || undefined;
+    const role = searchParams.get("role") || undefined;
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortDir = (searchParams.get("sortDir") === "asc" ? "asc" : "desc");
 
     try {
         if (type === "users") {
-            const { users, total } = await UserService.getAllUsersWithStats(page, limit);
+            const { users, total } = await UserService.getAllUsersWithStats(page, limit, search, role, sortBy, sortDir);
             return NextResponse.json({
                 data: users,
                 meta: {

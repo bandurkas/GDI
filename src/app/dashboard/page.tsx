@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatCurrency, formatUSD } from "@/lib/utils";
+import { formatCurrency, formatUSD, formatCurrencyWithUSD, formatNumberInput, parseFormattedNumber, convertIDRtoUSD } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardData {
@@ -130,20 +130,39 @@ export default function DashboardPage() {
         }
     };
 
+    const handlePayoutInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatNumberInput(e.target.value);
+        setPayoutAmount(formatted);
+        if (payoutError) setPayoutError(null);
+    };
+
     const handleRequestPayout = async (e: React.FormEvent) => {
         e.preventDefault();
         setPayoutLoading(true);
         setPayoutError(null);
         setPayoutSuccess(null);
 
-        const amount = parseFloat(payoutAmount);
-        if (isNaN(amount) || amount <= 0) {
+        const idrAmount = parseFormattedNumber(payoutAmount);
+        if (isNaN(idrAmount) || idrAmount <= 0) {
             setPayoutError("Please enter a valid amount");
             setPayoutLoading(false);
             return;
         }
 
-        const cents = Math.round(amount);
+        const cents = idrAmount * 100;
+        const MIN_CENTS = 1000000;
+        const MAX_CENTS = 1000000000;
+
+        if (cents < MIN_CENTS) {
+            setPayoutError(`Minimum withdrawal is Rp 10.000 (~$0.62)`);
+            setPayoutLoading(false);
+            return;
+        }
+        if (cents > MAX_CENTS) {
+            setPayoutError(`Maximum withdrawal is Rp 10.000.000 (~$625)`);
+            setPayoutLoading(false);
+            return;
+        }
 
         try {
             const res = await fetch("/api/payouts/request", {
@@ -246,14 +265,19 @@ export default function DashboardPage() {
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Rp</span>
                                         <input
-                                            type="number"
-                                            placeholder="100000"
+                                            type="text"
+                                            placeholder="100.000"
                                             value={payoutAmount}
-                                            onChange={(e) => setPayoutAmount(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                            onChange={handlePayoutInput}
+                                            className="w-full pl-12 pr-20 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                         />
+                                        {payoutAmount && parseFormattedNumber(payoutAmount) > 0 && (
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">
+                                                ~${convertIDRtoUSD(parseFormattedNumber(payoutAmount)).toFixed(2)}
+                                            </span>
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">{dictionary.dashboard.minWithdraw}</p>
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Minimum: Rp 10.000 (~$0.62) • Maximum: Rp 10.000.000 (~$625)</p>
                                 </div>
 
                                 {payoutError && (
@@ -368,18 +392,18 @@ export default function DashboardPage() {
             </div>
 
             {/* Purchased Services (Full Width) */}
-            <div className="bg-slate-900 dark:bg-black rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 dark:border-slate-800 overflow-hidden relative">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative">
                 {/* Decorative background elements specific to dark theme card */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
                 <div className="flex items-center gap-3 mb-8 relative z-10">
-                    <Package className="text-indigo-400" size={24} />
-                    <h3 className="text-xl font-black text-white">{dictionary.dashboard.purchasedServices}</h3>
+                    <Package className="text-indigo-600 dark:text-indigo-400" size={24} />
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.purchasedServices}</h3>
                 </div>
 
                 {!data?.orders || data.orders.length === 0 ? (
-                    <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10 relative z-10">
-                        <p className="text-slate-400 font-medium">{dictionary.dashboard.noServices}</p>
+                    <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-slate-800 relative z-10">
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">{dictionary.dashboard.noServices}</p>
                         <Link href="/products" className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-full transition-all">
                             {dictionary.common.browseServices}
                         </Link>
@@ -387,7 +411,7 @@ export default function DashboardPage() {
                 ) : (
                     <>
                         <div className="space-y-4 relative z-10">
-                            <div className="hidden sm:grid grid-cols-12 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 pb-2">
+                            <div className="hidden sm:grid grid-cols-12 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-4 pb-2">
                                 <div className="col-span-6">Service</div>
                                 <div className="col-span-3">Date</div>
                                 <div className="col-span-2 text-right">Total</div>
@@ -396,36 +420,46 @@ export default function DashboardPage() {
 
                             <div className="space-y-4 sm:space-y-2">
                                 {data.orders.map((order) => (
-                                    <div key={order.id} className="relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center p-5 sm:p-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl transition-all group gap-4 sm:gap-0">
+                                    <div key={order.id} className="relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center p-5 sm:p-4 bg-slate-50 dark:bg-slate-950/50 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all group gap-4 sm:gap-0">
 
                                         {/* Mobile: Top Row (Service + Amount) | Desktop: Service Col */}
                                         <div className="w-full sm:col-span-6">
                                             <div className="flex justify-between items-start gap-4 mb-1 sm:mb-0">
-                                                <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
                                                     {order.items[0]?.productName || dictionary.common.unknownService}
-                                                    {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
+                                                    {order.items.length > 1 && <span className="text-slate-500 dark:text-slate-400 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
                                                 </p>
                                                 {/* Mobile Amount */}
-                                                <p className="sm:hidden text-sm font-black text-white tracking-tight tabular-nums whitespace-nowrap">
-                                                    {formatCurrency(order.totalCents * 100)}
-                                                </p>
+                                                <div className="sm:hidden">
+                                                    <p className="text-sm font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
+                                                        {formatCurrency(order.totalCents * 100)}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                        ~{formatUSD(order.totalCents * 100)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <p className="text-[10px] text-slate-500">Order ID: #{order.id.slice(-8)}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400">Order ID: #{order.id.slice(-8)}</p>
                                         </div>
 
                                         {/* Desktop: Date Col */}
-                                        <div className="w-full sm:col-span-3 flex items-center gap-2 text-xs font-medium text-slate-400">
-                                            <Clock size={12} className="text-slate-600 hidden sm:block" />
-                                            <span className="sm:hidden text-[10px] font-bold uppercase tracking-widest text-slate-600 mr-2">Date:</span>
+                                        <div className="w-full sm:col-span-3 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                                            <Clock size={12} className="text-slate-400 dark:text-slate-500 hidden sm:block" />
+                                            <span className="sm:hidden text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mr-2">Date:</span>
                                             {new Date(order.createdAt).toLocaleDateString()}
                                         </div>
 
                                         {/* Mobile: Status | Desktop: Amount + Status */}
                                         <div className="w-full sm:col-span-2 flex items-center justify-between sm:block sm:text-right">
                                             {/* Desktop Amount */}
-                                            <p className="hidden sm:block text-sm font-black text-white tracking-tight tabular-nums">
-                                                {formatCurrency(order.totalCents * 100)}
-                                            </p>
+                                            <div className="hidden sm:block">
+                                                <p className="text-sm font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
+                                                    {formatCurrency(order.totalCents * 100)}
+                                                </p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                                    ~{formatUSD(order.totalCents * 100)}
+                                                </p>
+                                            </div>
 
                                             <div className="mt-0 sm:mt-1 inline-flex">
                                                 <span className={`px-2 py-1 sm:px-1.5 sm:py-0.5 rounded text-[10px] sm:text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED"
@@ -441,7 +475,7 @@ export default function DashboardPage() {
 
                                         {/* Desktop: Action | Mobile: Absolute/Hidden */}
                                         <div className="sm:col-span-1 flex justify-center hidden sm:flex">
-                                            <button className="p-2 rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors">
+                                            <button className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors">
                                                 <ExternalLink size={16} />
                                             </button>
                                         </div>
