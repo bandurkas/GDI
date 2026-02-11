@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { OrderService } from "@/services/order.service";
+import { ExchangeRateService } from "@/services/exchange-rate.service";
 
 import { PayoutService } from "@/services/payout.service";
 
@@ -17,30 +18,73 @@ export async function GET(req: Request) {
     const payoutPage = parseInt(searchParams.get("payout_page") || "1");
     const payoutLimit = parseInt(searchParams.get("payout_limit") || "5");
 
+
+
     try {
         const userId = session.user.id;
-        const wallet = await prisma.wallet.findUnique({ where: { userId } });
-        const { orders, total: ordersTotal } = await OrderService.getUserOrders(userId, page, limit);
-        const { payouts, total: payoutsTotal } = await PayoutService.getUserPayouts(userId, payoutPage, payoutLimit);
+
+        // Parallel fetching for performance
+        const [wallet, ordersResult, payoutsResult, exchangeRate, user, aggOrders, aggPendingPayouts, aggPaidPayouts] = await Promise.all([
+            prisma.wallet.findUnique({ where: { userId } }),
+            OrderService.getUserOrders(userId, page, limit),
+            PayoutService.getUserPayouts(userId, payoutPage, payoutLimit),
+            ExchangeRateService.getRate(),
+            prisma.user.findUnique({ where: { id: userId }, select: { cashbackPercentage: true } }),
+
+            // Aggregations for Strict Accuracy
+            prisma.order.aggregate({
+                _sum: { totalCents: true },
+                where: { userId, status: 'COMPLETED' }
+            }),
+            prisma.payout.aggregate({
+                _sum: { amountCents: true },
+                where: {
+                    userId,
+                    status: { in: ['REQUESTED', 'PROCESSING', 'APPROVED'] } // Pending Payouts
+                }
+            }),
+            prisma.payout.aggregate({
+                _sum: { amountCents: true },
+                where: { userId, status: 'PAID' }
+            })
+        ]);
+
+        const totalSalesIDR = aggOrders._sum.totalCents || 0;
+        const pendingPayoutsUSD = aggPendingPayouts._sum.amountCents || 0;
+        const totalPaidUSD = aggPaidPayouts._sum.amountCents || 0;
+
+        // Calculated Available based on formula: Earned - Paid - Pending
+        // Note: Wallet.totalEarnedCents is strict accumulation of commission
+        const calculatedAvailable = (wallet?.totalEarnedCents || 0) - totalPaidUSD - pendingPayoutsUSD;
 
         return NextResponse.json({
+            exchangeRate, // Number (e.g. 16000)
+            cashbackPercentage: user?.cashbackPercentage ?? 80.0,
             wallet,
-            orders,
+            calculatedStats: {
+                totalSalesIDR,
+                pendingPayoutsUSD,
+                totalPaidUSD,
+                calculatedAvailableUSD: calculatedAvailable
+            },
+            orders: ordersResult.orders,
             ordersMeta: {
-                total: ordersTotal,
+                total: ordersResult.total,
                 page,
                 limit,
-                totalPages: Math.ceil(ordersTotal / limit),
+                totalPages: Math.ceil(ordersResult.total / limit),
             },
-            payouts,
+            payouts: payoutsResult.payouts,
             payoutsMeta: {
-                total: payoutsTotal,
+                total: payoutsResult.total,
                 page: payoutPage,
                 limit: payoutLimit,
-                totalPages: Math.ceil(payoutsTotal / payoutLimit),
-            }
+                totalPages: Math.ceil(payoutsResult.total / payoutLimit),
+            },
+            totalBills: totalSalesIDR // Use aggregated value instead of page sum
         });
     } catch (error) {
+        console.error("Dashboard Error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

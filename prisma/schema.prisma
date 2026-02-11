@@ -151,11 +151,22 @@ model CashbackTransaction {
   notes       String?
 }
 
+
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
 model Payout {
   id          String        @id @default(cuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id])
-  amountCents Int
+  amountCents Int           // Amount in USD Cents
+  amountIDRCents Int?       // Amount in IDR Cents (calculated at payout)
+  exchangeRate Float        @default(16000.0) // Rate at time of request/payout
   status      PayoutStatus  @default(REQUESTED)
   method      String?
   reference   String?

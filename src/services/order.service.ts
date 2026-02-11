@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PaymentService, PaymentMode } from "./payment.service";
+import { ExchangeRateService } from "./exchange-rate.service";
 
 export class OrderService {
     static async createOrder(userId: string, paymentMethod: PaymentMode) {
@@ -80,8 +81,15 @@ export class OrderService {
         };
     }
 
+
+
     static async completeOrder(orderId: string) {
         console.log(`[OrderService] Completing order: ${orderId}`);
+
+        // Fetch rate outside transaction to avoid blocking/locking issues
+        const rate = await ExchangeRateService.getRate();
+        console.log(`[OrderService] Using Exchange Rate for Commission: 1 USD = ${rate} IDR`);
+
         return await prisma.$transaction(async (tx: any) => {
             const order = await tx.order.findUnique({
                 where: { id: orderId },
@@ -104,7 +112,7 @@ export class OrderService {
             });
             console.log(`[OrderService] Order status updated to COMPLETED`);
 
-            // 2. Create PENDING Cashback Transaction
+            // 2. Create PENDING Cashback Transaction (USD)
             const user = await tx.user.findUnique({ where: { id: order.userId } });
 
             // Use safe default logic clearly
@@ -115,35 +123,59 @@ export class OrderService {
             console.log(`[OrderService] User: ${order.userId}, Cashback %: ${userPercentage} (Raw DB: ${user?.cashbackPercentage})`);
 
             const cashbackRate = userPercentage / 100;
-            const cashbackAmount = Math.floor(order.totalCents * cashbackRate);
 
-            console.log(`[OrderService] Calculated Cashback: ${cashbackAmount} cents (Rate: ${cashbackRate}, Total: ${order.totalCents})`);
+            // NEW STRICT LOGIC (Step 2 of Clean Slate)
+            // 1. Get Rate (Assume 16000 or from Service if injected, but local var 'rate' is available)
+            // 2. Convert IDR Order Total -> USD Cents
+            // 3. Apply Commission %
+
+            // Formula: (IDR / Rate) * 100 -> USD Cents
+            const orderUSDCents = Math.floor((order.totalCents / rate) * 100);
+
+            // Commission
+            const commissionCents = Math.floor(orderUSDCents * cashbackRate);
+
+            console.log(`[OrderService] Commission Calculation:
+              Order: ${order.totalCents} IDR
+              Rate: ${rate}
+              USD Value: ${orderUSDCents} cents ($${orderUSDCents / 100})
+              Commission Rate: ${userPercentage}% (${cashbackRate})
+              Commission Earned: ${commissionCents} cents ($${commissionCents / 100})`);
+
+            const cashbackAmountUSDCents = commissionCents;
+
 
             const cashbackTx = await tx.cashbackTransaction.create({
                 data: {
                     userId: order.userId,
                     orderId: order.id,
-                    amountCents: cashbackAmount,
-                    rate: cashbackRate,
+                    amountCents: cashbackAmountUSDCents, // Stored as USD Cents
+                    rate: cashbackRate, // This is the percentage (0.8), not exchange rate. Maybe we should store exchange rate too?
+                    // Schema has `rate Float`. It was storing 0.8.
+                    // Ideally we should store the Exchange Rate used?
+                    // Schema definition for `rate`: @default(0.8). It is the commission percentage.
+                    // We can't easily add exchangeRate to CashbackTransaction without schema change.
+                    // Since specific Exchange Rate is only critical for Payouts, this is fine for now. 
+                    // Or we can assume it's calculated at this time.
                     status: "PENDING",
                 },
             });
-            console.log(`[OrderService] Created PENDING cashback transaction: ${cashbackTx.id}`);
+            console.log(`[OrderService] Created PENDING cashback transaction (USD): ${cashbackTx.id}`);
 
-            // 3. Update Wallet - Add to PENDING balance
+            // 3. Update Wallet - Add to PENDING balance (USD)
+            // Wallet now stores USD Cents. No division by 100 needed.
             const wallet = await tx.wallet.upsert({
                 where: { userId: order.userId },
                 create: {
                     userId: order.userId,
                     availableBalanceCents: 0,
-                    // DB stores IDR, so divide cents by 100
-                    pendingBalanceCents: Math.floor(cashbackAmount / 100),
-                    totalEarnedCents: Math.floor(cashbackAmount / 100),
+                    pendingBalanceCents: cashbackAmountUSDCents,
+                    totalEarnedCents: cashbackAmountUSDCents,
                     totalPaidOutCents: 0,
                 },
                 update: {
-                    pendingBalanceCents: { increment: Math.floor(cashbackAmount / 100) },
-                    totalEarnedCents: { increment: Math.floor(cashbackAmount / 100) },
+                    pendingBalanceCents: { increment: cashbackAmountUSDCents },
+                    totalEarnedCents: { increment: cashbackAmountUSDCents },
                 },
             });
             console.log(`[OrderService] Updated wallet pending balance. New pending: ${wallet.pendingBalanceCents}`);

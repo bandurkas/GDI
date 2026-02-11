@@ -32,8 +32,8 @@ export class CashbackService {
             await tx.wallet.update({
                 where: { userId: cashback.userId },
                 data: {
-                    pendingBalanceCents: { decrement: Math.floor(cashback.amountCents / 100) },
-                    availableBalanceCents: { increment: Math.floor(cashback.amountCents / 100) },
+                    pendingBalanceCents: { decrement: cashback.amountCents },
+                    availableBalanceCents: { increment: cashback.amountCents },
                 },
             });
 
@@ -78,16 +78,16 @@ export class CashbackService {
                 await tx.wallet.update({
                     where: { userId: cashback.userId },
                     data: {
-                        pendingBalanceCents: { decrement: Math.floor(cashback.amountCents / 100) },
-                        totalEarnedCents: { decrement: Math.floor(cashback.amountCents / 100) },
+                        pendingBalanceCents: { decrement: cashback.amountCents },
+                        totalEarnedCents: { decrement: cashback.amountCents },
                     },
                 });
             } else if (cashback.status === "AVAILABLE") {
                 await tx.wallet.update({
                     where: { userId: cashback.userId },
                     data: {
-                        availableBalanceCents: { decrement: Math.floor(cashback.amountCents / 100) },
-                        totalEarnedCents: { decrement: Math.floor(cashback.amountCents / 100) },
+                        availableBalanceCents: { decrement: cashback.amountCents },
+                        totalEarnedCents: { decrement: cashback.amountCents },
                     },
                 });
             }

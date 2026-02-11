@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatUSD } from "@/lib/utils";
 
 export class PayoutService {
     /**
@@ -15,15 +15,16 @@ export class PayoutService {
                 throw new Error("Wallet not found");
             }
 
-            // DB stores IDR, but we work in Cents. Multiply DB value by 100 to get Cents for comparison.
-            const availableCents = wallet.availableBalanceCents * 100;
+            // Wallet stores USD Cents
+            const availableCents = wallet.availableBalanceCents;
 
             if (availableCents < amountCents) {
-                throw new Error(`Insufficient balance. Available: ${formatCurrency(availableCents)}, Requested: ${formatCurrency(amountCents)}`);
+                // Formatting as USD since wallet is USD
+                throw new Error(`Insufficient balance. Available: ${formatUSD(availableCents)}, Requested: ${formatUSD(amountCents)}`);
             }
 
-            if (amountCents < 100000000) { // Minimum Rp 1.000.000
-                throw new Error("Minimum payout amount is Rp 1.000.000");
+            if (amountCents < 1000) { // Minimum USD 10.00 (1000 Cents)
+                throw new Error("Minimum payout amount is $10.00");
             }
 
             // Create payout request
@@ -37,14 +38,23 @@ export class PayoutService {
             });
 
             // Reserve the amount (deduct from available balance)
-            await tx.wallet.update({
-                where: { userId },
+            // Atomic Update with Balance Check (Prevents Race Condition)
+            const walletUpdate = await tx.wallet.updateMany({
+                where: {
+                    userId,
+                    availableBalanceCents: { gte: amountCents }
+                },
                 data: {
-                    // DB stores IDR for both balances
-                    pendingBalanceCents: { increment: Math.floor(amountCents / 100) },
-                    availableBalanceCents: { decrement: Math.floor(amountCents / 100) },
+                    pendingBalanceCents: { increment: amountCents },
+                    availableBalanceCents: { decrement: amountCents },
                 },
             });
+
+            if (walletUpdate.count === 0) {
+                // Fetch fresh wallet to show accurate error
+                const currentWallet = await tx.wallet.findUnique({ where: { userId } });
+                throw new Error(`Insufficient balance. Available: ${formatUSD(currentWallet?.availableBalanceCents || 0)}`);
+            }
 
             return payout;
         });
@@ -120,7 +130,7 @@ export class PayoutService {
             await tx.payout.update({
                 where: { id: payoutId },
                 data: {
-                    status: "REFUSED", // Using REFUSED per requirement (or REJECTED based on Schema, let's use REFUSED if schema supports it, which we added)
+                    status: "REFUSED", // Using REFUSED per requirement
                     processedAt: new Date(),
                     notes: reason,
                 },
@@ -130,8 +140,8 @@ export class PayoutService {
             await tx.wallet.update({
                 where: { userId: payout.userId },
                 data: {
-                    pendingBalanceCents: { decrement: Math.floor(payout.amountCents / 100) },
-                    availableBalanceCents: { increment: Math.floor(payout.amountCents / 100) },
+                    pendingBalanceCents: { decrement: payout.amountCents },
+                    availableBalanceCents: { increment: payout.amountCents },
                 },
             });
 
@@ -180,8 +190,8 @@ export class PayoutService {
             await tx.wallet.update({
                 where: { userId: payout.userId },
                 data: {
-                    pendingBalanceCents: { decrement: Math.floor(payout.amountCents / 100) },
-                    totalPaidOutCents: { increment: Math.floor(payout.amountCents / 100) },
+                    pendingBalanceCents: { decrement: payout.amountCents },
+                    totalPaidOutCents: { increment: payout.amountCents },
                 },
             });
 
@@ -261,7 +271,6 @@ export class PayoutService {
             }),
         ]);
 
-        // Transform to include calculated daily orders sum (orders on the requested day)
         // Transform to include calculated daily orders sum (orders on the requested day)
         const transformedPayouts = payouts.map((p: any) => {
             const requestDay = new Date(p.requestedAt);

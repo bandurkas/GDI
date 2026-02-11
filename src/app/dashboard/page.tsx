@@ -2,22 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { formatCurrency, formatUSD, formatCurrencyWithUSD, formatNumberInput, parseFormattedNumber, convertIDRtoUSD } from "@/lib/utils";
+import { formatCurrency, formatUSD, formatNumberInput, parseFormattedNumber, convertIDRToUSDCents } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardData {
+    exchangeRate: number;
+    cashbackPercentage: number;
     wallet: {
         availableBalanceCents: number;
         totalEarnedCents: number;
         pendingBalanceCents: number;
+        totalPaidOutCents: number;
+    };
+    calculatedStats: {
+        totalSalesIDR: number;
+        pendingPayoutsUSD: number;
+        totalPaidUSD: number;
+        calculatedAvailableUSD: number;
     };
     payouts: Array<{
         id: string;
         requestedAt: string;
         amountCents: number;
+        amountIDRCents?: number;
         status: string;
         receiptUrl?: string;
     }>;
@@ -34,8 +43,16 @@ interface DashboardData {
         status: string;
         items: Array<{
             productName: string;
+            quantity: number;
+            priceCents: number;
         }>;
     }>;
+    ordersMeta?: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
     totalBills: number;
 }
 
@@ -51,8 +68,8 @@ export default function DashboardPage() {
     const [payoutPage, setPayoutPage] = useState(1);
     const [payoutTotalPages, setPayoutTotalPages] = useState(1);
 
-    // Payout Form State
-    const [payoutAmount, setPayoutAmount] = useState<string>("");
+    // Payout Form State (USD)
+    const [payoutAmountUSD, setPayoutAmountUSD] = useState<string>("");
     const [payoutLoading, setPayoutLoading] = useState(false);
     const [payoutError, setPayoutError] = useState<string | null>(null);
     const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
@@ -73,7 +90,6 @@ export default function DashboardPage() {
         const targetOrdersPage = ordersPageOverride ?? page;
         const targetPayoutsPage = payoutsPageOverride ?? payoutPage;
 
-        // Only set loading on initial load, not page changes to avoid flash
         if (targetOrdersPage === 1 && targetPayoutsPage === 1 && !data) setLoading(true);
 
         const timestamp = new Date().getTime();
@@ -83,19 +99,8 @@ export default function DashboardPage() {
         });
         const json = await res.json();
 
-        // Calculate Total Bills (Total Spent) - Note: this might need adjustment if logic changes to partial fetch
-        // For now, total bills calculation based on partial fetched data is incorrect if we want LIFETIME total.
-        // Ideally backend should return this total separately. Assuming backend might return it later or we accept this limitation for now.
-        // Actually, let's keep it as is, but be aware.
-
-        // Correct approach: If json.totalBills is missing, we might only show sum of current page or 0.
-        // Let's assume for now we just show what we have or 0.
-
-        // UPDATE: json.orders is now paginated.
-        // We need to handle the new structure: json.orders (array) and json.ordersMeta.
-
+        // Orders processing
         const orders = json.orders || [];
-        // If meta exists, use it
         if (json.ordersMeta) {
             setTotalPages(json.ordersMeta.totalPages);
             setPage(json.ordersMeta.page);
@@ -106,15 +111,7 @@ export default function DashboardPage() {
             setPayoutPage(json.payoutsMeta.page);
         }
 
-        // For total bills, if we are paginating, we can't sum up simply on frontend unless backend returns it.
-        // Let's check `json.wallet.totalSpentCents`? Most likely not there yet. 
-        // We will just sum up visible orders for now or 0, or if backend returned a total somewhere.
-        // Actually, let's look at OrderService. It returns `orders` and `total`. 
-        // We might need to ask backend for "total spent" if that's critical. 
-        // For now, let's just use what we have.
-        const totalBills = orders.reduce((acc: number, order: { totalCents: number }) => acc + order.totalCents, 0);
-
-        setData({ ...json, orders, totalBills });
+        setData(json);
         setLoading(false);
     };
 
@@ -131,8 +128,12 @@ export default function DashboardPage() {
     };
 
     const handlePayoutInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatNumberInput(e.target.value);
-        setPayoutAmount(formatted);
+        // Simple number input for USD (allows decimals)
+        const val = e.target.value;
+        // Validate simpler regex for USD amount (e.g. 10.50)
+        if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) {
+            setPayoutAmountUSD(val);
+        }
         if (payoutError) setPayoutError(null);
     };
 
@@ -142,24 +143,24 @@ export default function DashboardPage() {
         setPayoutError(null);
         setPayoutSuccess(null);
 
-        const idrAmount = parseFormattedNumber(payoutAmount);
-        if (isNaN(idrAmount) || idrAmount <= 0) {
+        const amount = parseFloat(payoutAmountUSD);
+        if (isNaN(amount) || amount <= 0) {
             setPayoutError("Please enter a valid amount");
             setPayoutLoading(false);
             return;
         }
 
-        const cents = idrAmount * 100;
-        const MIN_CENTS = 100000000; // Rp 1,000,000
-        const MAX_CENTS = 10000000000; // Rp 100,000,000
-
-        if (cents < MIN_CENTS) {
-            setPayoutError(`Minimum withdrawal is Rp 1.000.000 (~$62.50)`);
+        const cents = Math.floor(amount * 100);
+        // Min payout $10
+        if (cents < 1000) {
+            setPayoutError("Minimum withdrawal is $10.00");
             setPayoutLoading(false);
             return;
         }
-        if (cents > MAX_CENTS) {
-            setPayoutError(`Maximum withdrawal is Rp 100.000.000 (~$6,250)`);
+
+        // Check available balance (USD Cents)
+        if (cents > (data?.wallet.availableBalanceCents || 0)) {
+            setPayoutError("Insufficient balance");
             setPayoutLoading(false);
             return;
         }
@@ -168,7 +169,7 @@ export default function DashboardPage() {
             const res = await fetch("/api/payouts/request", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ amountCents: cents }),
+                body: JSON.stringify({ amountCents: cents }), // Sending USD Cents
             });
 
             const json = await res.json();
@@ -178,8 +179,8 @@ export default function DashboardPage() {
             }
 
             setPayoutSuccess("Payout requested successfully!");
-            setPayoutAmount("");
-            fetchDashboard(page); // Refresh data
+            setPayoutAmountUSD("");
+            fetchDashboard(page);
         } catch (err: any) {
             setPayoutError(err.message);
         } finally {
@@ -193,319 +194,333 @@ export default function DashboardPage() {
         </div>
     );
 
+    const rate = data?.exchangeRate || 16000;
+    const commPct = data?.cashbackPercentage || 80.0;
 
+    // Use aggregated stats from API for strict accuracy
+    const activePayoutsCents = data?.calculatedStats?.pendingPayoutsUSD || 0;
 
     return (
-        <div className="space-y-10 py-8 px-4 sm:px-6 max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.dashboard.title}</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">{dictionary.dashboard.welcome} <span className="font-bold text-indigo-600 dark:text-indigo-400 break-all">{session?.user?.email}</span></p>
+        <div className="space-y-10 py-8 px-4 sm:px-6 max-w-7xl mx-auto">
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{dictionary.dashboard.title}</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">{dictionary.dashboard.welcome} <span className="font-bold text-indigo-600 dark:text-indigo-400">{session?.user?.email}</span></p>
+            </div>
+
+            {/* 1. Summary Section (Top Row) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {/* Card 1: Total Sales (IDR Only) */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Sales</p>
+                            <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
+                                {formatCurrency((data?.calculatedStats?.totalSalesIDR || 0))}
+                            </h3>
+                        </div>
+                        <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 dark:text-slate-400">
+                            <Package size={20} />
+                        </div>
+                    </div>
+                    <p className="text-xs text-slate-400 font-medium">Customer payments (IDR)</p>
                 </div>
 
-                {data?.wallet && (
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <div className="bg-white dark:bg-slate-900 px-6 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-                            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-600 dark:text-indigo-400">
-                                <Wallet size={24} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{dictionary.dashboard.cashback}</p>
-                                <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
-                                    {formatCurrency((data.wallet.availableBalanceCents || 0) * 100)}
-                                    <span className="text-sm text-slate-400 font-medium ml-2">
-                                        (~{formatUSD((data.wallet.availableBalanceCents || 0) * 100)})
-                                    </span>
-                                </p>
-                                {(data.wallet.pendingBalanceCents || 0) > 0 && (
-                                    <p className="text-xs font-bold text-amber-500 mt-1">
-                                        + {formatCurrency(data.wallet.pendingBalanceCents * 100)}
-                                        <span className="opacity-75 ml-1">
-                                            (~{formatUSD(data.wallet.pendingBalanceCents * 100)})
-                                        </span> Pending
-                                    </p>
-                                )}
+                {/* Card 2: Your Commission (USD Only - Primary) */}
+                <div className="bg-indigo-600 rounded-2xl p-6 border border-indigo-500 shadow-xl shadow-indigo-200/50 dark:shadow-none relative overflow-hidden text-white group">
+                    <div className="absolute top-0 right-0 p-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-white/20 transition-all"></div>
+
+                    <div className="relative">
+                        <div className="flex justify-between items-start mb-2">
+                            <p className="text-xs font-bold text-indigo-200 uppercase tracking-widest">Available Commission</p>
+                            <div className="p-2 bg-white/20 rounded-lg text-white">
+                                <DollarSign size={20} />
                             </div>
                         </div>
-
-                        <div className="bg-emerald-50 dark:bg-emerald-900/10 px-6 py-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/20 shadow-sm flex items-center gap-4">
-                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
-                                <DollarSign size={24} />
+                        <h3 className="text-4xl font-black tracking-tight mb-1">
+                            {formatUSD((data?.calculatedStats?.calculatedAvailableUSD || 0))}
+                        </h3>
+                        <div className="flex gap-4 mt-4 text-sm font-medium text-indigo-100">
+                            <div>
+                                <span className="opacity-70 block text-[10px] uppercase">Total Earned</span>
+                                {formatUSD(data?.wallet.totalEarnedCents || 0)}
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500 uppercase tracking-widest">{dictionary.dashboard.totalBills}</p>
-                                <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight tabular-nums">
-                                    {formatCurrency((data.totalBills || 0) * 100)}
-                                    <span className="text-sm text-emerald-600/60 dark:text-emerald-500/60 font-medium ml-2">
-                                        (~{formatUSD((data.totalBills || 0) * 100)})
-                                    </span>
-                                </p>
+                                <span className="opacity-70 block text-[10px] uppercase">Pending</span>
+                                {formatUSD(data?.calculatedStats?.pendingPayoutsUSD || 0)}
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
+
+                {/* Card 3: Payout Overview (USD Only) */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Payout Overview</p>
+                            <h3 className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                                {formatUSD(data?.calculatedStats?.totalPaidUSD || 0)}
+                            </h3>
+                            <p className="text-xs text-slate-400 font-medium">Total Paid (USD)</p>
+                        </div>
+                        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle size={20} />
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm">
+                        <span className="text-slate-500">Processing</span>
+                        <span className="font-bold text-amber-500">{formatUSD(data?.calculatedStats?.pendingPayoutsUSD || 0)}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. Commission Breakdown (USD Only) */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <TrendingUp size={18} className="text-indigo-600" />
+                        Commission Breakdown (USD)
+                    </h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
+                            <tr>
+                                <th className="px-6 py-3">Product</th>
+                                <th className="px-6 py-3 text-right">Units Sold</th>
+                                <th className="px-6 py-3 text-right">Comm. / Unit (USD)</th>
+                                <th className="px-6 py-3 text-right">Total Comm. (USD)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {data?.orders.flatMap(order =>
+                                order.items.map((item, idx) => {
+                                    // Calculate Commission for this item
+                                    // Item Price (IDR) / Rate -> USD Price
+                                    // USD Price * 100 -> USD Cents
+                                    // USD Cents * Comm% -> Comm Per Unit (Cents)
+                                    // Strict Calc: Total Item Value (IDR) -> USD Cents -> Comm %
+                                    const itemTotalIDR = item.priceCents * item.quantity;
+                                    const itemTotalUSDCents = convertIDRToUSDCents(itemTotalIDR, rate);
+                                    const totalComm = Math.floor(itemTotalUSDCents * (commPct / 100)); // Total for line item
+                                    const commPerUnit = totalComm / item.quantity; // Est. per unit
+
+
+                                    return (
+                                        <tr key={`${order.id}-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="px-6 py-3 font-medium text-slate-900 dark:text-white">{item.productName}</td>
+                                            <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400">{item.quantity}</td>
+                                            <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400 tabular-nums">{formatUSD(commPerUnit)}</td>
+                                            <td className="px-6 py-3 text-right font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">{formatUSD(totalComm)}</td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                            {(!data?.orders || data.orders.length === 0) && (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-slate-400">No sales yet</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-                {/* Left Column: Actions */}
+                {/* Left Column: Withdraw (USD) */}
                 <div className="lg:col-span-1 space-y-8">
-                    {/* Request Payout Card */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-32 bg-indigo-50 dark:bg-indigo-950/20 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30"></div>
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden">
+                        <div className="flex items-center gap-3 mb-6">
+                            <ArrowUpRight className="text-indigo-600 dark:text-indigo-400" size={24} />
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white">Withdraw Funds</h3>
+                        </div>
 
-                        <div className="relative">
-                            <div className="flex items-center gap-3 mb-6">
-                                <ArrowUpRight className="text-indigo-600 dark:text-indigo-400" size={24} />
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.withdrawFunds}</h3>
+                        <form onSubmit={handleRequestPayout} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Amount (USD)</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                    <input
+                                        type="text"
+                                        placeholder="100.00"
+                                        value={payoutAmountUSD}
+                                        onChange={handlePayoutInput}
+                                        className="w-full pl-10 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all tabular-nums"
+                                    />
+                                </div>
+                                <div className="mt-3 text-[10px] text-slate-400 space-y-1">
+                                    <p>Available: <span className="font-bold text-slate-700 dark:text-slate-300">{formatUSD(data?.wallet.availableBalanceCents || 0)}</span></p>
+                                    <p>Converted to IDR at payout using official exchange rate.</p>
+                                    <p className="opacity-70">Current Rate: 1 USD ≈ {formatCurrency(rate * 100).replace("Rp", "Rp ")}</p>
+                                </div>
                             </div>
 
-                            <form onSubmit={handleRequestPayout} className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{dictionary.dashboard.amountLabel}</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Rp</span>
-                                        <input
-                                            type="text"
-                                            placeholder="100.000"
-                                            value={payoutAmount}
-                                            onChange={handlePayoutInput}
-                                            className="w-full pl-12 pr-20 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                                        />
-                                        {payoutAmount && parseFormattedNumber(payoutAmount) > 0 && (
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium">
-                                                ~${convertIDRtoUSD(parseFormattedNumber(payoutAmount)).toFixed(2)}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium">Minimum: Rp 1.000.000 (~$62.50) • Maximum: Rp 100.000.000 (~$6,250)</p>
+                            {payoutError && (
+                                <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-xl flex items-start gap-2">
+                                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                                    <span>{payoutError}</span>
                                 </div>
+                            )}
 
-                                {payoutError && (
-                                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl flex items-start gap-3">
-                                        <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={16} />
-                                        <p className="text-xs font-bold text-red-600 dark:text-red-400">{payoutError}</p>
-                                    </div>
-                                )}
+                            {payoutSuccess && (
+                                <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm rounded-xl flex items-start gap-2">
+                                    <CheckCircle size={16} className="mt-0.5 shrink-0" />
+                                    <span>{payoutSuccess}</span>
+                                </div>
+                            )}
 
-                                {payoutSuccess && (
-                                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl flex items-start gap-3">
-                                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={16} />
-                                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{payoutSuccess}</p>
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={payoutLoading}
-                                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center"
-                                >
-                                    {payoutLoading ? dictionary.dashboard.processing : dictionary.dashboard.requestPayout}
-                                </button>
-                            </form>
-                        </div>
+                            <button
+                                type="submit"
+                                disabled={payoutLoading || (data?.wallet.availableBalanceCents || 0) < 1000}
+                                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200/50 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                {payoutLoading ? "Processing..." : "Request Payout"}
+                            </button>
+                        </form>
                     </div>
                 </div>
 
-                {/* Right Column: History & Orders */}
+                {/* Right Column: Payout History (USD) & Sales List (IDR) */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Payout History */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
-                        <div className="flex items-center gap-3 mb-8">
-                            <Clock className="text-indigo-600 dark:text-indigo-400" size={24} />
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.payoutHistory}</h3>
+                    {/* Payout History (USD) */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-900 dark:text-white">Payout History (USD)</h3>
                         </div>
-
-                        {!data?.payouts || data.payouts.length === 0 ? (
-                            <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                                <p className="text-slate-400 dark:text-slate-500 font-medium">{dictionary.dashboard.noPayouts}</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-800">
-                                            <th className="text-left text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pl-4">{dictionary.dashboard.tableDate}</th>
-                                            <th className="text-right text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">{dictionary.dashboard.tableAmount}</th>
-                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4">{dictionary.dashboard.tableStatus}</th>
-                                            <th className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-4 pr-4">{dictionary.dashboard.tableReceipt}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                        {data.payouts.map((payout) => (
-                                            <tr key={payout.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                <td className="py-4 pl-4 text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                    {new Date(payout.requestedAt).toLocaleDateString()}
-                                                </td>
-                                                <td className="py-4 text-right text-sm font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
-                                                    {formatCurrency(payout.amountCents * 100)}
-                                                </td>
-                                                <td className="py-4 text-center">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${payout.status === "PAID" ? "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/20" :
-                                                        payout.status === "Processing" ? "bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/20" :
-                                                            "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/20"
-                                                        }`}>
-                                                        {payout.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-4 pr-4 text-center">
-                                                    {payout.receiptUrl ? (
-                                                        <a href={payout.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium text-xs flex items-center justify-center gap-1">
-                                                            View <ExternalLink size={12} />
-                                                        </a>
-                                                    ) : (
-                                                        <span className="text-slate-300 dark:text-slate-600">-</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-
-                        {/* Payout Pagination Controls */}
-                        {data?.payoutsMeta && data.payoutsMeta.totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-6 px-2">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {dictionary.dashboard.page} {payoutPage} {dictionary.dashboard.of} {payoutTotalPages}
-                                </span>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handlePayoutPageChange(payoutPage - 1)}
-                                        disabled={payoutPage === 1}
-                                        className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
-                                    >
-                                        <ChevronLeft size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => handlePayoutPageChange(payoutPage + 1)}
-                                        disabled={payoutPage === payoutTotalPages}
-                                        className="p-1.5 border border-slate-200 dark:border-slate-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400"
-                                    >
-                                        <ChevronRight size={16} />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Purchased Services (Full Width) */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden relative">
-                {/* Decorative background elements specific to dark theme card */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-                <div className="flex items-center gap-3 mb-8 relative z-10">
-                    <Package className="text-indigo-600 dark:text-indigo-400" size={24} />
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white">{dictionary.dashboard.purchasedServices}</h3>
-                </div>
-
-                {!data?.orders || data.orders.length === 0 ? (
-                    <div className="text-center py-12 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-slate-800 relative z-10">
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">{dictionary.dashboard.noServices}</p>
-                        <Link href="/products" className="inline-block mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-full transition-all">
-                            {dictionary.common.browseServices}
-                        </Link>
-                    </div>
-                ) : (
-                    <>
-                        <div className="space-y-4 relative z-10">
-                            <div className="hidden sm:grid grid-cols-12 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-4 pb-2">
-                                <div className="col-span-6">Service</div>
-                                <div className="col-span-3">Date</div>
-                                <div className="col-span-2 text-right">Total</div>
-                                <div className="col-span-1 text-center">Action</div>
-                            </div>
-
-                            <div className="space-y-4 sm:space-y-2">
-                                {data.orders.map((order) => (
-                                    <div key={order.id} className="relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center p-5 sm:p-4 bg-slate-50 dark:bg-slate-950/50 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all group gap-4 sm:gap-0">
-
-                                        {/* Mobile: Top Row (Service + Amount) | Desktop: Service Col */}
-                                        <div className="w-full sm:col-span-6">
-                                            <div className="flex justify-between items-start gap-4 mb-1 sm:mb-0">
-                                                <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                                                    {order.items[0]?.productName || dictionary.common.unknownService}
-                                                    {order.items.length > 1 && <span className="text-slate-500 dark:text-slate-400 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
-                                                </p>
-                                                {/* Mobile Amount */}
-                                                <div className="sm:hidden">
-                                                    <p className="text-sm font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
-                                                        {formatCurrency(order.totalCents * 100)}
-                                                    </p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                        ~{formatUSD(order.totalCents * 100)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400">Order ID: #{order.id.slice(-8)}</p>
-                                        </div>
-
-                                        {/* Desktop: Date Col */}
-                                        <div className="w-full sm:col-span-3 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                                            <Clock size={12} className="text-slate-400 dark:text-slate-500 hidden sm:block" />
-                                            <span className="sm:hidden text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mr-2">Date:</span>
-                                            {new Date(order.createdAt).toLocaleDateString()}
-                                        </div>
-
-                                        {/* Mobile: Status | Desktop: Amount + Status */}
-                                        <div className="w-full sm:col-span-2 flex items-center justify-between sm:block sm:text-right">
-                                            {/* Desktop Amount */}
-                                            <div className="hidden sm:block">
-                                                <p className="text-sm font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
-                                                    {formatCurrency(order.totalCents * 100)}
-                                                </p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                                    ~{formatUSD(order.totalCents * 100)}
-                                                </p>
-                                            </div>
-
-                                            <div className="mt-0 sm:mt-1 inline-flex">
-                                                <span className={`px-2 py-1 sm:px-1.5 sm:py-0.5 rounded text-[10px] sm:text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED"
-                                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/20"
-                                                    : order.status === "PENDING"
-                                                        ? "bg-blue-500/20 text-blue-400 border-blue-500/20"
-                                                        : "bg-slate-500/20 text-slate-400 border-slate-500/20"
-                                                    }`}>
-                                                    {order.status || dictionary.common.completed}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
+                                    <tr>
+                                        <th className="px-6 py-3 whitespace-nowrap">Date</th>
+                                        <th className="px-6 py-3 whitespace-nowrap">Amount (USD)</th>
+                                        <th className="px-6 py-3 whitespace-nowrap">Status</th>
+                                        <th className="px-6 py-3 whitespace-nowrap text-right">Receipt</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {data?.payouts.map((payout) => (
+                                        <tr key={payout.id}>
+                                            <td className="px-6 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                                {new Date(payout.requestedAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-3 font-bold text-slate-900 dark:text-white whitespace-nowrap tabular-nums">
+                                                {formatUSD(payout.amountCents)}
+                                            </td>
+                                            <td className="px-6 py-3 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                                                    ${payout.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                                        payout.status === 'PROCESSING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                                    {payout.status.toLowerCase()}
                                                 </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Desktop: Action | Mobile: Absolute/Hidden */}
-                                        <div className="sm:col-span-1 flex justify-center hidden sm:flex">
-                                            <button className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                                <ExternalLink size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                            </td>
+                                            <td className="px-6 py-3 whitespace-nowrap text-right">
+                                                {payout.receiptUrl && (
+                                                    <a href={payout.receiptUrl} target="_blank" rel="noreferrer" className="text-indigo-600 hover:text-indigo-700 text-xs font-medium inline-flex items-center gap-1">
+                                                        View <ExternalLink size={12} />
+                                                    </a>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {(!data?.payouts || data.payouts.length === 0) && (
+                                        <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">No payout history</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination for Payouts */}
+                        {payoutTotalPages > 1 && (
+                            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-center gap-2">
+                                <button
+                                    onClick={() => handlePayoutPageChange(payoutPage - 1)}
+                                    disabled={payoutPage === 1}
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="text-xs font-medium py-1">Page {payoutPage} of {payoutTotalPages}</span>
+                                <button
+                                    onClick={() => handlePayoutPageChange(payoutPage + 1)}
+                                    disabled={payoutPage === payoutTotalPages}
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Pagination Controls */}
-                        <div className="flex items-center justify-between mt-6 px-2 relative z-10">
-                            <button
-                                onClick={() => handlePageChange(page - 1)}
-                                disabled={page === 1}
-                                className="text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors flex items-center gap-1"
-                            >
-                                ← {dictionary.dashboard.page}
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                                {dictionary.dashboard.page} {page} {dictionary.dashboard.of} {totalPages}
-                            </span>
-                            <button
-                                onClick={() => handlePageChange(page + 1)}
-                                disabled={page === totalPages}
-                                className="text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors flex items-center gap-1"
-                            >
-                                {dictionary.dashboard.page} →
-                            </button>
+                    {/* Purchased Services (IDR Only) */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950/50">
+                            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Package size={18} className="text-slate-400" />
+                                {dictionary.dashboard.purchasedServices}
+                            </h3>
                         </div>
-                    </>
-                )}
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th className="px-6 py-3">Product / Order ID</th>
+                                    <th className="px-6 py-3">Date</th>
+                                    <th className="px-6 py-3 text-right">Paid (IDR)</th>
+                                    <th className="px-6 py-3 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {data?.orders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-6 py-3">
+                                            <div className="font-medium text-slate-900 dark:text-white">
+                                                {order.items.map(i => i.productName).join(", ")}
+                                            </div>
+                                            <div className="text-xs text-slate-500 font-mono mt-0.5">#{order.id.slice(-8)}</div>
+                                        </td>
+                                        <td className="px-6 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                            {new Date(order.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-3 text-right font-medium text-slate-900 dark:text-white tabular-nums">
+                                            {formatCurrency(order.totalCents)} {/* IDR Cents */}
+                                        </td>
+                                        <td className="px-6 py-3 text-right">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                                                ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                                    order.status === 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                                                        'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                                {order.status.toLowerCase()}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {(!data?.orders || data.orders.length === 0) && (
+                                    <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">No orders found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                        {/* Pagination for Orders */}
+                        {totalPages > 1 && (
+                            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-center gap-2">
+                                <button
+                                    onClick={() => handlePageChange(page - 1)}
+                                    disabled={page === 1}
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="text-xs font-medium py-1">Page {page} of {totalPages}</span>
+                                <button
+                                    onClick={() => handlePageChange(page + 1)}
+                                    disabled={page === totalPages}
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

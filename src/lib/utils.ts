@@ -1,69 +1,75 @@
-export const formatCurrency = (amountInCents: number) => {
-    // Convert cents to whole units
-    const units = amountInCents / 100;
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
+// Classname merger (Standard)
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
+
+// --- CURRENCY FORMATTERS ---
+
+/**
+ * Format IDR (Indonesian Rupiah)
+ * Input: IDR Units (e.g. 50000)
+ * Output: "Rp 50.000" (No cents)
+ */
+export function formatCurrency(amountIDR: number): string {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(units);
-};
+        maximumFractionDigits: 0,
+    }).format(amountIDR);
+}
 
-export const formatUSD = (amountInCents: number) => {
-    const IDR_TO_USD_RATE = 16000;
-    // content is in cents, so we divide by 100 to get IDR units
-    const amountIDR = amountInCents / 100;
-    const amountUSD = amountIDR / IDR_TO_USD_RATE;
-
+/**
+ * Format USD (US Dollar)
+ * Input: USD Cents (e.g. 1000 -> $10.00)
+ * Output: "$10.00" (With cents)
+ */
+export function formatUSD(amountUSDCents: number): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(amountUSD);
-};
+        maximumFractionDigits: 2,
+    }).format(amountUSDCents / 100);
+}
+
+// --- CONVERSION HELPERS ---
 
 /**
- * Format currency with USD estimate
- * @param amountInCents - Amount in cents (e.g., 10000000 = Rp 100,000)
- * @returns Formatted string like "Rp 100.000 (~$6.25)"
+ * Convert USD Cents to IDR Units
+ * Input: USD Cents (e.g. 1000)
+ * Output: IDR Units (e.g. 160000)
  */
-export const formatCurrencyWithUSD = (amountInCents: number): string => {
-    const idr = formatCurrency(amountInCents);
-    const usd = formatUSD(amountInCents);
-    return `${idr} (~${usd})`;
-};
-
-/**
- * Format number input with thousand separators (Indonesian style)
- * @param value - Raw input string
- * @returns Formatted string with dots as thousand separators
- */
-export function formatNumberInput(value: string): string {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Add thousand separators (dots for Indonesian format)
-    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+export function convertUSDCentsToIDR(usdCents: number, rate = 16000): number {
+    // Cents / 100 = USD Units. Units * Rate = IDR.
+    return Math.round((usdCents / 100) * rate);
 }
 
 /**
- * Parse formatted number back to integer
- * @param value - Formatted string like "100.000"
- * @returns Integer like 100000
+ * Convert IDR Units to USD Cents
+ * Input: IDR Units (e.g. 16000)
+ * Output: USD Cents (e.g. 100)
  */
+export function convertIDRToUSDCents(idrAmount: number, rate = 16000): number {
+    // IDR / Rate = USD Units. USD Units * 100 = Cents.
+    return Math.floor((idrAmount / rate) * 100);
+}
+
+// --- INPUT HELPERS ---
+
+export function formatNumberInput(value: string): string {
+    // Remove non-digits
+    return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 export function parseFormattedNumber(value: string): number {
     const cleaned = value.replace(/\./g, '');
     return parseInt(cleaned, 10) || 0;
 }
 
-/**
- * Convert IDR to USD (approximate)
- * @param idrAmount - Amount in IDR (not cents)
- * @returns USD amount as number
- */
-export function convertIDRtoUSD(idrAmount: number): number {
-    const IDR_TO_USD_RATE = 16000;
-    return idrAmount / IDR_TO_USD_RATE;
-}
+// Backward compatibility (Deprecated, map to new)
+export const convertUSDtoIDR = (usdUnits: number, rate = 16000) => Math.round(usdUnits * rate);
+export const convertIDRtoUSD = (idrUnits: number, rate = 16000) => idrUnits / rate;

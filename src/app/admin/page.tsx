@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight, Filter, ArrowUp, ArrowDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, convertUSDCentsToIDR } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { Clock } from "lucide-react";
 
@@ -72,7 +72,7 @@ function StatusUpdateModal({ isOpen, onClose, payout, onUpdate }: { isOpen: bool
                         </div>
                         <div className="text-right">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 block">{dictionary.admin.amount}</span>
-                            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(payout.amountCents * 100)}</span>
+                            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(convertUSDCentsToIDR(payout.amountCents))}</span>
                         </div>
                     </div>
 
@@ -684,7 +684,7 @@ export default function AdminPage() {
                                 <ShoppingCart size={16} className="text-indigo-500/70 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
                             </div>
                             <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{dailyStats.todayOrdersCount}</p>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">{dictionary.admin.amount}: {formatCurrency((dailyStats.todayOrdersSum || 0) * 100)}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">{dictionary.admin.amount}: {formatCurrency(dailyStats.todayOrdersSum || 0)}</p>
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:border-blue-100 dark:hover:border-blue-900/50 group">
@@ -724,7 +724,7 @@ export default function AdminPage() {
                                 <p className="text-[10px] uppercase tracking-widest font-extrabold text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Processed</p>
                                 <CheckCircle2 size={16} className="text-emerald-500/70 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                             </div>
-                            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{formatCurrency((dailyStats.todayCashbackPaid || 0) * 100)}</p>
+                            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{formatCurrency(convertUSDCentsToIDR(dailyStats.todayCashbackPaid || 0))}</p>
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">Paid Today</p>
                         </div>
                     </div>
@@ -868,9 +868,9 @@ export default function AdminPage() {
                                                         <div className="text-xs text-slate-500 dark:text-slate-400 truncate">ID: {item.user?.id?.substring(0, 8)}...</div>
                                                     </td>
                                                     <td className="hidden lg:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                                        {formatCurrency((item.dayOrdersSum || 0) * 100)}
+                                                        {formatCurrency(item.dayOrdersSum || 0)}
                                                     </td>
-                                                    <td className="px-4 py-4 text-right font-medium text-slate-900 dark:text-white">{formatCurrency(item.amountCents * 100)}</td>
+                                                    <td className="px-4 py-4 text-right font-medium text-slate-900 dark:text-white">{formatCurrency(convertUSDCentsToIDR(item.amountCents))}</td>
                                                     <td className="px-4 py-4 text-center">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
                                                             item.status === 'REQUESTED' ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' :
@@ -932,9 +932,9 @@ export default function AdminPage() {
                                                     </td>
                                                     <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-600 dark:text-slate-400">{item.role}</td>
                                                     <td className="px-4 py-4 text-right font-medium text-indigo-600 dark:text-indigo-400">{item.cashbackPercentage}%</td>
-                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(item.totalSpentCents * 100)}</td>
-                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(item.totalEarnedCents * 100)}</td>
-                                                    <td className="px-4 py-4 text-right font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(item.availableBalanceCents * 100)}</td>
+                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(item.totalSpentCents)}</td>
+                                                    <td className="hidden lg:table-cell px-4 py-4 text-right text-sm text-slate-600 dark:text-slate-400">{formatCurrency(convertUSDCentsToIDR(item.totalEarnedCents))}</td>
+                                                    <td className="px-4 py-4 text-right font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(convertUSDCentsToIDR(item.availableBalanceCents))}</td>
                                                     <td className="px-4 py-4 text-right">
                                                         <div className="relative inline-block text-left">
                                                             <button
