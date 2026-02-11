@@ -294,29 +294,31 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {data?.orders.flatMap(order =>
-                                order.items.map((item, idx) => {
-                                    // Calculate Commission for this item
-                                    // Item Price (IDR) / Rate -> USD Price
-                                    // USD Price * 100 -> USD Cents
-                                    // USD Cents * Comm% -> Comm Per Unit (Cents)
-                                    // Strict Calc: Total Item Value (IDR) -> USD Cents -> Comm %
-                                    const itemTotalIDR = item.priceCents * item.quantity;
-                                    const itemTotalUSDCents = convertIDRToUSDCents(itemTotalIDR, rate);
-                                    const totalComm = Math.floor(itemTotalUSDCents * (commPct / 100)); // Total for line item
-                                    const commPerUnit = totalComm / item.quantity; // Est. per unit
+                            {data?.orders
+                                .filter(order => order.status === "COMPLETED")
+                                .flatMap(order =>
+                                    order.items.map((item, idx) => {
+                                        // Calculate Commission for this item
+                                        // Item Price (IDR) / Rate -> USD Price
+                                        // USD Price * 100 -> USD Cents
+                                        // USD Cents * Comm% -> Comm Per Unit (Cents)
+                                        // Strict Calc: Total Item Value (IDR) -> USD Cents -> Comm %
+                                        const itemTotalIDR = item.priceCents * item.quantity;
+                                        const itemTotalUSDCents = convertIDRToUSDCents(itemTotalIDR, rate);
+                                        const totalComm = Math.floor(itemTotalUSDCents * (commPct / 100)); // Total for line item
+                                        const commPerUnit = totalComm / item.quantity; // Est. per unit
 
 
-                                    return (
-                                        <tr key={`${order.id}-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-6 py-3 font-medium text-slate-900 dark:text-white">{item.productName}</td>
-                                            <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400">{item.quantity}</td>
-                                            <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400 tabular-nums">{formatUSD(commPerUnit)}</td>
-                                            <td className="px-6 py-3 text-right font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">{formatUSD(totalComm)}</td>
-                                        </tr>
-                                    );
-                                })
-                            )}
+                                        return (
+                                            <tr key={`${order.id}-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                <td className="px-6 py-3 font-medium text-slate-900 dark:text-white">{item.productName}</td>
+                                                <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400">{item.quantity}</td>
+                                                <td className="px-6 py-3 text-right text-slate-600 dark:text-slate-400 tabular-nums">{formatUSD(commPerUnit)}</td>
+                                                <td className="px-6 py-3 text-right font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">{formatUSD(totalComm)}</td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             {(!data?.orders || data.orders.length === 0) && (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-8 text-center text-slate-400">No sales yet</td>
