@@ -25,7 +25,7 @@ echo "🗄️  Syncing database schema..."
 npx prisma db push
 
 echo "🔍 Running production data sanity check..."
-npx ts-node scripts/prod-sanity-check.ts
+node scripts/prod-sanity-check.js
 
 echo "🏗️  Building production bundle..."
 npm run build
