@@ -89,6 +89,7 @@ export class UserService {
                     _count: { orders: stats?._count || 0 },
                     totalSpentCents: stats?._sum.totalCents || 0,
                     totalEarnedCents: u.wallet?.totalEarnedCents || 0,
+                    totalPaidOutCents: u.wallet?.totalPaidOutCents || 0,
                     availableBalanceCents: u.wallet?.availableBalanceCents || 0,
                     cashbackPercentage: u.cashbackPercentage ?? 80.0,
                     wallet: u.wallet // Keep wallet for consistency if needed
@@ -116,6 +117,7 @@ export class UserService {
             else if (sortBy === 'cashbackPercentage') orderBy.push({ cashbackPercentage: sortDir });
             else if (sortBy === 'balance') orderBy.push({ wallet: { availableBalanceCents: sortDir } });
             else if (sortBy === 'earned') orderBy.push({ wallet: { totalEarnedCents: sortDir } });
+            else if (sortBy === 'paid') orderBy.push({ wallet: { totalPaidOutCents: sortDir } });
         }
         // Fallback or ensure createdAt is used if nothing else
         if (orderBy.length === 0) orderBy.push({ createdAt: 'desc' });
@@ -168,6 +170,7 @@ export class UserService {
                 },
                 totalSpentCents: stats?._sum.totalCents || 0,
                 totalEarnedCents: user.wallet?.totalEarnedCents || 0,
+                totalPaidOutCents: user.wallet?.totalPaidOutCents || 0,
                 availableBalanceCents: user.wallet?.availableBalanceCents || 0,
                 cashbackPercentage: user.cashbackPercentage ?? 80.0,
             };
