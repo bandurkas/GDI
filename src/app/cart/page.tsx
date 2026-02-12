@@ -150,8 +150,6 @@ export default function CartPage() {
     );
 
     const totalCents = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
-    const userPercentage = (session?.user as any)?.cashbackPercentage ?? 80.0;
-    const cashbackCents = Math.floor(totalCents * (userPercentage / 100));
 
     return (
         <div className="max-w-4xl mx-auto py-8">
@@ -197,8 +195,8 @@ export default function CartPage() {
                                     <p className="text-sm text-slate-500 dark:text-slate-400">{dictionary.cart.quantity}: {item.quantity}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency((item.product.priceCents * item.quantity) * 100)}</p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{formatCurrency(item.product.priceCents * 100)} {dictionary.cart.each}</p>
+                                    <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency(item.product.priceCents * item.quantity)}</p>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{formatCurrency(item.product.priceCents)} {dictionary.cart.each}</p>
                                 </div>
                             </div>
                         ))}
@@ -210,7 +208,7 @@ export default function CartPage() {
                             <div className="space-y-4 mb-6">
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400 text-sm font-medium">
                                     <span>{dictionary.cart.subtotal}</span>
-                                    <span className="tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(totalCents * 100)}</span>
+                                    <span className="tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(totalCents)}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400 text-sm font-medium">
                                     <span>{dictionary.cart.tax}</span>
@@ -218,17 +216,11 @@ export default function CartPage() {
                                 </div>
                                 <div className="pt-4 border-t border-indigo-100 dark:border-white/10 flex justify-between items-baseline">
                                     <span className="font-bold text-slate-900 dark:text-white text-lg">{dictionary.cart.total}</span>
-                                    <span className="font-bold text-indigo-600 dark:text-indigo-400 text-xl tracking-tighter tabular-nums">{formatCurrency(totalCents * 100)}</span>
+                                    <span className="font-bold text-indigo-600 dark:text-indigo-400 text-xl tracking-tighter tabular-nums">{formatCurrency(totalCents)}</span>
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/20 mb-8">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{dictionary.cart.estimatedCashback}:</span>
-                                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">{formatCurrency(cashbackCents * 100)}</span>
-                                </div>
-                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% {dictionary.cart.instantReward}</p>
-                            </div>
+
 
                             <div className="flex items-start gap-3 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
                                 <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? "bg-indigo-600 border-indigo-600" : "border-slate-300 dark:border-white/20"}`}>
