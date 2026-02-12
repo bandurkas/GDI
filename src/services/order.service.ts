@@ -42,10 +42,8 @@ export class OrderService {
                 },
             });
 
-            // 4. Clear Cart
-            await tx.cartItem.deleteMany({
-                where: { cartId: cart.id },
-            });
+            // 4. Clear Cart - REMOVED from here to keep cart intact if payment is abandoned
+            // It will now be cleared in completeOrder upon successful payment.
 
             return order;
         });
@@ -111,6 +109,18 @@ export class OrderService {
                 data: { status: "COMPLETED" },
             });
             console.log(`[OrderService] Order status updated to COMPLETED`);
+
+            // 1.5. Clear User's Cart now that payment is confirmed
+            const cart = await tx.cart.findUnique({
+                where: { userId: order.userId },
+                select: { id: true },
+            });
+            if (cart) {
+                await tx.cartItem.deleteMany({
+                    where: { cartId: cart.id },
+                });
+                console.log(`[OrderService] Cart cleared for user: ${order.userId}`);
+            }
 
             // 2. Create PENDING Cashback Transaction (USD)
             const user = await tx.user.findUnique({ where: { id: order.userId } });
