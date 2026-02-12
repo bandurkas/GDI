@@ -69,4 +69,16 @@ export class CartService {
         });
         return cart?._count.items ?? 0;
     }
+
+    static async removeProduct(userId: string, productId: string) {
+        const cart = await prisma.cart.findUnique({ where: { userId } });
+        if (cart) {
+            await prisma.cartItem.deleteMany({
+                where: {
+                    cartId: cart.id,
+                    productId: productId
+                }
+            });
+        }
+    }
 }

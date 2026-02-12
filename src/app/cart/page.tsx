@@ -82,6 +82,25 @@ export default function CartPage() {
         fetchCart();
     };
 
+    const removeItem = async (productId: string) => {
+        if (status === "authenticated") {
+            try {
+                const res = await fetch(`/api/cart/${productId}`, { method: "DELETE" });
+                if (!res.ok) throw new Error("Failed to remove item");
+            } catch (error) {
+                console.error("Error removing item:", error);
+                toast.error("Failed to remove item");
+                return;
+            }
+        } else {
+            const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+            const updatedCart = localCart.filter((item: any) => item.productId !== productId);
+            localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
+        }
+        await refreshCart();
+        fetchCart();
+    };
+
     const initiateCheckout = async (guestEmail?: string, guestName?: string) => {
         setPaying(true);
         try {
@@ -193,6 +212,12 @@ export default function CartPage() {
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">{dictionary.cart.quantity}: {item.quantity}</p>
+                                    <button
+                                        onClick={() => removeItem(item.product.id)}
+                                        className="text-xs font-semibold text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:underline mt-2 flex items-center gap-1 transition-colors"
+                                    >
+                                        <Trash2 size={12} /> Remove
+                                    </button>
                                 </div>
                                 <div className="text-right">
                                     <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency(item.product.priceCents * item.quantity)}</p>
