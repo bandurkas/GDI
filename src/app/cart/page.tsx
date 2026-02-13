@@ -385,20 +385,20 @@ export default function CartPage() {
 
 
 
-                            <div className="flex items-start gap-3 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
-                                <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? "bg-indigo-600 border-indigo-600" : "border-slate-300 dark:border-white/20"}`}>
-                                    {agreed && <ArrowRight size={12} className="text-white" />}
+                            <div className="flex items-start gap-4 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
+                                <div className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-300 ${agreed ? "bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20" : "border-slate-200 dark:border-white/10 hover:border-indigo-400"}`}>
+                                    {agreed && <ArrowRight size={14} className="text-white" />}
                                 </div>
-                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-tight">
+                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-snug">
                                     {dictionary.cart.agreeTo}{" "}
                                     <Link
                                         href="/refund"
                                         target="_blank"
-                                        className="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-0.5"
+                                        className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold inline-flex items-center gap-0.5"
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         {dictionary.cart.refundPolicy}
-                                        <ArrowRight size={10} />
+                                        <ArrowRight size={12} />
                                     </Link>
                                 </span>
                             </div>
@@ -406,15 +406,22 @@ export default function CartPage() {
                             <button
                                 onClick={handlePay}
                                 disabled={paying || !agreed}
-                                className="w-full relative overflow-hidden group flex items-center justify-between bg-slate-900 dark:bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-2xl shadow-slate-200 dark:shadow-indigo-500/20 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-600 disabled:shadow-none"
+                                className="w-full relative overflow-hidden group flex items-center justify-between bg-slate-900 dark:bg-indigo-600 text-white p-5 rounded-[2rem] font-bold text-lg hover:shadow-2xl hover:shadow-indigo-500/30 transition-all duration-500 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none group"
                             >
-                                <div className="flex items-center gap-3">
-                                    <CreditCard size={22} className="group-hover:rotate-12 transition-transform" />
-                                    <span>{paying ? dictionary.cart.processing : dictionary.cart.payNow}</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                <div className="relative z-10 flex items-center gap-4 whitespace-nowrap">
+                                    <div className="bg-white/10 p-2.5 rounded-2xl group-hover:scale-110 group-hover:bg-white/20 transition-all duration-500">
+                                        <CreditCard size={22} className="group-hover:rotate-12 transition-transform duration-500" />
+                                    </div>
+                                    <span className="tracking-tight">{paying ? dictionary.cart.processing : dictionary.cart.payNow}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold bg-white/10 px-2 py-1 rounded-lg backdrop-blur-md">{formatCurrency(totalCents)}</span>
-                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                <div className="relative z-10 flex items-center gap-3">
+                                    <span className="text-sm font-black bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10 tabular-nums">
+                                        {formatCurrency(totalCents)}
+                                    </span>
+                                    <div className="bg-white/20 p-2 rounded-xl group-hover:translate-x-1 transition-transform duration-500">
+                                        <ArrowRight size={18} />
+                                    </div>
                                 </div>
                             </button>
                         </div>
