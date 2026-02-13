@@ -70,7 +70,7 @@ export class CartService {
         return cart?._count.items ?? 0;
     }
 
-    static async removeProduct(userId: string, productId: string) {
+    static async removeProduct(userId: string, productId: string, deleteAll: boolean = false) {
         const cart = await prisma.cart.findUnique({ where: { userId } });
         if (cart) {
             const item = await prisma.cartItem.findFirst({
@@ -78,14 +78,14 @@ export class CartService {
             });
 
             if (item) {
-                if (item.quantity > 1) {
+                if (deleteAll || item.quantity <= 1) {
+                    await prisma.cartItem.delete({
+                        where: { id: item.id }
+                    });
+                } else {
                     await prisma.cartItem.update({
                         where: { id: item.id },
                         data: { quantity: item.quantity - 1 }
-                    });
-                } else {
-                    await prisma.cartItem.delete({
-                        where: { id: item.id }
                     });
                 }
             }

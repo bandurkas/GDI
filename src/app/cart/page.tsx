@@ -13,13 +13,16 @@ import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import Script from "next/script";
 import { GuestCheckoutModal } from "@/components/cart/GuestCheckoutModal";
+import { X } from "lucide-react";
 
 export default function CartPage() {
     const { data: session, status } = useSession();
     const { refreshCart, addToCart } = useCart();
     const { dictionary } = useLanguage();
     const [cart, setCart] = useState<any>(null);
+    const [optimisticCart, setOptimisticCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState<Record<string, boolean>>({});
     const [paying, setPaying] = useState(false);
     const [agreed, setAgreed] = useState(false);
     const [showGuestModal, setShowGuestModal] = useState(false);
@@ -38,6 +41,7 @@ export default function CartPage() {
                 const res = await fetch("/api/cart");
                 const data = await res.json();
                 setCart(data);
+                setOptimisticCart(data);
             } catch (error) {
                 console.error("Failed to fetch cart:", error);
             }
@@ -61,49 +65,155 @@ export default function CartPage() {
                         };
                     }).filter((item: any) => item.product);
 
-                    setCart({ items });
+                    const cartData = { items };
+                    setCart(cartData);
+                    setOptimisticCart(cartData);
                 } catch (error) {
                     console.error("Failed to hydrate guest cart:", error);
                 }
             } else {
                 setCart({ items: [] });
+                setOptimisticCart({ items: [] });
             }
         }
         setLoading(false);
     };
 
     const clearCart = async () => {
+        const previousCart = cart;
+        setOptimisticCart({ items: [] });
+
         if (status === "authenticated") {
             await fetch("/api/cart", { method: "DELETE" });
         } else {
             localStorage.removeItem("guest_cart");
         }
+
+        toast.success("Cart cleared", {
+            action: {
+                label: "Undo",
+                onClick: async () => {
+                    if (status === "authenticated") {
+                        for (const item of previousCart.items) {
+                            await fetch("/api/cart", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ productId: item.product.id, quantity: item.quantity }),
+                            });
+                        }
+                    } else {
+                        localStorage.setItem("guest_cart", JSON.stringify(previousCart.items.map((i: any) => ({
+                            productId: i.product.id,
+                            quantity: i.quantity
+                        }))));
+                    }
+                    fetchCart();
+                    refreshCart();
+                }
+            }
+        });
+
         await refreshCart();
         fetchCart();
     };
 
-    const removeItem = async (productId: string) => {
-        if (status === "authenticated") {
-            try {
-                const res = await fetch(`/api/cart/${productId}`, { method: "DELETE" });
-                if (!res.ok) throw new Error("Failed to remove item");
-            } catch (error) {
-                console.error("Error removing item:", error);
-                toast.error("Failed to remove item");
-                return;
+    const updateQuantity = async (productId: string, delta: number) => {
+        // Optimistic Update
+        const newOptimisticItems = optimisticCart.items.map((item: any) => {
+            if (item.product.id === productId) {
+                const newQty = Math.max(0, item.quantity + delta);
+                return { ...item, quantity: newQty };
             }
-        } else {
-            const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
-            const updatedCart = localCart.map((item: any) => {
-                if (item.productId === productId) {
-                    return { ...item, quantity: item.quantity - 1 };
+            return item;
+        }).filter((item: any) => item.quantity > 0);
+
+        setOptimisticCart({ ...optimisticCart, items: newOptimisticItems });
+
+        setUpdating(prev => ({ ...prev, [productId]: true }));
+        try {
+            if (delta > 0) {
+                // Add
+                if (status === "authenticated") {
+                    await fetch("/api/cart", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ productId, quantity: delta }),
+                    });
+                } else {
+                    const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+                    const index = localCart.findIndex((i: any) => i.productId === productId);
+                    if (index > -1) localCart[index].quantity += delta;
+                    else localCart.push({ productId, quantity: delta });
+                    localStorage.setItem("guest_cart", JSON.stringify(localCart));
                 }
-                return item;
-            }).filter((item: any) => item.quantity > 0);
-            localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
+            } else {
+                // Subtract
+                if (status === "authenticated") {
+                    const res = await fetch(`/api/cart/${productId}`, { method: "DELETE" });
+                    if (!res.ok) throw new Error("Failed");
+                } else {
+                    const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+                    const index = localCart.findIndex((i: any) => i.productId === productId);
+                    if (index > -1) {
+                        localCart[index].quantity += delta;
+                        if (localCart[index].quantity <= 0) localCart.splice(index, 1);
+                        localStorage.setItem("guest_cart", JSON.stringify(localCart));
+                    }
+                }
+            }
+            await refreshCart();
+            fetchCart();
+        } catch (e) {
+            toast.error("Failed to update cart");
+            fetchCart(); // Rollback
+        } finally {
+            setUpdating(prev => ({ ...prev, [productId]: false }));
         }
-        await refreshCart();
-        fetchCart();
+    };
+
+    const deleteItemCompletely = async (productId: string) => {
+        const itemToDelete = optimisticCart.items.find((i: any) => i.product.id === productId);
+        if (!itemToDelete) return;
+
+        const newOptimisticItems = optimisticCart.items.filter((item: any) => item.product.id !== productId);
+        setOptimisticCart({ ...optimisticCart, items: newOptimisticItems });
+
+        try {
+            if (status === "authenticated") {
+                await fetch(`/api/cart/${productId}?all=true`, { method: "DELETE" });
+            } else {
+                const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+                const updated = localCart.filter((i: any) => i.productId !== productId);
+                localStorage.setItem("guest_cart", JSON.stringify(updated));
+            }
+
+            toast.success(`${itemToDelete.product.name} removed`, {
+                action: {
+                    label: "Undo",
+                    onClick: async () => {
+                        if (status === "authenticated") {
+                            await fetch("/api/cart", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ productId, quantity: itemToDelete.quantity }),
+                            });
+                        } else {
+                            const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+                            localCart.push({ productId, quantity: itemToDelete.quantity });
+                            localStorage.setItem("guest_cart", JSON.stringify(localCart));
+                        }
+                        fetchCart();
+                        refreshCart();
+                    }
+                }
+            });
+
+            await refreshCart();
+            fetchCart();
+        } catch (e) {
+            toast.error("Removal failed");
+            fetchCart();
+        }
     };
 
     const initiateCheckout = async (guestEmail?: string, guestName?: string) => {
@@ -173,7 +283,8 @@ export default function CartPage() {
         </div>
     );
 
-    const totalCents = cart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
+    const targetCart = optimisticCart || cart;
+    const totalCents = targetCart?.items?.reduce((acc: number, item: any) => acc + (item.product.priceCents * item.quantity), 0) || 0;
 
     return (
         <div className="max-w-4xl mx-auto py-8">
@@ -212,33 +323,43 @@ export default function CartPage() {
             ) : (
                 <div className="grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
-                        {cart.items.map((item: any) => (
-                            <div key={item.productId || item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
-                                <div>
-                                    <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
-                                    <div className="flex items-center gap-3 mt-3">
-                                        <button
-                                            onClick={() => removeItem(item.product.id)}
-                                            className="h-8 w-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-red-500 hover:border-red-500 transition-all active:scale-95 bg-white dark:bg-slate-800"
-                                        >
-                                            <Minus size={14} />
-                                        </button>
-                                        <span className="font-bold text-slate-700 dark:text-slate-300 min-w-[20px] text-center">{item.quantity}</span>
-                                        <button
-                                            onClick={() => {
-                                                addToCart(item.product.id).then(() => {
-                                                    fetchCart();
-                                                });
-                                            }}
-                                            className="h-8 w-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-indigo-500 hover:border-indigo-500 transition-all active:scale-95 bg-white dark:bg-slate-800"
-                                        >
-                                            <Plus size={14} />
-                                        </button>
+                        {targetCart.items.map((item: any) => (
+                            <div key={item.product.id} className="group relative flex items-center justify-between p-6 rounded-3xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm hover:shadow-md transition-all duration-300">
+                                <button
+                                    onClick={() => deleteItemCompletely(item.product.id)}
+                                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-white/5 flex items-center justify-center text-slate-400 hover:text-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 z-10"
+                                    title="Remove item"
+                                >
+                                    <X size={14} />
+                                </button>
+
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{item.product.name}</h3>
+                                    <div className="flex items-center gap-4 mt-4">
+                                        <div className="flex items-center bg-slate-100/50 dark:bg-white/5 rounded-2xl p-1 border border-slate-200/50 dark:border-white/5">
+                                            <button
+                                                onClick={() => updateQuantity(item.product.id, -1)}
+                                                disabled={updating[item.product.id]}
+                                                className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-red-500 hover:shadow-sm transition-all active:scale-90 disabled:opacity-50"
+                                            >
+                                                <Minus size={16} />
+                                            </button>
+                                            <span className="font-black text-slate-900 dark:text-white min-w-[32px] text-center tabular-nums">
+                                                {item.quantity}
+                                            </span>
+                                            <button
+                                                onClick={() => updateQuantity(item.product.id, 1)}
+                                                disabled={updating[item.product.id]}
+                                                className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 hover:shadow-sm transition-all active:scale-90 disabled:opacity-50"
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency(item.product.priceCents * item.quantity)}</p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{formatCurrency(item.product.priceCents)} {dictionary.cart.each}</p>
+                                <div className="text-right ml-6">
+                                    <p className="font-black text-slate-900 dark:text-white tracking-tight tabular-nums text-xl">{formatCurrency(item.product.priceCents * item.quantity)}</p>
+                                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 tabular-nums uppercase tracking-widest">{formatCurrency(item.product.priceCents)} {dictionary.cart.each}</p>
                                 </div>
                             </div>
                         ))}
@@ -285,11 +406,16 @@ export default function CartPage() {
                             <button
                                 onClick={handlePay}
                                 disabled={paying || !agreed}
-                                className="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-600 disabled:shadow-none group"
+                                className="w-full relative overflow-hidden group flex items-center justify-between bg-slate-900 dark:bg-indigo-600 text-white p-5 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-2xl shadow-slate-200 dark:shadow-indigo-500/20 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-600 disabled:shadow-none"
                             >
-                                <CreditCard size={20} />
-                                {paying ? dictionary.cart.processing : dictionary.cart.payNow}
-                                {!paying && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
+                                <div className="flex items-center gap-3">
+                                    <CreditCard size={22} className="group-hover:rotate-12 transition-transform" />
+                                    <span>{paying ? dictionary.cart.processing : dictionary.cart.payNow}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold bg-white/10 px-2 py-1 rounded-lg backdrop-blur-md">{formatCurrency(totalCents)}</span>
+                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
                             </button>
                         </div>
                     </div>

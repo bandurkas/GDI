@@ -16,7 +16,9 @@ export async function DELETE(
     }
 
     try {
-        await CartService.removeProduct(session.user.id, params.productId);
+        const { searchParams } = new URL(request.url);
+        const deleteAll = searchParams.get("all") === "true";
+        await CartService.removeProduct(session.user.id, params.productId, deleteAll);
         return NextResponse.json({ message: "Item removed" });
     } catch (error) {
         console.error("Error removing item from cart:", error);
