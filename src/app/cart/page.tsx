@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { ShoppingBag, Trash2, CreditCard, ArrowRight } from "lucide-react";
+import { ShoppingBag, Trash2, CreditCard, ArrowRight, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ import { GuestCheckoutModal } from "@/components/cart/GuestCheckoutModal";
 
 export default function CartPage() {
     const { data: session, status } = useSession();
-    const { refreshCart } = useCart();
+    const { refreshCart, addToCart } = useCart();
     const { dictionary } = useLanguage();
     const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -94,7 +94,12 @@ export default function CartPage() {
             }
         } else {
             const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
-            const updatedCart = localCart.filter((item: any) => item.productId !== productId);
+            const updatedCart = localCart.map((item: any) => {
+                if (item.productId === productId) {
+                    return { ...item, quantity: item.quantity - 1 };
+                }
+                return item;
+            }).filter((item: any) => item.quantity > 0);
             localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
         }
         await refreshCart();
@@ -211,13 +216,25 @@ export default function CartPage() {
                             <div key={item.productId || item.id} className="flex items-center justify-between p-6 rounded-2xl border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-sm">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">{item.product.name}</h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">{dictionary.cart.quantity}: {item.quantity}</p>
-                                    <button
-                                        onClick={() => removeItem(item.product.id)}
-                                        className="text-xs font-semibold text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:underline mt-2 flex items-center gap-1 transition-colors"
-                                    >
-                                        <Trash2 size={12} /> Remove
-                                    </button>
+                                    <div className="flex items-center gap-3 mt-3">
+                                        <button
+                                            onClick={() => removeItem(item.product.id)}
+                                            className="h-8 w-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-red-500 hover:border-red-500 transition-all active:scale-95 bg-white dark:bg-slate-800"
+                                        >
+                                            <Minus size={14} />
+                                        </button>
+                                        <span className="font-bold text-slate-700 dark:text-slate-300 min-w-[20px] text-center">{item.quantity}</span>
+                                        <button
+                                            onClick={() => {
+                                                addToCart(item.product.id).then(() => {
+                                                    fetchCart();
+                                                });
+                                            }}
+                                            className="h-8 w-8 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 hover:text-indigo-500 hover:border-indigo-500 transition-all active:scale-95 bg-white dark:bg-slate-800"
+                                        >
+                                            <Plus size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="text-right">
                                     <p className="font-bold text-indigo-600 dark:text-indigo-400 tracking-tight tabular-nums text-lg">{formatCurrency(item.product.priceCents * item.quantity)}</p>

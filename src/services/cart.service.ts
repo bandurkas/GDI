@@ -73,12 +73,22 @@ export class CartService {
     static async removeProduct(userId: string, productId: string) {
         const cart = await prisma.cart.findUnique({ where: { userId } });
         if (cart) {
-            await prisma.cartItem.deleteMany({
-                where: {
-                    cartId: cart.id,
-                    productId: productId
-                }
+            const item = await prisma.cartItem.findFirst({
+                where: { cartId: cart.id, productId }
             });
+
+            if (item) {
+                if (item.quantity > 1) {
+                    await prisma.cartItem.update({
+                        where: { id: item.id },
+                        data: { quantity: item.quantity - 1 }
+                    });
+                } else {
+                    await prisma.cartItem.delete({
+                        where: { id: item.id }
+                    });
+                }
+            }
         }
     }
 }
