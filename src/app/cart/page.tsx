@@ -406,22 +406,13 @@ export default function CartPage() {
                             <button
                                 onClick={handlePay}
                                 disabled={paying || !agreed}
-                                className="w-full relative overflow-hidden group flex items-center justify-between bg-slate-900 dark:bg-indigo-600 text-white p-5 rounded-[2rem] font-bold text-lg hover:shadow-2xl hover:shadow-indigo-500/30 transition-all duration-500 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none group"
+                                className="w-full relative overflow-hidden group flex items-center justify-center gap-4 bg-slate-900 dark:bg-indigo-600 text-white p-5 rounded-[2rem] font-black text-xl hover:shadow-2xl hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:shadow-none disabled:transform-none"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                <div className="relative z-10 flex items-center gap-4 whitespace-nowrap">
-                                    <div className="bg-white/10 p-2.5 rounded-2xl group-hover:scale-110 group-hover:bg-white/20 transition-all duration-500">
-                                        <CreditCard size={22} className="group-hover:rotate-12 transition-transform duration-500" />
-                                    </div>
-                                    <span className="tracking-tight">{paying ? dictionary.cart.processing : dictionary.cart.payNow}</span>
-                                </div>
                                 <div className="relative z-10 flex items-center gap-3">
-                                    <span className="text-sm font-black bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10 tabular-nums">
-                                        {formatCurrency(totalCents)}
-                                    </span>
-                                    <div className="bg-white/20 p-2 rounded-xl group-hover:translate-x-1 transition-transform duration-500">
-                                        <ArrowRight size={18} />
-                                    </div>
+                                    <CreditCard size={24} className="group-hover:rotate-12 transition-transform duration-300" />
+                                    <span className="tracking-tight">{paying ? dictionary.cart.processing : dictionary.cart.payNow}</span>
+                                    {!paying && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform duration-300" />}
                                 </div>
                             </button>
                         </div>
