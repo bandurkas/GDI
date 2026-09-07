@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { colocationContent, type Lang } from "@/lib/colocation/content";
 import { COLOCATION_PRESETS, STANDARD_RACK_PRICING, SERVER_OPS_PLANS, SERVER_OPS_ADDONS, getPreset } from "@/lib/colocation/config";
-import { calculateColocation, formatIdr, formatIdrCompact } from "@/lib/colocation/calc";
+import { calculateColocation, formatIdr, formatUsd, USD_IDR_RATE } from "@/lib/colocation/calc";
 import { ColocationCalculator } from "@/components/colocation/Calculator";
 import { PresetLink, Faq } from "@/components/colocation/Bits";
 
@@ -216,8 +216,9 @@ export default async function ManagedColocationPage() {
                                     )}
                                     <div className={`pt-5 border-t ${p.category === "extreme-gpu" ? "border-white/10" : "border-slate-100 dark:border-white/5"}`}>
                                         <p className={`text-[10px] font-bold uppercase tracking-widest ${p.category === "extreme-gpu" ? "text-slate-400" : "text-slate-400"}`}>{t.categories.from}</p>
-                                        <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdrCompact(r.monthlyIdr)}<span className="text-sm font-bold text-slate-400 ml-1">{isGpu ? t.categories.perServerMonth : t.categories.perMonth}</span></p>
-                                        <p className={`mt-1 text-xs ${p.category === "extreme-gpu" ? "text-slate-400" : "text-slate-500"}`}>{t.categories.setup} {formatIdr(r.setupIdr)}</p>
+                                        <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(r.monthlyIdr)}<span className="text-sm font-bold text-slate-400 ml-1">{isGpu ? t.categories.perServerMonth : t.categories.perMonth}</span></p>
+                                        <p className="font-mono text-xs text-slate-400">{formatUsd(r.monthlyIdr)}</p>
+                                        <p className={`mt-1 text-xs ${p.category === "extreme-gpu" ? "text-slate-400" : "text-slate-500"}`}>{t.categories.setup} {formatIdr(r.setupIdr)} <span className="font-mono text-slate-400">({formatUsd(r.setupIdr)})</span></p>
                                         {copy?.note && <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400">{copy.note}</p>}
                                         {p.engineeringReview && !copy?.note && <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400">{t.categories.validation}</p>}
                                         <PresetLink presetId={p.id} className={`mt-4 w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors cursor-pointer ${p.category === "extreme-gpu" ? "bg-white text-slate-900 hover:bg-slate-200" : "bg-slate-900 dark:bg-indigo-600 text-white hover:bg-black dark:hover:bg-indigo-500"}`}>
@@ -286,8 +287,9 @@ export default async function ManagedColocationPage() {
                                         </dl>
                                         <div className="mt-6 pt-5 border-t border-white/10">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t.categories.from}</p>
-                                            <p className="text-2xl font-black tabular-nums">{formatIdrCompact(r.monthlyIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{t.categories.perServerMonth}</span></p>
-                                            <p className="mt-1 text-xs text-slate-400">{t.categories.setup} {formatIdr(r.setupIdr)}</p>
+                                            <p className="text-2xl font-black tabular-nums">{formatIdr(r.monthlyIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{t.categories.perServerMonth}</span></p>
+                                            <p className="font-mono text-xs text-slate-400">{formatUsd(r.monthlyIdr)}</p>
+                                            <p className="mt-1 text-xs text-slate-400">{t.categories.setup} {formatIdr(r.setupIdr)} <span className="font-mono">({formatUsd(r.setupIdr)})</span></p>
                                         </div>
                                     </div>
                                 );
@@ -301,7 +303,7 @@ export default async function ManagedColocationPage() {
             <section className="py-20 lg:py-28 bg-slate-50 dark:bg-slate-950">
                 <div className="container mx-auto px-4">
                     <ColocationCalculator content={t} />
-                    <p className="mt-8 max-w-4xl mx-auto text-center text-[11px] text-slate-400 leading-relaxed">{t.disclaimer}</p>
+                    <p className="mt-8 max-w-4xl mx-auto text-center text-[11px] text-slate-400 leading-relaxed">{t.disclaimer} {t.fxNote.replace("{rate}", formatIdr(USD_IDR_RATE))}</p>
                 </div>
             </section>
 
@@ -320,7 +322,8 @@ export default async function ManagedColocationPage() {
                                     <span className="font-mono text-[10px] text-slate-400 mb-3">{String(i + 1).padStart(2, "0")}</span>
                                     <h3 className="font-bold text-lg mb-1">{c.name}</h3>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t.categories.from}</p>
-                                    <p className="text-xl font-black tabular-nums mb-4">{formatIdr(item.monthlyIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{t.categories.perMonth}</span></p>
+                                    <p className="text-xl font-black tabular-nums">{formatIdr(item.monthlyIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{t.categories.perMonth}</span></p>
+                                    <p className="font-mono text-xs text-slate-400 mb-4">{formatUsd(item.monthlyIdr)}</p>
                                     <ul className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 flex-1">
                                         {c.lines.map((l) => <li key={l} className="flex gap-2"><CheckCircle2 size={13} className="mt-0.5 text-emerald-500 shrink-0" />{l}</li>)}
                                     </ul>
@@ -397,8 +400,9 @@ export default async function ManagedColocationPage() {
                                     <h3 className="text-xl font-bold mb-1">{c.name}</h3>
                                     <p className={`text-sm mb-5 ${gpu ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>{c.tagline}</p>
                                     <p className={`text-[10px] font-bold uppercase tracking-widest ${gpu ? "text-slate-400" : "text-slate-400"}`}>{t.categories.from}</p>
-                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdrCompact(pl.monthlyPerServerIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth}</span></p>
-                                    <p className={`mt-1 text-xs mb-5 ${gpu ? "text-slate-400" : "text-slate-500"}`}>{t.serverOps.setup} {formatIdr(pl.setupPerServerIdr)} · {pl.includedHours ? `${pl.includedHours} ${t.serverOps.hours} · ` : ""}{pl.responseMinutes} min {t.serverOps.response}</p>
+                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(pl.monthlyPerServerIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth}</span></p>
+                                    <p className="font-mono text-xs text-slate-400">{formatUsd(pl.monthlyPerServerIdr)}</p>
+                                    <p className={`mt-1 text-xs mb-5 ${gpu ? "text-slate-400" : "text-slate-500"}`}>{t.serverOps.setup} {formatIdr(pl.setupPerServerIdr)} ({formatUsd(pl.setupPerServerIdr)}) · {pl.includedHours ? `${pl.includedHours} ${t.serverOps.hours} · ` : ""}{pl.responseMinutes} min {t.serverOps.response}</p>
                                     <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${gpu ? "text-slate-400" : "text-slate-400"}`}>{t.serverOps.included}</p>
                                     <ul className={`space-y-2 text-sm flex-1 ${gpu ? "text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
                                         {c.items.map((it) => <li key={it} className="flex gap-2"><CheckCircle2 size={15} className={`mt-0.5 shrink-0 ${gpu ? "text-amber-300" : "text-emerald-500"}`} />{it}</li>)}
@@ -534,7 +538,7 @@ export default async function ManagedColocationPage() {
                         <Link href="/auth/register" className="inline-flex items-center px-8 py-4 border border-white/25 hover:border-white text-white font-bold rounded-full transition-colors">{t.finalCta.secondary}</Link>
                     </div>
                     <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">{t.finalCta.micro}</p>
-                    <p className="mt-10 max-w-3xl mx-auto text-[11px] text-slate-500 leading-relaxed">{t.disclaimer}</p>
+                    <p className="mt-10 max-w-3xl mx-auto text-[11px] text-slate-500 leading-relaxed">{t.disclaimer} {t.fxNote.replace("{rate}", formatIdr(USD_IDR_RATE))}</p>
                 </div>
             </section>
         </div>

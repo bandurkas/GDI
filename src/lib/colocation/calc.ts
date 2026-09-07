@@ -245,10 +245,14 @@ export function calculateColocation(input: CalcInput): CalcResult {
 export const formatIdr = (v: number) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(v);
 
-export const formatIdrCompact = (v: number) => {
-    if (v >= 1e9) return `Rp ${(v / 1e9).toLocaleString("en-US", { maximumFractionDigits: 2 })}B`;
-    if (v >= 1e6) return `Rp ${(v / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 })}M`;
-    return formatIdr(v);
+// "Rp 1.8M" is read as 1.8 miliar (billion) in Indonesia — never abbreviate IDR, always show full figures.
+export const formatIdrCompact = (v: number) => formatIdr(v);
+
+/** Indicative USD conversion for readers unfamiliar with rupiah. Rate via NEXT_PUBLIC_USD_IDR_RATE (default 17,600). */
+export const USD_IDR_RATE = Number(process.env.NEXT_PUBLIC_USD_IDR_RATE) || 17600;
+export const formatUsd = (idr: number) => {
+    const usd = idr / USD_IDR_RATE;
+    return `≈ $${usd.toLocaleString("en-US", { maximumFractionDigits: usd < 100 ? 1 : 0 })}`;
 };
 
 export const formatPower = (kw: number) =>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Info, AlertTriangle, Cpu, Server, HardDrive, Sparkles } from "lucide-react";
 import type { ColocationContent } from "@/lib/colocation/content";
 import { BANDWIDTH_OPTIONS, COLOCATION_PRESETS, COLOCATION_PRICING, CONTRACT_TERMS, CUSTOM_PRESET_ID, SERVER_OPS_PLANS, getPreset, type ContractTerm, type OpsPlanId } from "@/lib/colocation/config";
-import { calculateColocation, formatIdr, formatPower, type CalcInput } from "@/lib/colocation/calc";
+import { calculateColocation, formatIdr, formatPower, formatUsd, type CalcInput } from "@/lib/colocation/calc";
 import { track } from "@/lib/colocation/analytics";
 import { LeadForm } from "./LeadForm";
 import { RackViz } from "./RackViz";
@@ -213,7 +213,7 @@ export function ColocationCalculator({ content }: Props) {
                     <div>
                         <label className={labelCls} htmlFor="calc-bw">{C.connectivity}<Tip text={C.tooltips.crossConnect} /></label>
                         <select id="calc-bw" className={selectCls} value={bandwidthId} onChange={(e) => { markStarted(); setBandwidthId(e.target.value); }}>
-                            {BANDWIDTH_OPTIONS.map((b) => <option key={b.id} value={b.id}>{bwLabel(b.id)}{b.monthlyIdr ? ` — ${formatIdr(b.monthlyIdr)}` : ""}</option>)}
+                            {BANDWIDTH_OPTIONS.map((b) => <option key={b.id} value={b.id}>{bwLabel(b.id)}{b.monthlyIdr ? ` — ${formatIdr(b.monthlyIdr)} (${formatUsd(b.monthlyIdr)})` : ""}</option>)}
                         </select>
                         {isGpu && (
                             <label className="mt-3 flex items-start gap-3 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -273,7 +273,7 @@ export function ColocationCalculator({ content }: Props) {
                     <div>
                         <label className={labelCls}>{content.serverOps.calc.label}</label>
                         <div className="grid gap-2" role="radiogroup" aria-label={content.serverOps.calc.label}>
-                            {[{ id: "none" as OpsPlanId, name: content.serverOps.calc.none, price: "", items: [] as string[] }, ...SERVER_OPS_PLANS.filter((pl) => (isGpu ? pl.gpuOnly : !pl.gpuOnly)).map((pl) => ({ id: pl.id as OpsPlanId, name: content.serverOps.plans[pl.id].name, price: `+ ${formatIdr(pl.monthlyPerServerIdr)} ${isGpu ? content.serverOps.perNodeMonth : content.serverOps.perServerMonth}`, items: [content.serverOps.coverage[pl.coverage], pl.includedHours ? `${pl.includedHours} ${content.serverOps.hours}` : "", `${pl.responseMinutes} min ${content.serverOps.response}`].filter(Boolean) }))].map((o) => {
+                            {[{ id: "none" as OpsPlanId, name: content.serverOps.calc.none, price: "", items: [] as string[] }, ...SERVER_OPS_PLANS.filter((pl) => (isGpu ? pl.gpuOnly : !pl.gpuOnly)).map((pl) => ({ id: pl.id as OpsPlanId, name: content.serverOps.plans[pl.id].name, price: `+ ${formatIdr(pl.monthlyPerServerIdr)} (${formatUsd(pl.monthlyPerServerIdr)}) ${isGpu ? content.serverOps.perNodeMonth : content.serverOps.perServerMonth}`, items: [content.serverOps.coverage[pl.coverage], pl.includedHours ? `${pl.includedHours} ${content.serverOps.hours}` : "", `${pl.responseMinutes} min ${content.serverOps.response}`].filter(Boolean) }))].map((o) => {
                                 const checked = o.id === "none" ? result.opsPlan === "none" : result.opsPlan === o.id;
                                 return (
                                     <button key={o.id} type="button" role="radio" aria-checked={checked} onClick={() => { markStarted(); setOpsPlan(o.id); }} className={`text-left p-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${checked ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10" : "border-slate-200 dark:border-white/10 hover:border-indigo-300 bg-slate-50/50 dark:bg-white/5"}`}>
@@ -299,6 +299,7 @@ export function ColocationCalculator({ content }: Props) {
                             <h3 className="text-xs font-black uppercase tracking-widest text-indigo-300 mb-4">{C.estimate}</h3>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{C.result.monthly}</p>
                             <p key={result.monthlyIdr} className="mt-1 text-3xl sm:text-4xl font-black tracking-tight tabular-nums break-words gdi-pop">{formatIdr(result.monthlyIdr)}<span className="text-base font-bold text-slate-400 ml-2">{C.result.perMonth}</span></p>
+                            <p className="mt-1 font-mono text-sm text-indigo-300">{formatUsd(result.monthlyIdr)} {C.result.perMonth}</p>
 
                             <div className="mt-6 p-4 rounded-2xl bg-white/[0.04] border border-white/10">
                                 <RackViz
@@ -320,11 +321,11 @@ export function ColocationCalculator({ content }: Props) {
                                 <Row label={C.result.power} value={<>{formatPower(result.totalPowerKw)}{result.displayPowerKwPerServer !== result.powerKwPerServer && <span className="block text-[10px] text-slate-400 font-medium">~{result.displayPowerKwPerServer} kW / {content.categories.typicalPower}</span>}</>} tip={C.tooltips.kw} />
                                 <Row label={C.result.racks} value={result.estimatedRackCount} />
                                 <Row label={C.result.facility} value={C.facility[result.facility]} />
-                                <Row label={C.result.setup} value={formatIdr(result.setupIdr)} />
+                                <Row label={C.result.setup} value={<>{formatIdr(result.setupIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.setupIdr)}</span></>} />
                                 <Row label={C.result.connectivity} value={result.bandwidthQuoteRequired || result.fabricQuoteRequired ? C.result.quoteRequired : result.bandwidthMonthlyIdr ? formatIdr(result.bandwidthMonthlyIdr) : C.result.included} />
                                 <Row label={C.result.service} value={result.serviceQuoteRequired ? C.result.quoteRequired : result.serviceMonthlyIdr ? formatIdr(result.serviceMonthlyIdr) : C.result.included} />
-                                {result.opsPlan !== "none" && <Row label={content.serverOps.calc.resultRow} value={<>{formatIdr(result.opsMonthlyIdr)}<span className="block text-[10px] text-slate-400 font-medium">{content.serverOps.plans[result.opsPlan].name}</span></>} />}
-                                <Row label={`${C.result.contractTotal} ${result.contractMonths} ${C.months}`} value={formatIdr(result.contractTotalIdr)} />
+                                {result.opsPlan !== "none" && <Row label={content.serverOps.calc.resultRow} value={<>{formatIdr(result.opsMonthlyIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.opsMonthlyIdr)} · {content.serverOps.plans[result.opsPlan].name}</span></>} />}
+                                <Row label={`${C.result.contractTotal} ${result.contractMonths} ${C.months}`} value={<>{formatIdr(result.contractTotalIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.contractTotalIdr)}</span></>} />
                                 <Row label={C.result.finalQuote} value={<span className={result.engineeringReview ? "text-amber-300" : "text-emerald-300"}>{result.engineeringReview ? C.result.validation : C.result.standardQuote}</span>} />
                             </div>
 

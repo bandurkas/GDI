@@ -4,10 +4,11 @@ import { cookies } from "next/headers";
 import { dictionaries } from "@/lib/dictionaries";
 import { colocationContent, type Lang } from "@/lib/colocation/content";
 import { getPreset } from "@/lib/colocation/config";
-import { calculateColocation, formatIdrCompact } from "@/lib/colocation/calc";
+import { calculateColocation, formatIdr, formatUsd } from "@/lib/colocation/calc";
 
-const fromPrice = (id: string) =>
-    formatIdrCompact(calculateColocation({ presetId: id, quantity: 1, contractMonths: 1, bandwidthId: "basic", gpuFabric: false, siteMode: "single", drScope: "all", drCount: 0, serviceLevel: "core" }).monthlyIdr);
+const fromIdr = (id: string) =>
+    (calculateColocation({ presetId: id, quantity: 1, contractMonths: 1, bandwidthId: "basic", gpuFabric: false, siteMode: "single", drScope: "all", drCount: 0, serviceLevel: "core" }).monthlyIdr);
+const fromPrice = (id: string) => formatIdr(fromIdr(id));
 
 export default async function GDIPage() {
     const cookieStore = await cookies();
@@ -169,10 +170,12 @@ export default async function GDIPage() {
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">1U · {dict.home.pillarInfra.from}</p>
                                         <p className="font-mono text-xl font-bold tabular-nums">{fromPrice("standard-1u")}<span className="text-xs text-slate-400 ml-1">{dict.home.pillarInfra.perMonth}</span></p>
+                                        <p className="font-mono text-[11px] text-slate-500">{formatUsd(fromIdr("standard-1u"))}</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">DGX B200 · {dict.home.pillarInfra.from}</p>
                                         <p className="font-mono text-xl font-bold tabular-nums text-amber-300">{fromPrice("dgx-b200")}<span className="text-xs text-slate-400 ml-1">{dict.home.pillarInfra.perMonth}</span></p>
+                                        <p className="font-mono text-[11px] text-slate-500">{formatUsd(fromIdr("dgx-b200"))}</p>
                                     </div>
                                 </div>
                                 <Link href="/services/managed-colocation#calculator" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-slate-900 font-bold hover:bg-slate-200 transition-colors">

@@ -126,7 +126,7 @@ const en = {
         serviceLevel: "Service level",
         service: {
             core: { name: "GDI Core Management", price: "Included", items: ["Facility coordination", "Basic deployment coordination", "Incident escalation", "Monthly service report"] },
-            remote: { name: "Managed Remote Operations", price: "+ Rp 2,400,000 / month / deployment", items: ["Priority coordination", "Up to an agreed remote-hands allowance", "Maintenance coordination", "Expanded monthly report"] },
+            remote: { name: "Managed Remote Operations", price: "+ Rp 2.400.000 (≈ $136) / month / deployment", items: ["Priority coordination", "Up to an agreed remote-hands allowance", "Maintenance coordination", "Expanded monthly report"] },
             enterprise: { name: "Enterprise NOC / Mission Critical", price: "Custom quote", items: ["24/7 operational support scoped separately", "GPU clusters, multi-rack and regulated workloads"] },
         },
         customFields: {
@@ -200,11 +200,11 @@ const en = {
         footnote: "High-density GPU power is priced separately and should not be estimated from standard full-rack pricing.",
         addonsTitle: "Add-ons",
         addons: [
-            "Extra 100 W (standard servers): Rp 420,000 / month",
-            "Additional IPv4: from Rp 36,000 / month",
-            "Additional LAN port: Rp 180,000 / month",
-            "Additional standard power socket: Rp 180,000 / month",
-            "OS installation assistance: Rp 420,000 / event",
+            "Extra 100 W (standard servers): Rp 420.000 / month (≈ $23.9)",
+            "Additional IPv4: from Rp 36.000 / month (≈ $2.0)",
+            "Additional LAN port: Rp 180.000 / month (≈ $10.2)",
+            "Additional standard power socket: Rp 180.000 / month (≈ $10.2)",
+            "OS installation assistance: Rp 420.000 / event (≈ $23.9)",
             "Cross-connect, BGP, private circuit, IX, dark fiber, cloud connect, AI fabric: request quote",
         ],
         requestQuote: "Request quote",
@@ -213,7 +213,7 @@ const en = {
         title: "Managed Service Levels",
         intro: "Every level defines the responsibility boundary between GDI, the facility and your team.",
         core: { name: "GDI Core Management", badge: "Default", price: "Included in base estimate", items: ["Facility selection and coordination", "Deployment coordination", "Asset registration", "Incident escalation", "Maintenance coordination", "Basic monthly service report", "Single GDI commercial contact"] },
-        remote: { name: "Managed Remote Operations", badge: "Optional", price: "From Rp 2,400,000 / month / deployment", items: ["Everything in Core", "Priority operational coordination", "Remote-hands allowance according to contract", "Physical checks and approved interventions", "Spare-parts / RMA coordination", "Expanded monthly report"] },
+        remote: { name: "Managed Remote Operations", badge: "Optional", price: "From Rp 2.400.000 (≈ $136) / month / deployment", items: ["Everything in Core", "Priority operational coordination", "Remote-hands allowance according to contract", "Physical checks and approved interventions", "Spare-parts / RMA coordination", "Expanded monthly report"] },
         enterprise: { name: "Enterprise NOC", badge: "Custom", price: "Custom quote", items: ["GPU clusters and multi-rack environments", "Regulated and business-critical workloads", "24/7 escalation requirements", "Custom incident response", "Multi-site infrastructure"], cta: "Design Enterprise SLA" },
     },
     process: {
@@ -325,6 +325,7 @@ const en = {
         },
     },
     eyebrows: { manages: "Managed layer", serverOps: "Server operations", why: "Multi-data-center model", categories: "Server profiles", racks: "Standard racks", ops: "Operations", process: "Timeline", reporting: "Visibility", multisite: "Multi-site", scale: "Scale", faq: "FAQ" },
+    fxNote: "USD amounts are indicative conversions at {rate} per USD for reference only; invoicing is in Indonesian rupiah (IDR).",
     disclaimer: "Indicative prices only and subject to technical validation, facility availability and contract conditions. High-density GPU deployments require confirmation of power, cooling, rack and network capacity. Prices exclude applicable taxes and optional third-party connectivity/cross-connect charges unless specifically included in the final proposal.",
     lead: {
         title: "Request Final Quote",
@@ -506,7 +507,7 @@ const id: ColocationContent = {
         serviceLevel: "Tingkat layanan",
         service: {
             core: { name: "GDI Core Management", price: "Termasuk", items: ["Koordinasi fasilitas", "Koordinasi deployment dasar", "Eskalasi insiden", "Laporan layanan bulanan"] },
-            remote: { name: "Managed Remote Operations", price: "+ Rp 2.400.000 / bulan / deployment", items: ["Koordinasi prioritas", "Alokasi remote-hands sesuai kesepakatan", "Koordinasi pemeliharaan", "Laporan bulanan diperluas"] },
+            remote: { name: "Managed Remote Operations", price: "+ Rp 2.400.000 (≈ $136) / bulan / deployment", items: ["Koordinasi prioritas", "Alokasi remote-hands sesuai kesepakatan", "Koordinasi pemeliharaan", "Laporan bulanan diperluas"] },
             enterprise: { name: "Enterprise NOC / Mission Critical", price: "Penawaran khusus", items: ["Dukungan operasional 24/7 dengan cakupan terpisah", "Klaster GPU, multi-rak dan beban kerja teregulasi"] },
         },
         customFields: {
@@ -580,11 +581,11 @@ const id: ColocationContent = {
         footnote: "Daya GPU high-density dihitung terpisah dan tidak boleh diestimasi dari harga full rack standar.",
         addonsTitle: "Tambahan",
         addons: [
-            "Tambahan 100 W (server standar): Rp 420.000 / bulan",
-            "IPv4 tambahan: mulai Rp 36.000 / bulan",
-            "Port LAN tambahan: Rp 180.000 / bulan",
-            "Soket daya standar tambahan: Rp 180.000 / bulan",
-            "Bantuan instalasi OS: Rp 420.000 / kejadian",
+            "Tambahan 100 W (server standar): Rp 420.000 / bulan (≈ $23.9)",
+            "IPv4 tambahan: mulai Rp 36.000 / bulan (≈ $2.0)",
+            "Port LAN tambahan: Rp 180.000 / bulan (≈ $10.2)",
+            "Soket daya standar tambahan: Rp 180.000 / bulan (≈ $10.2)",
+            "Bantuan instalasi OS: Rp 420.000 / kejadian (≈ $23.9)",
             "Cross-connect, BGP, private circuit, IX, dark fiber, cloud connect, AI fabric: minta penawaran",
         ],
         requestQuote: "Minta penawaran",
@@ -593,7 +594,7 @@ const id: ColocationContent = {
         title: "Tingkat Layanan Terkelola",
         intro: "Setiap tingkat mendefinisikan batas tanggung jawab antara GDI, fasilitas dan tim Anda.",
         core: { name: "GDI Core Management", badge: "Default", price: "Termasuk dalam estimasi dasar", items: ["Pemilihan dan koordinasi fasilitas", "Koordinasi deployment", "Registrasi aset", "Eskalasi insiden", "Koordinasi pemeliharaan", "Laporan layanan bulanan dasar", "Satu kontak komersial GDI"] },
-        remote: { name: "Managed Remote Operations", badge: "Opsional", price: "Mulai Rp 2.400.000 / bulan / deployment", items: ["Semua yang ada di Core", "Koordinasi operasional prioritas", "Alokasi remote-hands sesuai kontrak", "Pemeriksaan fisik dan intervensi yang disetujui", "Koordinasi suku cadang / RMA", "Laporan bulanan diperluas"] },
+        remote: { name: "Managed Remote Operations", badge: "Opsional", price: "Mulai Rp 2.400.000 (≈ $136) / bulan / deployment", items: ["Semua yang ada di Core", "Koordinasi operasional prioritas", "Alokasi remote-hands sesuai kontrak", "Pemeriksaan fisik dan intervensi yang disetujui", "Koordinasi suku cadang / RMA", "Laporan bulanan diperluas"] },
         enterprise: { name: "Enterprise NOC", badge: "Custom", price: "Penawaran khusus", items: ["Klaster GPU dan lingkungan multi-rak", "Beban kerja teregulasi dan business-critical", "Kebutuhan eskalasi 24/7", "Respons insiden khusus", "Infrastruktur multi-site"], cta: "Rancang SLA Enterprise" },
     },
     process: {
@@ -705,6 +706,7 @@ const id: ColocationContent = {
         },
     },
     eyebrows: { manages: "Lapisan terkelola", serverOps: "Operasional server", why: "Model multi-data-center", categories: "Profil server", racks: "Rak standar", ops: "Operasional", process: "Alur", reporting: "Visibilitas", multisite: "Multi-site", scale: "Skala", faq: "FAQ" },
+    fxNote: "Nilai USD adalah konversi indikatif pada kurs {rate} per USD hanya sebagai referensi; penagihan dilakukan dalam rupiah (IDR).",
     disclaimer: "Harga bersifat indikatif dan tunduk pada validasi teknis, ketersediaan fasilitas dan ketentuan kontrak. Deployment GPU high-density memerlukan konfirmasi kapasitas daya, pendinginan, rak dan jaringan. Harga belum termasuk pajak yang berlaku dan biaya konektivitas/cross-connect pihak ketiga opsional kecuali secara khusus disertakan dalam proposal akhir.",
     lead: {
         title: "Minta Penawaran Akhir",

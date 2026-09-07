@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X, CheckCircle2, ChevronDown, Send } from "lucide-react";
 import type { ColocationContent } from "@/lib/colocation/content";
 import type { CalcInput, CalcResult } from "@/lib/colocation/calc";
-import { formatIdr, formatPower } from "@/lib/colocation/calc";
+import { formatIdr, formatPower, formatUsd } from "@/lib/colocation/calc";
 import { track } from "@/lib/colocation/analytics";
 
 interface Props {
@@ -101,8 +101,8 @@ export function LeadForm({ content, input, result, serverTypeLabel, bandwidthLab
                             <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-2">{L.snapshot}</div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-700 dark:text-slate-300">
                                 <span className="font-bold">{serverTypeLabel}</span><span className="text-right tabular-nums">× {result.quantity}</span>
-                                <span>{content.calculator.result.monthly}</span><span className="text-right font-bold tabular-nums">{formatIdr(result.monthlyIdr)}</span>
-                                <span>{content.calculator.result.setup}</span><span className="text-right tabular-nums">{formatIdr(result.setupIdr)}</span>
+                                <span>{content.calculator.result.monthly}</span><span className="text-right font-bold tabular-nums">{formatIdr(result.monthlyIdr)} <span className="font-mono text-xs text-slate-400">({formatUsd(result.monthlyIdr)})</span></span>
+                                <span>{content.calculator.result.setup}</span><span className="text-right tabular-nums">{formatIdr(result.setupIdr)} <span className="font-mono text-xs text-slate-400">({formatUsd(result.setupIdr)})</span></span>
                                 <span>{content.calculator.result.power}</span><span className="text-right tabular-nums">{formatPower(result.totalPowerKw)}</span>
                                 <span>{content.calculator.result.rackSpace}</span><span className="text-right tabular-nums">{result.totalRackU}U · {result.estimatedRackCount} {content.calculator.result.racks.toLowerCase()}</span>
                             </div>

@@ -25,6 +25,7 @@ pm2 restart gdi-platform
 | `DATABASE_URL` | postgres connection |
 | `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | auth (URL must be https://gdiconsult.online) |
 | `BANK_NAME`, `BANK_ACCOUNT_NUMBER`, `BANK_ACCOUNT_HOLDER`, `BANK_SWIFT`, `BANK_PAYMENT_NOTE` | bank requisites shown to customers |
+| `NEXT_PUBLIC_USD_IDR_RATE` | indicative IDR per USD for the "≈ $" hints on colocation pages (default 17600) |
 | `ONLINE_PAYMENT_ENABLED` | `true` + `MIDTRANS_*` keys re-enable Midtrans checkout (off by default) |
 
 ## Payment flow (current)
