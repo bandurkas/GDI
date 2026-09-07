@@ -4,6 +4,8 @@
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { colocationContent } from "@/lib/colocation/content";
+import { servicesContent } from "@/lib/services/content";
+import { PACKAGE_NAMES } from "@/lib/services/config";
 import Image from "next/image";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
@@ -52,8 +54,8 @@ export function Footer() {
                             {dictionary.footer.solutions}
                         </h3>
                         <ul className="space-y-4">
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Start AI Pack</Link></li>
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Enterprise AI</Link></li>
+                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{servicesContent[language].nav}</Link></li>
+                            <li><Link href="/products#pkg-ent-assistant" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{PACKAGE_NAMES["ent-assistant"]}</Link></li>
                             <li><Link href="/services/managed-colocation" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{colocationContent[language].nav}</Link></li>
                             <li><Link href="/services/managed-colocation#ai" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">NVIDIA B200 / B300 Colocation</Link></li>
                             <li><Link href="/services/managed-colocation#server-operations" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{colocationContent[language].serverOps.title}</Link></li>

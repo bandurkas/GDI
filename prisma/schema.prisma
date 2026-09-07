@@ -188,6 +188,28 @@ model ColocationLead {
   @@index([status, createdAt])
 }
 
+/// Requests from the AI services page (custom development, retainers, package questions).
+model ServiceLead {
+  id          String     @id @default(cuid())
+  name        String
+  company     String
+  email       String
+  phone       String
+  interest    String
+  packageId   String?
+  budget      String?
+  timeline    String?
+  message     String?
+  pageUrl     String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  status      LeadStatus @default(NEW)
+  createdAt   DateTime   @default(now())
+
+  @@index([status, createdAt])
+}
+
 model Payout {
   id          String        @id @default(cuid())
   userId      String

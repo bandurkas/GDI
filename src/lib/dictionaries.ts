@@ -9,7 +9,7 @@ const en = {
         logout: "Logout",
         dashboard: "Dashboard",
         adminManager: "Manager",
-        products: "Products",
+        products: "AI Services",
         cart: "Cart",
         contactSales: "Contact sales",
         startNow: "Start now",
@@ -83,47 +83,6 @@ const en = {
         footerText: "Global Digital Informasi is not just a technology vendor, but a strategic digital partner helping businesses build sustainable growth in the digital economy.",
         exploreSolutions: "Explore Solutions",
         exploreInfra: "Data Center & Colocation"
-    },
-    products: {
-        title: "Enterprise AI Infrastructure",
-        subtitle: "A complete suite of intelligent tools to transform your business. From automation foundations to full-scale AI operations.",
-        businessOutcomes: "Business Outcomes",
-        coreCapabilities: "Core Capabilities",
-        whatIncluded: "What is included",
-        tierFoundation: "Foundation",
-        tierExpansion: "Expansion",
-        tierTransformation: "Transformation",
-        tierEnterprise: "Enterprise",
-        startAi: {
-            name: "Start AI Pack",
-            valueProp: "Essential automation for beginners.",
-            outcomes: ["Reduce operational costs by 40%", "Zero-touch processing"],
-            features: ["Intelligent Document Processing", "Workflow Orchestration", "Human-in-the-loop"]
-        },
-        middleScale: {
-            name: "Middle Scale AI",
-            valueProp: "Secure, context-aware GenAI for teams.",
-            outcomes: ["Boost employee productivity", "Secure internal data utilization"],
-            features: ["RAG Architecture", "Role-based Access Control", "Custom Knowledge Base"]
-        },
-        autoPlatform: {
-            name: "AI Automation Platform",
-            valueProp: "Turn raw data into strategic assets.",
-            outcomes: ["Real-time business intelligence", "Predictive forecasting"],
-            features: ["Data Lakehouse Setup", "Real-time Dashboards", "Integrations (SAP, Salesforce)"]
-        },
-        entAssistant: {
-            name: "Enterprise AI Assistant",
-            valueProp: "Scalable cloud foundations for AI.",
-            outcomes: ["99.99% Uptime", "Global low-latency deployment"],
-            features: ["Kubernetes Management", "Multi-cloud Strategy", "Security Compliance (SOC2)"]
-        },
-        cases: [
-            { name: "FinTech", desc: "Automating loan approvals with 99% accuracy." },
-            { name: "Education", desc: "Personalized learning paths for 50k+ students." },
-            { name: "E-commerce", desc: "Dynamic pricing engines driving 30% revenue uplift." },
-            { name: "Logistics", desc: "Route optimization saving 1M miles annually." }
-        ]
     },
     dashboard: {
         title: "User Dashboard",
@@ -258,6 +217,9 @@ const en = {
         orderCancelled: "Order cancelled.",
         confirmPaymentPrompt: "Confirm that the bank transfer for this order has been received?",
         leads: "Colocation Leads",
+        serviceLeads: "Service Requests",
+        interest: "Interest",
+        budget: "Budget",
         lead: "Lead",
         estimate: "Estimate",
         noLeads: "No leads yet.",
@@ -425,7 +387,7 @@ const id: Dictionary = {
         logout: "Keluar",
         dashboard: "Dasbor",
         adminManager: "Pengelola",
-        products: "Produk",
+        products: "Layanan AI",
         cart: "Keranjang",
         contactSales: "Hubungi Penjualan",
         startNow: "Mulai Sekarang",
@@ -499,47 +461,6 @@ const id: Dictionary = {
         footerText: "Global Digital Informasi bukan hanya vendor teknologi, tetapi mitra digital strategis yang membantu bisnis membangun pertumbuhan berkelanjutan dalam ekonomi digital.",
         exploreSolutions: "Jelajahi Solusi",
         exploreInfra: "Data Center & Colocation"
-    },
-    products: {
-        title: "Infrastruktur AI Perusahaan",
-        subtitle: "Rangkaian lengkap alat cerdas untuk mengubah bisnis Anda. Dari fondasi otomatisasi hingga operasi AI skala penuh.",
-        businessOutcomes: "Hasil Bisnis",
-        coreCapabilities: "Kemampuan Inti",
-        whatIncluded: "Apa yang termasuk",
-        tierFoundation: "Fondasi",
-        tierExpansion: "Ekspansi",
-        tierTransformation: "Transformasi",
-        tierEnterprise: "Perusahaan",
-        startAi: {
-            name: "Paket Mulai AI",
-            valueProp: "Otomatisasi penting untuk pemula.",
-            outcomes: ["Kurangi biaya operasional hingga 40%", "Pemrosesan tanpa sentuhan"],
-            features: ["Pemrosesan Dokumen Cerdas", "Orkestrasi Alur Kerja", "Human-in-the-loop"]
-        },
-        middleScale: {
-            name: "AI Skala Menengah",
-            valueProp: "GenAI yang aman dan sadar konteks untuk tim.",
-            outcomes: ["Tingkatkan produktivitas karyawan", "Pemanfaatan data internal yang aman"],
-            features: ["Arsitektur RAG", "Kontrol Akses Berbasis Peran", "Basis Pengetahuan Kustom"]
-        },
-        autoPlatform: {
-            name: "Platform Otomatisasi AI",
-            valueProp: "Ubah data mentah menjadi aset strategis.",
-            outcomes: ["Intelijen bisnis waktu nyata", "Peramalan prediktif"],
-            features: ["Pengaturan Data Lakehouse", "Dasbor Waktu Nyata", "Integrasi (SAP, Salesforce)"]
-        },
-        entAssistant: {
-            name: "Asisten AI Perusahaan",
-            valueProp: "Fondasi cloud yang dapat diskalakan untuk AI.",
-            outcomes: ["Uptime 99.99%", "Penyebaran latensi rendah global"],
-            features: ["Manajemen Kubernetes", "Strategi Multi-cloud", "Kepatuhan Keamanan (SOC2)"]
-        },
-        cases: [
-            { name: "FinTech", desc: "Mengotomatiskan persetujuan pinjaman dengan akurasi 99%." },
-            { name: "Pendidikan", desc: "Jalur pembelajaran yang dipersonalisasi untuk 50 ribu+ siswa." },
-            { name: "E-commerce", desc: "Mesin harga dinamis mendorong peningkatan pendapatan 30%." },
-            { name: "Logistik", desc: "Optimalisasi rute menghemat 1 juta mil setiap tahun." }
-        ]
     },
     dashboard: {
         title: "Dasbor Pengguna",
@@ -674,6 +595,9 @@ const id: Dictionary = {
         orderCancelled: "Pesanan dibatalkan.",
         confirmPaymentPrompt: "Konfirmasi bahwa transfer bank untuk pesanan ini sudah diterima?",
         leads: "Lead Colocation",
+        serviceLeads: "Permintaan Layanan",
+        interest: "Minat",
+        budget: "Anggaran",
         lead: "Lead",
         estimate: "Estimasi",
         noLeads: "Belum ada lead.",

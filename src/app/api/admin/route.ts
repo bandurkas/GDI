@@ -42,6 +42,13 @@ export async function GET(req: Request) {
                 prisma.colocationLead.findMany({ orderBy: { createdAt: "desc" }, skip, take: limit }),
             ]);
             return NextResponse.json({ data: leads, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
+        } else if (type === "service-leads") {
+            const skip = (page - 1) * limit;
+            const [total, leads] = await prisma.$transaction([
+                prisma.serviceLead.count(),
+                prisma.serviceLead.findMany({ orderBy: { createdAt: "desc" }, skip, take: limit }),
+            ]);
+            return NextResponse.json({ data: leads, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
         } else {
             return NextResponse.json({ error: "Invalid type" }, { status: 400 });
         }

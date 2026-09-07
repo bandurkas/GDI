@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { dictionaries } from "@/lib/dictionaries";
 import { colocationContent, type Lang } from "@/lib/colocation/content";
 import { getPreset } from "@/lib/colocation/config";
+import { SERVICE_PACKAGES, PACKAGE_NAMES } from "@/lib/services/config";
 import { calculateColocation, formatIdr, formatUsd } from "@/lib/colocation/calc";
 
 const fromIdr = (id: string) =>
@@ -85,7 +86,7 @@ export default async function GDIPage() {
                                         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">Packages</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {[dict.products.startAi.name, dict.products.middleScale.name, dict.products.autoPlatform.name, dict.products.entAssistant.name].map((n, i) => (
+                                        {SERVICE_PACKAGES.map((p) => PACKAGE_NAMES[p.id]).map((n, i) => (
                                             <div key={n} className={`px-3 py-2.5 rounded-xl text-xs font-bold ${i === 0 ? "bg-indigo-600 text-white" : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-white/10"}`}>{n}</div>
                                         ))}
                                     </div>
