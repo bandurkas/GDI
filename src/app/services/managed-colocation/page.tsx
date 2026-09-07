@@ -403,8 +403,8 @@ export default async function ManagedColocationPage() {
                                     <h3 className="text-xl font-bold mb-1">{c.name}</h3>
                                     <p className={`text-sm mb-5 ${gpu ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>{c.tagline}</p>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t.categories.from} · {fromPreset.name}</p>
-                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(from)}<span className="text-xs font-bold text-slate-400 ml-1">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth}</span></p>
-                                    <p className="font-mono text-xs text-slate-400">{formatUsd(from)}</p>
+                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(from)}</p>
+                                    <p className="text-xs font-bold text-slate-400">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth} · <span className="font-mono font-medium">{formatUsd(from)}</span></p>
                                     <p className={`mt-1 text-xs ${gpu ? "text-slate-400" : "text-slate-500"}`}>{t.serverOps.setup} {formatIdr(setup)} ({formatUsd(setup)}) · {pl.includedHours ? `${pl.includedHours} ${t.serverOps.hours} · ` : ""}{pl.responseMinutes} min {t.serverOps.response}</p>
                                     <p className={`mt-2 mb-5 text-[11px] font-bold ${pl.hardwareRatePerYear ? (gpu ? "text-amber-300" : "text-indigo-600 dark:text-indigo-400") : "text-slate-400"}`}>
                                         {pl.hardwareRatePerYear ? `${t.serverOps.hardwareShare}: ${Math.round(pl.hardwareRatePerYear * 100)}% ${t.serverOps.perYearOfValue}` : t.serverOps.noHardware}
@@ -415,9 +415,9 @@ export default async function ManagedColocationPage() {
                                     </ul>
                                     {"note" in c && c.note && <p className={`mt-4 text-[11px] leading-snug ${gpu ? "text-slate-400" : "text-slate-500"}`}>{c.note}</p>}
                                     <details className={`mt-5 rounded-xl border ${gpu ? "border-white/10 bg-white/5" : "border-slate-200 dark:border-white/10 bg-white dark:bg-white/5"}`}>
-                                        <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-between">
-                                            <span>{t.serverOps.onboardingTitle}</span>
-                                            <span className="font-mono normal-case tracking-normal text-slate-400">{formatIdr(setup)} · {pl.onboardingHours} {t.serverOps.onboardingHours}</span>
+                                        <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold uppercase tracking-widest">
+                                            <span className="block">{t.serverOps.onboardingTitle}</span>
+                                            <span className="block mt-1 font-mono normal-case tracking-normal text-slate-400">{formatIdr(setup)} · {pl.onboardingHours} {t.serverOps.onboardingHours}</span>
                                         </summary>
                                         <ul className={`px-4 pb-4 space-y-1.5 text-xs ${gpu ? "text-slate-300" : "text-slate-600 dark:text-slate-400"}`}>
                                             {t.serverOps.onboarding[pl.id].map((it) => <li key={it} className="flex gap-2"><span className="mt-1.5 h-1 w-1 rounded-full bg-current shrink-0" />{it}</li>)}
