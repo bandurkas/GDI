@@ -12,7 +12,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gdi.id"),
+  metadataBase: new URL("https://gdiconsult.online"),
   title: "Global Digital Informasi - AI & Software Solutions",
   description: "Strategic Digital Partner for the Future Economy. AI-driven software and digital solutions tailored to real business needs.",
   keywords: ["AI", "Software Solutions", "Digital Transformation", "Automation", "GDI"],
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Global Digital Informasi",
     description: "Strategic Digital Partner for the Future Economy.",
-    url: "https://gdi.id", // Placeholder URL
+    url: "https://gdiconsult.online",
     siteName: "GDI",
     images: [
       {

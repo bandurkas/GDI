@@ -141,6 +141,51 @@ model CashbackTransaction {
   notes       String?
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+}
+
+model ColocationLead {
+  id                 String     @id @default(cuid())
+  name               String
+  company            String
+  email              String
+  phone              String
+  presetId           String
+  serverType         String
+  quantity           Int
+  contractTerm       Int?
+  deploymentDate     String?
+  currentLocation    String?
+  needReceiving      String?
+  connectivity       String?
+  gpuFabric          String?
+  siteMode           String?
+  notes              String?
+  monthlyEstimateIdr Float
+  setupEstimateIdr   Float
+  totalRackU         Int
+  totalPowerKw       Float
+  estimatedRackCount Int
+  selectedBandwidth  String?
+  serviceLevel       String?
+  engineeringReview  Boolean    @default(false)
+  enterpriseTier     String?
+  technical          Json?
+  pageUrl            String?
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  status             LeadStatus @default(NEW)
+  createdAt          DateTime   @default(now())
+
+  @@index([status, createdAt])
+}
+
 model Payout {
   id          String        @id @default(cuid())
   userId      String

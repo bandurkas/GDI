@@ -3,11 +3,12 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { colocationContent } from "@/lib/colocation/content";
 import Image from "next/image";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
-    const { dictionary } = useLanguage();
+    const { dictionary, language } = useLanguage();
 
     return (
         <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-white/5 pt-16 pb-8 transition-colors duration-300">
@@ -53,7 +54,8 @@ export function Footer() {
                         <ul className="space-y-4">
                             <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Start AI Pack</Link></li>
                             <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Enterprise AI</Link></li>
-                            <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Cloud Infrastructure</Link></li>
+                            <li><Link href="/services/managed-colocation" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{colocationContent[language].nav}</Link></li>
+                            <li><Link href="/services/managed-colocation#ai" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">NVIDIA B200 / B300 Colocation</Link></li>
                         </ul>
                     </div>
 

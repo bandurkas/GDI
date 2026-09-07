@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { useCart } from "@/context/CartContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { colocationContent } from "@/lib/colocation/content";
 
 export function Navbar() {
     const { data: session } = useSession();
@@ -33,6 +34,9 @@ export function Navbar() {
                     </Link>
                     <Link href="/products" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         {dictionary.common.products}
+                    </Link>
+                    <Link href="/services/managed-colocation" className="hidden md:inline text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        {colocationContent[language].nav}
                     </Link>
 
                     {/* Language Switcher */}

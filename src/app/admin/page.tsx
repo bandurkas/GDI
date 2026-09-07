@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Users, ClipboardList, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ClipboardList, Landmark, Shield, Search, ArrowUpDown, DollarSign, CreditCard, CheckCircle, XCircle, FileText, ChevronDown, Edit, ArrowUpRight, CheckCircle2, ShoppingCart, MoreHorizontal, ExternalLink, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
@@ -204,7 +204,7 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
 export default function AdminPage() {
     const { dictionary } = useLanguage();
     const { data: session, status } = useSession();
-    const [activeTab, setActiveTab] = useState<"users" | "payouts" | "orders">("orders");
+    const [activeTab, setActiveTab] = useState<"users" | "payouts" | "orders" | "leads">("orders");
     const [data, setData] = useState<any[]>([]);
     const [dailyStats, setDailyStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -323,6 +323,15 @@ export default function AdminPage() {
         } catch (e: any) {
             toast.error(e.message);
         }
+    };
+
+    const handleLeadStatus = async (id: string, status: string) => {
+        try {
+            const res = await fetch(`/api/admin/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+            if (!res.ok) throw new Error("Failed");
+            toast.success(dictionary.admin.leadStatusUpdated);
+            fetchData(activeTab, page);
+        } catch (e: any) { toast.error(e.message); }
     };
 
     const openUpdateModal = (payout: AdminPayout) => {
@@ -474,6 +483,19 @@ export default function AdminPage() {
                         </button>
 
                         <button
+                            onClick={() => setActiveTab("leads")}
+                            className={`
+                            group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
+                            ${activeTab === "leads"
+                                    ? "border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"}
+                        `}
+                        >
+                            <Landmark size={18} className="mr-2" />
+                            {dictionary.admin.leads}
+                        </button>
+
+                        <button
                             onClick={() => setActiveTab("payouts")}
                             className={`
                             group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
@@ -516,6 +538,15 @@ export default function AdminPage() {
                                             <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
+                                    ) : activeTab === "leads" ? (
+                                        <>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.lead}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.userEmail}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.estimate}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">{dictionary.admin.status}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.requested}</th>
+                                            <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
+                                        </>
                                     ) : activeTab === "orders" ? (
                                         <>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.order}</th>
@@ -546,7 +577,7 @@ export default function AdminPage() {
                                     </tr>
                                 ) : data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{activeTab === "orders" ? dictionary.admin.noOrders : dictionary.admin.noPayouts}</td>
+                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{activeTab === "orders" ? dictionary.admin.noOrders : activeTab === "leads" ? dictionary.admin.noLeads : dictionary.admin.noPayouts}</td>
                                     </tr>
                                 ) : (
                                     data.map((item: any) => (
@@ -611,6 +642,35 @@ export default function AdminPage() {
                                                                     </div>
                                                                 </>
                                                             )}
+                                                        </div>
+                                                    </td>
+                                                </>
+                                            ) : activeTab === "leads" ? (
+                                                <>
+                                                    <td className="px-4 py-4 max-w-[260px]">
+                                                        <div className="font-bold text-slate-900 dark:text-white truncate">{item.serverType} × {item.quantity}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                                                            {item.totalRackU}U · {item.totalPowerKw >= 1000 ? `${(item.totalPowerKw / 1000).toFixed(2)} MW` : `${item.totalPowerKw} kW`} · {item.estimatedRackCount} racks
+                                                            {item.enterpriseTier && <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-bold uppercase">{String(item.enterpriseTier).replace("-", " ")}</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4 max-w-[220px]">
+                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={item.email}>{item.name} · {item.company}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate"><a href={`mailto:${item.email}`} className="hover:text-indigo-600">{item.email}</a> · <a href={`https://wa.me/${String(item.phone).replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">{item.phone}</a></div>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-4 py-4 text-right text-sm text-slate-900 dark:text-white tabular-nums">
+                                                        <div className="font-bold">{formatCurrency(item.monthlyEstimateIdr * 100)}<span className="text-xs text-slate-400"> /mo</span></div>
+                                                        <div className="text-xs text-slate-500">{item.contractTerm} mo · {item.serviceLevel} · {item.selectedBandwidth}</div>
+                                                    </td>
+                                                    <td className="px-4 py-4 text-center">
+                                                        <select value={item.status} onChange={(e) => handleLeadStatus(item.id, e.target.value)} className={`px-2 py-1 rounded-full text-xs font-bold border-0 focus:ring-2 focus:ring-indigo-500/30 ${item.status === "WON" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : item.status === "LOST" ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400" : item.status === "NEW" ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"}`}>
+                                                            {["NEW", "CONTACTED", "QUOTED", "WON", "LOST"].map((st) => <option key={st} value={st}>{st}</option>)}
+                                                        </select>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-500 dark:text-slate-400">{new Date(item.createdAt).toLocaleString()}</td>
+                                                    <td className="hidden xl:table-cell px-4 py-4 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
+                                                        <div className="truncate" title={[item.notes, item.deploymentDate && `Deploy: ${item.deploymentDate}`, item.currentLocation && `From: ${item.currentLocation}`, item.gpuFabric && `Fabric: ${item.gpuFabric}`, item.siteMode && `Site: ${item.siteMode}`, item.technical && `Tech: ${JSON.stringify(item.technical)}`].filter(Boolean).join(" | ")}>
+                                                            {[item.notes, item.deploymentDate && `Deploy: ${item.deploymentDate}`, item.currentLocation && `From: ${item.currentLocation}`].filter(Boolean).join(" | ") || "-"}
                                                         </div>
                                                     </td>
                                                 </>

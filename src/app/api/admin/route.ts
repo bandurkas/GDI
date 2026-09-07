@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { UserService } from "@/services/user.service";
 import { OrderService } from "@/services/order.service";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -34,6 +35,13 @@ export async function GET(req: Request) {
                 data: orders,
                 meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
             });
+        } else if (type === "leads") {
+            const skip = (page - 1) * limit;
+            const [total, leads] = await prisma.$transaction([
+                prisma.colocationLead.count(),
+                prisma.colocationLead.findMany({ orderBy: { createdAt: "desc" }, skip, take: limit }),
+            ]);
+            return NextResponse.json({ data: leads, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } });
         } else {
             return NextResponse.json({ error: "Invalid type" }, { status: 400 });
         }

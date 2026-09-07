@@ -234,7 +234,12 @@ const en = {
         noOrders: "No orders found.",
         paymentConfirmed: "Payment confirmed, cashback credited.",
         orderCancelled: "Order cancelled.",
-        confirmPaymentPrompt: "Confirm that the bank transfer for this order has been received?"
+        confirmPaymentPrompt: "Confirm that the bank transfer for this order has been received?",
+        leads: "Colocation Leads",
+        lead: "Lead",
+        estimate: "Estimate",
+        noLeads: "No leads yet.",
+        leadStatusUpdated: "Lead status updated."
     },
     footer: {
         rights: "All rights reserved.",
@@ -623,7 +628,12 @@ const id: Dictionary = {
         noOrders: "Pesanan tidak ditemukan.",
         paymentConfirmed: "Pembayaran dikonfirmasi, cashback dikreditkan.",
         orderCancelled: "Pesanan dibatalkan.",
-        confirmPaymentPrompt: "Konfirmasi bahwa transfer bank untuk pesanan ini sudah diterima?"
+        confirmPaymentPrompt: "Konfirmasi bahwa transfer bank untuk pesanan ini sudah diterima?",
+        leads: "Lead Colocation",
+        lead: "Lead",
+        estimate: "Estimasi",
+        noLeads: "Belum ada lead.",
+        leadStatusUpdated: "Status lead diperbarui."
     },
     footer: {
         rights: "Seluruh hak cipta.",
