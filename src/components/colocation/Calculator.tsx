@@ -135,7 +135,7 @@ export function ColocationCalculator({ content }: Props) {
 
             <div className="grid lg:grid-cols-5 gap-8 items-start">
                 {/* ── Configure ── */}
-                <div className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-sm space-y-8">
+                <div className="lg:col-span-3 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-sm space-y-8">
                     <h3 className="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{C.configure}</h3>
 
                     {/* Step 1 — server type */}
@@ -279,7 +279,7 @@ export function ColocationCalculator({ content }: Props) {
                                     <button key={o.id} type="button" role="radio" aria-checked={checked} onClick={() => { markStarted(); setOpsPlan(o.id); }} className={`text-left p-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${checked ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10" : "border-slate-200 dark:border-white/10 hover:border-indigo-300 bg-slate-50/50 dark:bg-white/5"}`}>
                                         <div className="flex items-center justify-between gap-3">
                                             <span className="text-sm font-bold text-slate-900 dark:text-white">{o.name}</span>
-                                            {o.price && <span className={`text-xs font-bold whitespace-nowrap ${checked ? "text-indigo-700 dark:text-indigo-300" : "text-slate-500"}`}>{o.price}</span>}
+                                            {o.price && <span className={`text-xs font-bold text-right ${checked ? "text-indigo-700 dark:text-indigo-300" : "text-slate-500"}`}>{o.price}</span>}
                                         </div>
                                         {o.items.length > 0 && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{o.items.join(" · ")}</p>}
                                     </button>
@@ -292,7 +292,7 @@ export function ColocationCalculator({ content }: Props) {
                 </div>
 
                 {/* ── Estimate ── */}
-                <div className="lg:col-span-2 lg:sticky lg:top-24">
+                <div className="lg:col-span-2 min-w-0 lg:sticky lg:top-24">
                     <div className="bg-slate-900 dark:bg-black text-white rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-900/20 border border-slate-800 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
                         <div className="relative">
