@@ -100,7 +100,7 @@ export function Footer() {
 
                 <div className="pt-8 border-t border-slate-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-slate-400 text-xs font-medium">
-                        © {new Date().getFullYear()} Global Digital Informasi. {dictionary.footer.rights}
+                        © 2024 Global Digital Informasi. {dictionary.footer.rights}
                     </p>
                     <div className="flex items-center gap-6">
                         <Link href="/auth/login" className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold transition-colors">
