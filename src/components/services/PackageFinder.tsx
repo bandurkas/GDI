@@ -34,7 +34,7 @@ export function PackageFinder({ content }: Props) {
                 </Q>
                 <Q n={2} title={F.q2}>
                     <div className="grid grid-cols-2 gap-2">
-                        {(Object.keys(F.q2Options) as FinderSystems[]).map((k) => <button key={k} type="button" className={optionCls(systems === k)} onClick={() => setSystems(k)} aria-pressed={systems === k}>{F.q2Options[k]}</button>)}
+                        {(["0-1", "2", "3-5", "not-sure"] as FinderSystems[]).map((k) => <button key={k} type="button" className={optionCls(systems === k)} onClick={() => setSystems(k)} aria-pressed={systems === k}>{F.q2Options[k]}</button>)}
                     </div>
                 </Q>
                 <Q n={3} title={F.q3}>
