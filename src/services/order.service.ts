@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PaymentService, PaymentMode } from "./payment.service";
+import { getBankDetails } from "@/lib/bank";
 
 export class OrderService {
     static async createOrder(userId: string, paymentMethod: PaymentMode) {
@@ -28,8 +29,8 @@ export class OrderService {
                 data: {
                     userId,
                     totalCents,
-                    status: "PENDING", // Always starts as PENDING for Midtrans
-                    paymentMethod: paymentMethod === "TEST" ? "TEST" : "MIDTRANS",
+                    status: "PENDING",
+                    paymentMethod,
                     items: {
                         create: cart.items.map((item) => ({
                             productId: item.productId,
@@ -74,10 +75,21 @@ export class OrderService {
             return { ...order, status: "COMPLETED" };
         }
 
+        if (paymentMethod === "BANK_TRANSFER") {
+            return { ...order, bankDetails: getBankDetails() };
+        }
+
         return {
             ...order,
             snapToken: paymentResult.snapToken
         };
+    }
+
+    static async cancelOrder(orderId: string) {
+        const order = await prisma.order.findUnique({ where: { id: orderId } });
+        if (!order) throw new Error("Order not found");
+        if (order.status !== "PENDING") throw new Error("Only pending orders can be cancelled");
+        return prisma.order.update({ where: { id: orderId }, data: { status: "FAILED" } });
     }
 
     static async completeOrder(orderId: string) {
@@ -158,13 +170,20 @@ export class OrderService {
         return { orders, total };
     }
 
-    static async getAllOrders() {
-        return await prisma.order.findMany({
-            include: {
-                user: { select: { email: true } },
-                items: true
-            },
-            orderBy: { createdAt: "desc" },
-        });
+    static async getAllOrders(page: number = 1, limit: number = 10) {
+        const skip = (page - 1) * limit;
+        const [total, orders] = await prisma.$transaction([
+            prisma.order.count(),
+            prisma.order.findMany({
+                include: {
+                    user: { select: { id: true, email: true, name: true } },
+                    items: true
+                },
+                orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+                skip,
+                take: limit,
+            }),
+        ]);
+        return { orders, total };
     }
 }

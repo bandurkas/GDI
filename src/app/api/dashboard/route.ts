@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { OrderService } from "@/services/order.service";
 
 import { PayoutService } from "@/services/payout.service";
+import { getBankDetails } from "@/lib/bank";
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({
             wallet,
+            bankDetails: getBankDetails(),
             orders,
             ordersMeta: {
                 total: ordersTotal,

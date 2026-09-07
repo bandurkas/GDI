@@ -29,9 +29,11 @@ export async function GET(req: Request) {
                 }
             });
         } else if (type === "orders") {
-            // Orders pagination not requested yet, leaving as is or could update later
-            const orders = await OrderService.getAllOrders();
-            return NextResponse.json(orders);
+            const { orders, total } = await OrderService.getAllOrders(page, limit);
+            return NextResponse.json({
+                data: orders,
+                meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+            });
         } else {
             return NextResponse.json({ error: "Invalid type" }, { status: 400 });
         }

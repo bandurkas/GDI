@@ -62,7 +62,14 @@ export class MidtransPaymentProvider implements PaymentProvider {
     }
 }
 
-export type PaymentMode = "TEST" | "MIDTRANS";
+// Offline payment: order stays PENDING until an admin confirms the transfer.
+export class BankTransferPaymentProvider implements PaymentProvider {
+    async processPayment(_amountCents: number, orderId: string): Promise<PaymentResult> {
+        return { status: "PENDING", transactionId: `bank_${orderId}` };
+    }
+}
+
+export type PaymentMode = "TEST" | "MIDTRANS" | "BANK_TRANSFER";
 
 export class PaymentService {
     private provider: PaymentProvider;
@@ -70,6 +77,8 @@ export class PaymentService {
     constructor(mode: PaymentMode) {
         if (mode === "TEST") {
             this.provider = new TestPaymentProvider();
+        } else if (mode === "BANK_TRANSFER") {
+            this.provider = new BankTransferPaymentProvider();
         } else {
             this.provider = new MidtransPaymentProvider();
         }

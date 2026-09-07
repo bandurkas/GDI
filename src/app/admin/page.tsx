@@ -204,7 +204,7 @@ function UserUpdateModal({ isOpen, onClose, user, onUpdate }: { isOpen: boolean,
 export default function AdminPage() {
     const { dictionary } = useLanguage();
     const { data: session, status } = useSession();
-    const [activeTab, setActiveTab] = useState<"users" | "payouts">("payouts");
+    const [activeTab, setActiveTab] = useState<"users" | "payouts" | "orders">("orders");
     const [data, setData] = useState<any[]>([]);
     const [dailyStats, setDailyStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -303,6 +303,25 @@ export default function AdminPage() {
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             fetchData(activeTab, newPage);
+        }
+    };
+
+    const handleOrderAction = async (id: string, action: "confirm" | "cancel") => {
+        if (action === "confirm" && !window.confirm(dictionary.admin.confirmPaymentPrompt)) return;
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || "Failed");
+            toast.success(action === "confirm" ? dictionary.admin.paymentConfirmed : dictionary.admin.orderCancelled);
+            setOpenMenuId(null);
+            fetchData(activeTab, page);
+            fetchDailyStats();
+        } catch (e: any) {
+            toast.error(e.message);
         }
     };
 
@@ -442,6 +461,19 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 mb-6">
                     <nav className="flex space-x-8" aria-label="Tabs">
                         <button
+                            onClick={() => setActiveTab("orders")}
+                            className={`
+                            group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
+                            ${activeTab === "orders"
+                                    ? "border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"}
+                        `}
+                        >
+                            <ShoppingCart size={18} className="mr-2" />
+                            {dictionary.admin.orders}
+                        </button>
+
+                        <button
                             onClick={() => setActiveTab("payouts")}
                             className={`
                             group inline-flex items-center py-4 px-1 border-b-2 font-bold text-sm transition-all
@@ -484,6 +516,16 @@ export default function AdminPage() {
                                             <th className="hidden xl:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.comment}</th>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
                                         </>
+                                    ) : activeTab === "orders" ? (
+                                        <>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.order}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.userEmail}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">{dictionary.admin.amount}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.method}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">{dictionary.admin.status}</th>
+                                            <th className="hidden md:table-cell px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.requested}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right w-12"></th>
+                                        </>
                                     ) : activeTab === "users" ? (
                                         <>
                                             <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{dictionary.admin.allUsers}</th>
@@ -504,7 +546,7 @@ export default function AdminPage() {
                                     </tr>
                                 ) : data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{dictionary.admin.noPayouts}</td>
+                                        <td colSpan={7} className="text-center py-12 text-slate-400 dark:text-slate-500">{activeTab === "orders" ? dictionary.admin.noOrders : dictionary.admin.noPayouts}</td>
                                     </tr>
                                 ) : (
                                     data.map((item: any) => (
@@ -570,6 +612,66 @@ export default function AdminPage() {
                                                                 </>
                                                             )}
                                                         </div>
+                                                    </td>
+                                                </>
+                                            ) : activeTab === "orders" ? (
+                                                <>
+                                                    <td className="px-4 py-4 max-w-[240px]">
+                                                        <div className="font-bold text-slate-900 dark:text-white">GDI-{item.id.slice(-8).toUpperCase()}</div>
+                                                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate" title={item.items?.map((i: any) => i.productName).join(", ")}>
+                                                            {item.items?.[0]?.productName}{item.items?.length > 1 && ` +${item.items.length - 1}`}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-4 max-w-[200px]">
+                                                        <div className="font-medium text-slate-900 dark:text-white truncate" title={item.user?.email}>{item.user?.email}</div>
+                                                        {item.user?.name && <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{item.user.name}</div>}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-right font-medium text-slate-900 dark:text-white tabular-nums">{formatCurrency(item.totalCents * 100)}</td>
+                                                    <td className="hidden md:table-cell px-4 py-4 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{String(item.paymentMethod).replace("_", " ")}</td>
+                                                    <td className="px-4 py-4 text-center">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                                            item.status === 'PENDING' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                                'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                                                            }`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                                        {new Date(item.createdAt).toLocaleString()}
+                                                    </td>
+                                                    <td className="px-4 py-4 text-right">
+                                                        {item.status === "PENDING" && (
+                                                            <div className="relative inline-block text-left">
+                                                                <button
+                                                                    onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                                                                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                                                >
+                                                                    <MoreHorizontal size={18} />
+                                                                </button>
+
+                                                                {openMenuId === item.id && (
+                                                                    <>
+                                                                        <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                                                                        <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 z-20 py-2 origin-top-right overflow-hidden">
+                                                                            <button
+                                                                                onClick={() => handleOrderAction(item.id, "confirm")}
+                                                                                className="w-full text-left px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-2 transition-colors border-b border-slate-50 dark:border-slate-700"
+                                                                            >
+                                                                                <CheckCircle2 size={16} />
+                                                                                {dictionary.admin.confirmPayment}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleOrderAction(item.id, "cancel")}
+                                                                                className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
+                                                                            >
+                                                                                <XCircle size={16} />
+                                                                                {dictionary.admin.cancelOrder}
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </>
                                             ) : activeTab === "users" ? (

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Wallet, Package, Clock, DollarSign, ExternalLink, ArrowUpRight, AlertCircle, CheckCircle, FileText, ChevronLeft, ChevronRight, Landmark, Copy, Check } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
@@ -30,14 +30,102 @@ interface DashboardData {
         id: string;
         createdAt: string;
         totalCents: number;
+        status: string;
+        paymentMethod: string;
         items: Array<{
             productName: string;
         }>;
     }>;
+    bankDetails?: {
+        bankName: string;
+        accountNumber: string;
+        accountHolder: string;
+        swift?: string;
+        note?: string;
+    };
     totalBills: number;
 }
 
+const orderRef = (id: string) => `GDI-${id.slice(-8).toUpperCase()}`;
+
+function CopyValue({ value }: { value: string }) {
+    const [copied, setCopied] = useState(false);
+    const { dictionary } = useLanguage();
+    const copy = async () => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch { /* clipboard unavailable */ }
+    };
+    return (
+        <button type="button" onClick={copy} title={dictionary.dashboard.copy} className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? dictionary.dashboard.copied : dictionary.dashboard.copy}
+        </button>
+    );
+}
+
+function PaymentInstructions({ orders, bank, highlightId }: { orders: DashboardData["orders"]; bank?: DashboardData["bankDetails"]; highlightId?: string | null }) {
+    const { dictionary } = useLanguage();
+    const pending = orders.filter(o => o.status === "PENDING" && o.paymentMethod === "BANK_TRANSFER");
+    if (!bank || pending.length === 0) return null;
+    const d = dictionary.dashboard;
+    const row = (label: string, value: string, copyable = true) => (
+        <div className="flex items-center justify-between gap-4 py-3 border-b border-amber-100 dark:border-amber-500/10 last:border-0">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700/70 dark:text-amber-400/70">{label}</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white tabular-nums text-right">
+                {value}{copyable && <CopyValue value={value} />}
+            </span>
+        </div>
+    );
+    return (
+        <div className="bg-amber-50 dark:bg-amber-900/10 rounded-3xl p-8 border border-amber-200 dark:border-amber-500/20 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+                <Landmark className="text-amber-600 dark:text-amber-400" size={24} />
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">{d.paymentInstructions}</h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">{d.paymentInstructionsIntro}</p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white/70 dark:bg-black/20 rounded-2xl px-5 py-2">
+                    {row(d.bankName, bank.bankName, false)}
+                    {row(d.accountNumber, bank.accountNumber)}
+                    {row(d.accountHolder, bank.accountHolder)}
+                    {bank.swift && row(d.swift, bank.swift)}
+                </div>
+                <div className="space-y-3">
+                    {pending.map(o => (
+                        <div key={o.id} className={`rounded-2xl px-5 py-4 border ${o.id === highlightId ? "bg-white dark:bg-slate-900 border-amber-400 dark:border-amber-500 shadow-lg" : "bg-white/70 dark:bg-black/20 border-transparent"}`}>
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{d.pendingOrders}</div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{o.items[0]?.productName}{o.items.length > 1 && <span className="text-slate-500 font-normal"> +{o.items.length - 1}</span>}</div>
+                            <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">{d.orderReference}</span>
+                                <span className="text-sm font-black text-slate-900 dark:text-white">{orderRef(o.id)}<CopyValue value={orderRef(o.id)} /></span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">{d.amountToPay}</span>
+                                <span className="text-sm font-black text-amber-700 dark:text-amber-400 tabular-nums">{formatCurrency(o.totalCents * 100)}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            {bank.note && <p className="text-xs text-slate-600 dark:text-slate-400 mt-4">{bank.note}</p>}
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-4">{d.afterTransfer}</p>
+        </div>
+    );
+}
+
 export default function DashboardPage() {
+    return (
+        <Suspense fallback={null}>
+            <DashboardInner />
+        </Suspense>
+    );
+}
+
+function DashboardInner() {
     const { data: session, status } = useSession();
     const { dictionary } = useLanguage();
     const [data, setData] = useState<DashboardData | null>(null);
@@ -56,6 +144,8 @@ export default function DashboardPage() {
     const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const highlightOrder = searchParams.get("order");
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -110,7 +200,7 @@ export default function DashboardPage() {
         // Actually, let's look at OrderService. It returns `orders` and `total`. 
         // We might need to ask backend for "total spent" if that's critical. 
         // For now, let's just use what we have.
-        const totalBills = orders.reduce((acc: number, order: { totalCents: number }) => acc + order.totalCents, 0);
+        const totalBills = orders.filter((o: { status: string }) => o.status === "COMPLETED").reduce((acc: number, order: { totalCents: number }) => acc + order.totalCents, 0);
 
         setData({ ...json, orders, totalBills });
         setLoading(false);
@@ -206,6 +296,8 @@ export default function DashboardPage() {
                     </div>
                 )}
             </div>
+
+            <PaymentInstructions orders={data?.orders || []} bank={data?.bankDetails} highlightId={highlightOrder} />
 
             <div className="grid lg:grid-cols-3 gap-8">
                 {/* Left Column: Actions */}
@@ -382,7 +474,7 @@ export default function DashboardPage() {
                                                 {order.items[0]?.productName || dictionary.common.unknownService}
                                                 {order.items.length > 1 && <span className="text-slate-500 text-xs font-normal ml-2">+{order.items.length - 1} {dictionary.common.more}</span>}
                                             </p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Order ID: #{order.id.slice(-8)}</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">{dictionary.dashboard.orderReference}: {orderRef(order.id)}</p>
                                         </div>
                                         <div className="col-span-3 flex items-center gap-2 text-xs font-medium text-slate-400">
                                             <Clock size={12} className="text-slate-600" />
@@ -391,8 +483,10 @@ export default function DashboardPage() {
                                         <div className="col-span-2 text-right">
                                             <p className="text-sm font-black text-white tracking-tight tabular-nums">{formatCurrency(order.totalCents * 100)}</p>
                                             <div className="mt-1 inline-flex">
-                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">
-                                                    {dictionary.common.completed}
+                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide border ${order.status === "COMPLETED" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/20" :
+                                                    order.status === "PENDING" ? "bg-amber-500/20 text-amber-400 border-amber-500/20" :
+                                                        "bg-red-500/20 text-red-400 border-red-500/20"}`}>
+                                                    {order.status === "COMPLETED" ? dictionary.common.completed : order.status === "PENDING" ? dictionary.dashboard.awaitingPayment : dictionary.dashboard.cancelled}
                                                 </span>
                                             </div>
                                         </div>

@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { ShoppingBag, Trash2, CreditCard, ArrowRight } from "lucide-react";
+import { ShoppingBag, Trash2, Landmark, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useCart } from "@/context/CartContext";
 import { formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-import Script from "next/script";
 
 export default function CartPage() {
     const { data: session, status } = useSession();
@@ -51,34 +50,16 @@ export default function CartPage() {
             const res = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentMethod: "MIDTRANS" }),
+                body: JSON.stringify({ paymentMethod: "BANK_TRANSFER" }),
             });
 
             if (res.ok) {
                 const orderData = await res.json();
-
-                if (orderData.snapToken) {
-                    // @ts-ignore
-                    window.snap.pay(orderData.snapToken, {
-                        onSuccess: function (result: any) {
-                            router.push("/dashboard?success=true");
-                            refreshCart();
-                        },
-                        onPending: function (result: any) {
-                            router.push("/dashboard?pending=true");
-                            refreshCart();
-                        },
-                        onError: function (result: any) {
-                            alert(dictionary.cart.paymentFailed);
-                        },
-                        onClose: function () {
-                            setPaying(false);
-                        }
-                    });
-                } else if (orderData.status === "COMPLETED") {
-                    // Fallback for immediate success (like TEST mode if we switch it)
+                await refreshCart();
+                if (orderData.status === "COMPLETED") {
                     router.push("/dashboard?success=true");
-                    refreshCart();
+                } else {
+                    router.push(`/dashboard?order=${orderData.id}`);
                 }
             } else {
                 const data = await res.json();
@@ -107,10 +88,6 @@ export default function CartPage() {
 
     return (
         <div className="max-w-4xl mx-auto py-8">
-            <Script
-                src="https://app.sandbox.midtrans.com/snap/snap.js"
-                data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-            />
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                     <ShoppingBag className="text-indigo-600 dark:text-indigo-400" />
@@ -182,6 +159,13 @@ export default function CartPage() {
                                 </div>
                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-widest font-bold">{userPercentage}% {dictionary.cart.instantReward}</p>
                             </div>
+                            <div className="p-4 rounded-xl bg-white/70 dark:bg-white/5 border border-indigo-100 dark:border-white/10 mb-8">
+                                <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white mb-1">
+                                    <Landmark size={16} className="text-indigo-600 dark:text-indigo-400" />
+                                    {dictionary.cart.bankTransferTitle}
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{dictionary.cart.bankTransferNote}</p>
+                            </div>
                             <div className="flex items-start gap-3 mb-8 group/agree cursor-pointer" onClick={() => setAgreed(!agreed)}>
                                 <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all ${agreed ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 dark:border-white/20'}`}>
                                     {agreed && <ArrowRight size={12} className="text-white" />}
@@ -205,8 +189,8 @@ export default function CartPage() {
                                 disabled={paying || !agreed}
                                 className="w-full flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-black dark:hover:bg-indigo-500 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-500/30 disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-600 disabled:shadow-none group"
                             >
-                                <CreditCard size={20} />
-                                {paying ? dictionary.cart.processing : dictionary.cart.payNow}
+                                <Landmark size={20} />
+                                {paying ? dictionary.cart.processing : dictionary.cart.placeOrder}
                                 {!paying && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
                             </button>
                         </div>
