@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         drScope: (["all", "count", "custom"].includes(String(calc.drScope)) ? calc.drScope : "all") as CalcInput["drScope"],
         drCount: Number(calc.drCount) || 0,
         serviceLevel: (["core", "remote", "enterprise"].includes(String(calc.serviceLevel)) ? calc.serviceLevel : "core") as CalcInput["serviceLevel"],
+        opsPlan: (["none", "essential", "standard", "advanced", "gpu"].includes(String(calc.opsPlan)) ? calc.opsPlan : "none") as CalcInput["opsPlan"],
         powerWattsOverride: Number(calc.powerWattsOverride) || undefined,
         custom: calc.custom && typeof calc.custom === "object"
             ? { rackU: Number(calc.custom.rackU) || 1, powerWatts: Number(calc.custom.powerWatts) || 0, notes: str(calc.custom.notes, 300) || undefined }
@@ -69,6 +70,8 @@ export async function POST(req: Request) {
                 estimatedRackCount: result.estimatedRackCount,
                 selectedBandwidth: str(calc.bandwidthId, 20) || null,
                 serviceLevel: str(calc.serviceLevel, 20) || null,
+                opsPlan: result.opsPlan === "none" ? null : result.opsPlan,
+                opsMonthlyIdr: result.opsMonthlyIdr || null,
                 engineeringReview: result.engineeringReview,
                 enterpriseTier: result.enterpriseTier === "none" ? null : result.enterpriseTier,
                 technical: body.technical && typeof body.technical === "object" ? body.technical : undefined,

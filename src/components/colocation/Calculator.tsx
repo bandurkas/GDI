@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Info, AlertTriangle, Cpu, Server, HardDrive, Sparkles } from "lucide-react";
 import type { ColocationContent } from "@/lib/colocation/content";
-import { BANDWIDTH_OPTIONS, COLOCATION_PRESETS, COLOCATION_PRICING, CONTRACT_TERMS, CUSTOM_PRESET_ID, getPreset, type ContractTerm } from "@/lib/colocation/config";
+import { BANDWIDTH_OPTIONS, COLOCATION_PRESETS, COLOCATION_PRICING, CONTRACT_TERMS, CUSTOM_PRESET_ID, SERVER_OPS_PLANS, getPreset, type ContractTerm, type OpsPlanId } from "@/lib/colocation/config";
 import { calculateColocation, formatIdr, formatPower, type CalcInput } from "@/lib/colocation/calc";
 import { track } from "@/lib/colocation/analytics";
 import { LeadForm } from "./LeadForm";
@@ -40,6 +40,7 @@ export function ColocationCalculator({ content }: Props) {
     const [drScope, setDrScope] = useState<CalcInput["drScope"]>("all");
     const [drCount, setDrCount] = useState(1);
     const [serviceLevel, setServiceLevel] = useState<CalcInput["serviceLevel"]>("core");
+    const [opsPlan, setOpsPlan] = useState<OpsPlanId>("none");
     const [powerOverride, setPowerOverride] = useState("");
     const [custom, setCustom] = useState({ rackU: "2", powerWatts: "800", psuCount: "", dualFeed: false, depthMm: "", weightKg: "", ports: "", specialCooling: false, notes: "" });
     const [leadOpen, setLeadOpen] = useState(false);
@@ -47,14 +48,14 @@ export function ColocationCalculator({ content }: Props) {
     const lastTier = useRef("none");
 
     const input: CalcInput = useMemo(() => ({
-        presetId, quantity, contractMonths, bandwidthId, gpuFabric, siteMode, drScope, drCount, serviceLevel,
+        presetId, quantity, contractMonths, bandwidthId, gpuFabric, siteMode, drScope, drCount, serviceLevel, opsPlan,
         powerWattsOverride: Number(powerOverride) || undefined,
         custom: presetId === CUSTOM_PRESET_ID ? {
             rackU: Number(custom.rackU) || 1, powerWatts: Number(custom.powerWatts) || 0,
             psuCount: Number(custom.psuCount) || undefined, dualFeed: custom.dualFeed, depthMm: Number(custom.depthMm) || undefined,
             weightKg: Number(custom.weightKg) || undefined, ports: Number(custom.ports) || undefined, specialCooling: custom.specialCooling, notes: custom.notes || undefined,
         } : undefined,
-    }), [presetId, quantity, contractMonths, bandwidthId, gpuFabric, siteMode, drScope, drCount, serviceLevel, powerOverride, custom]);
+    }), [presetId, quantity, contractMonths, bandwidthId, gpuFabric, siteMode, drScope, drCount, serviceLevel, opsPlan, powerOverride, custom]);
 
     const result = useMemo(() => calculateColocation(input), [input]);
     const preset = getPreset(presetId);
@@ -89,7 +90,11 @@ export function ColocationCalculator({ content }: Props) {
 
     useEffect(() => {
         track("colocation_page_view");
-        const onPreset = (e: Event) => { const id = (e as CustomEvent<string>).detail; if (id) choosePreset(id); };
+        const onPreset = (e: Event) => {
+            const id = (e as CustomEvent<string>).detail;
+            if (id === "ops") { setOpsPlan((cur) => (cur === "none" ? "standard" : cur)); return; }
+            if (id) choosePreset(id);
+        };
         window.addEventListener(PRESET_EVENT, onPreset);
         const fromQuery = new URLSearchParams(window.location.search).get("preset");
         if (fromQuery && (getPreset(fromQuery) || fromQuery === CUSTOM_PRESET_ID)) setPresetId(fromQuery);
@@ -263,6 +268,27 @@ export function ColocationCalculator({ content }: Props) {
                             })}
                         </div>
                     </div>
+
+                    {/* Step 7 — managed server operations */}
+                    <div>
+                        <label className={labelCls}>{content.serverOps.calc.label}</label>
+                        <div className="grid gap-2" role="radiogroup" aria-label={content.serverOps.calc.label}>
+                            {[{ id: "none" as OpsPlanId, name: content.serverOps.calc.none, price: "", items: [] as string[] }, ...SERVER_OPS_PLANS.filter((pl) => (isGpu ? pl.gpuOnly : !pl.gpuOnly)).map((pl) => ({ id: pl.id as OpsPlanId, name: content.serverOps.plans[pl.id].name, price: `+ ${formatIdr(pl.monthlyPerServerIdr)} ${isGpu ? content.serverOps.perNodeMonth : content.serverOps.perServerMonth}`, items: [content.serverOps.coverage[pl.coverage], pl.includedHours ? `${pl.includedHours} ${content.serverOps.hours}` : "", `${pl.responseMinutes} min ${content.serverOps.response}`].filter(Boolean) }))].map((o) => {
+                                const checked = o.id === "none" ? result.opsPlan === "none" : result.opsPlan === o.id;
+                                return (
+                                    <button key={o.id} type="button" role="radio" aria-checked={checked} onClick={() => { markStarted(); setOpsPlan(o.id); }} className={`text-left p-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${checked ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10" : "border-slate-200 dark:border-white/10 hover:border-indigo-300 bg-slate-50/50 dark:bg-white/5"}`}>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white">{o.name}</span>
+                                            {o.price && <span className={`text-xs font-bold whitespace-nowrap ${checked ? "text-indigo-700 dark:text-indigo-300" : "text-slate-500"}`}>{o.price}</span>}
+                                        </div>
+                                        {o.items.length > 0 && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{o.items.join(" · ")}</p>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="mt-2 text-xs text-slate-400">{content.serverOps.calc.hint}</p>
+                        {result.opsVolumeReview && <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">{content.serverOps.calc.volumeReview}</p>}
+                    </div>
                 </div>
 
                 {/* ── Estimate ── */}
@@ -297,6 +323,7 @@ export function ColocationCalculator({ content }: Props) {
                                 <Row label={C.result.setup} value={formatIdr(result.setupIdr)} />
                                 <Row label={C.result.connectivity} value={result.bandwidthQuoteRequired || result.fabricQuoteRequired ? C.result.quoteRequired : result.bandwidthMonthlyIdr ? formatIdr(result.bandwidthMonthlyIdr) : C.result.included} />
                                 <Row label={C.result.service} value={result.serviceQuoteRequired ? C.result.quoteRequired : result.serviceMonthlyIdr ? formatIdr(result.serviceMonthlyIdr) : C.result.included} />
+                                {result.opsPlan !== "none" && <Row label={content.serverOps.calc.resultRow} value={<>{formatIdr(result.opsMonthlyIdr)}<span className="block text-[10px] text-slate-400 font-medium">{content.serverOps.plans[result.opsPlan].name}</span></>} />}
                                 <Row label={`${C.result.contractTotal} ${result.contractMonths} ${C.months}`} value={formatIdr(result.contractTotalIdr)} />
                                 <Row label={C.result.finalQuote} value={<span className={result.engineeringReview ? "text-amber-300" : "text-emerald-300"}>{result.engineeringReview ? C.result.validation : C.result.standardQuote}</span>} />
                             </div>

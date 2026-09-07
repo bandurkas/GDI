@@ -56,6 +56,7 @@ export function Footer() {
                             <li><Link href="/products" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">Enterprise AI</Link></li>
                             <li><Link href="/services/managed-colocation" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{colocationContent[language].nav}</Link></li>
                             <li><Link href="/services/managed-colocation#ai" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">NVIDIA B200 / B300 Colocation</Link></li>
+                            <li><Link href="/services/managed-colocation#server-operations" className="text-slate-500 dark:text-slate-400 text-sm hover:text-indigo-600 dark:hover:text-white transition-colors">{colocationContent[language].serverOps.title}</Link></li>
                         </ul>
                     </div>
 

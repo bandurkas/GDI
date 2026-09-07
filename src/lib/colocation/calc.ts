@@ -4,6 +4,8 @@ import {
     CUSTOM_PRESET_ID,
     ENTERPRISE_THRESHOLDS,
     getPreset,
+    getOpsPlan,
+    type OpsPlanId,
     type ContractTerm,
     type DrScope,
     type EnterpriseTier,
@@ -35,6 +37,8 @@ export interface CalcInput {
     drScope: DrScope;
     drCount: number;
     serviceLevel: ServiceLevel;
+    /** Managed Server Operations plan applied per server (OS / application layer). */
+    opsPlan?: OpsPlanId;
     /** Optional power override for standard presets (watts). */
     powerWattsOverride?: number;
     custom?: CustomServerSpec;
@@ -55,6 +59,10 @@ export interface CalcResult {
     serversMonthlyIdr: number;
     bandwidthMonthlyIdr: number;
     serviceMonthlyIdr: number;
+    opsPlan: OpsPlanId;
+    opsMonthlyIdr: number;
+    opsSetupIdr: number;
+    opsVolumeReview: boolean;
     monthlyIdr: number;
     setupIdr: number;
     contractMonths: number;
@@ -160,7 +168,19 @@ export function calculateColocation(input: CalcInput): CalcResult {
     const serviceQuoteRequired = input.serviceLevel === "enterprise";
     const serviceMonthly = input.serviceLevel === "remote" ? P.remoteOperationsPerDeploymentIdr : 0;
 
-    const monthly = serversMonthly + bandwidthMonthly + serviceMonthly;
+    // Managed Server Operations (per priced server). GPU plan only for GPU-class; non-GPU plans not offered for GPU-class.
+    let opsPlan: OpsPlanId = input.opsPlan ?? "none";
+    if (opsPlan !== "none") {
+        const plan = getOpsPlan(opsPlan);
+        if (!plan || (plan.gpuOnly && !isGpuClass) || (!plan.gpuOnly && isGpuClass)) opsPlan = "none";
+    }
+    const ops = opsPlan !== "none" ? getOpsPlan(opsPlan)! : undefined;
+    const opsMonthly = ops ? ops.monthlyPerServerIdr * pricedServers : 0;
+    const opsSetup = ops ? ops.setupPerServerIdr * pricedServers : 0;
+    const opsVolumeReview = !!ops?.volumeReviewFrom && pricedServers >= ops.volumeReviewFrom;
+
+    const monthly = serversMonthly + bandwidthMonthly + serviceMonthly + opsMonthly;
+    const setupTotal = setup + opsSetup;
     const contractMonths = Math.min(input.contractMonths, 24);
     const contractTotal = monthly * contractMonths;
 
@@ -198,8 +218,12 @@ export function calculateColocation(input: CalcInput): CalcResult {
         serversMonthlyIdr: serversMonthly,
         bandwidthMonthlyIdr: bandwidthMonthly,
         serviceMonthlyIdr: serviceMonthly,
+        opsPlan,
+        opsMonthlyIdr: opsMonthly,
+        opsSetupIdr: opsSetup,
+        opsVolumeReview,
         monthlyIdr: monthly,
-        setupIdr: setup,
+        setupIdr: setupTotal,
         contractMonths,
         contractTotalIdr: contractTotal,
         totalRackU,

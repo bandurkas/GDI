@@ -209,6 +209,42 @@ export const STANDARD_RACK_PRICING = [
     { id: "full", monthlyIdr: 24000000 },
 ];
 
+// ── Managed Server Operations (OS / application layer on the customer's servers) ──
+// Separate from data-center remote hands (facility) and from hardware warranty / OEM support.
+// Prices = regional + global market average × 1.20 (see docs/PRICING_SERVER_OPS.md).
+export type OpsPlanId = "none" | "essential" | "standard" | "advanced" | "gpu";
+
+export interface OpsPlan {
+    id: Exclude<OpsPlanId, "none">;
+    monthlyPerServerIdr: number;
+    setupPerServerIdr: number;
+    includedHours: number;
+    coverage: "24x7-monitoring" | "business-hours" | "24x7";
+    responseMinutes: number;
+    /** Only offered for GPU-class servers (auto-selected for GPU presets). */
+    gpuOnly?: boolean;
+    /** Volume review threshold (servers) after which pricing is negotiated. */
+    volumeReviewFrom?: number;
+}
+
+export const SERVER_OPS_PLANS: OpsPlan[] = [
+    { id: "essential", monthlyPerServerIdr: 480000, setupPerServerIdr: 600000, includedHours: 0, coverage: "24x7-monitoring", responseMinutes: 60 },
+    { id: "standard", monthlyPerServerIdr: 1800000, setupPerServerIdr: 1200000, includedHours: 4, coverage: "business-hours", responseMinutes: 240 },
+    { id: "advanced", monthlyPerServerIdr: 6000000, setupPerServerIdr: 1800000, includedHours: 10, coverage: "24x7", responseMinutes: 30 },
+    { id: "gpu", monthlyPerServerIdr: 9000000, setupPerServerIdr: 6000000, includedHours: 12, coverage: "24x7", responseMinutes: 30, gpuOnly: true, volumeReviewFrom: 10 },
+];
+
+export const SERVER_OPS_ADDONS = {
+    extraAdminHourIdr: 600000,
+    backupPer100GbIdr: 300000,
+    backupPerTbIdr: 1500000,
+    hardwareMaintenanceNbdPerServerIdr: 1800000,
+    vulnerabilityScanPerServerIdr: 900000,
+    drRestoreTestPerEventIdr: 1500000,
+};
+
+export const getOpsPlan = (id: OpsPlanId) => SERVER_OPS_PLANS.find((p) => p.id === id);
+
 export function getPreset(id: string): ColocationPreset | undefined {
     return COLOCATION_PRESETS.find((p) => p.id === id);
 }

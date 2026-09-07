@@ -660,7 +660,7 @@ export default function AdminPage() {
                                                     </td>
                                                     <td className="hidden md:table-cell px-4 py-4 text-right text-sm text-slate-900 dark:text-white tabular-nums">
                                                         <div className="font-bold">{formatCurrency(item.monthlyEstimateIdr * 100)}<span className="text-xs text-slate-400"> /mo</span></div>
-                                                        <div className="text-xs text-slate-500">{item.contractTerm} mo · {item.serviceLevel} · {item.selectedBandwidth}</div>
+                                                        <div className="text-xs text-slate-500">{item.contractTerm} mo · {item.serviceLevel} · {item.selectedBandwidth}{item.opsPlan && ` · ops: ${item.opsPlan}`}</div>
                                                     </td>
                                                     <td className="px-4 py-4 text-center">
                                                         <select value={item.status} onChange={(e) => handleLeadStatus(item.id, e.target.value)} className={`px-2 py-1 rounded-full text-xs font-bold border-0 focus:ring-2 focus:ring-indigo-500/30 ${item.status === "WON" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : item.status === "LOST" ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400" : item.status === "NEW" ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"}`}>

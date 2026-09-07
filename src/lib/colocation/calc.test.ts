@@ -182,3 +182,34 @@ describe("colocation calculator — add-ons and options", () => {
         expect(rev.setupIdr).toBe(6000000);
     });
 });
+
+describe("managed server operations", () => {
+    it("standard plan adds per-server monthly and setup", () => {
+        const r = calculateColocation({ ...base, presetId: "standard-1u", quantity: 3, opsPlan: "standard" });
+        expect(r.opsMonthlyIdr).toBe(3 * 1800000);
+        expect(r.monthlyIdr).toBe(3 * 1560000 + 3 * 1800000);
+        expect(r.setupIdr).toBe(3 * 660000 + 3 * 1200000);
+    });
+    it("essential and advanced plans price correctly", () => {
+        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "essential" }).monthlyIdr).toBe(2040000 + 480000);
+        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "advanced" }).monthlyIdr).toBe(2040000 + 6000000);
+    });
+    it("GPU plan only applies to GPU-class servers; non-GPU plans are dropped for GPU servers", () => {
+        const g = calculateColocation({ ...base, opsPlan: "gpu" });
+        expect(g.opsPlan).toBe("gpu");
+        expect(g.monthlyIdr).toBe(49500000 + 9000000);
+        expect(g.setupIdr).toBe(6000000 + 6000000);
+        expect(calculateColocation({ ...base, presetId: "standard-1u", opsPlan: "gpu" }).opsPlan).toBe("none");
+        expect(calculateColocation({ ...base, opsPlan: "standard" }).opsPlan).toBe("none");
+    });
+    it("GPU ops flags volume review from 10 nodes and follows DR duplication", () => {
+        expect(calculateColocation({ ...base, quantity: 10, opsPlan: "gpu" }).opsVolumeReview).toBe(true);
+        expect(calculateColocation({ ...base, quantity: 9, opsPlan: "gpu" }).opsVolumeReview).toBe(false);
+        const dr = calculateColocation({ ...base, quantity: 2, siteMode: "dr", drScope: "all", opsPlan: "gpu" });
+        expect(dr.opsMonthlyIdr).toBe(4 * 9000000);
+    });
+    it("spec totals are unchanged when no ops plan is selected", () => {
+        expect(calculateColocation({ ...base, quantity: 10 }).monthlyIdr).toBe(495000000);
+        expect(calculateColocation({ ...base, quantity: 10 }).opsMonthlyIdr).toBe(0);
+    });
+});

@@ -173,6 +173,8 @@ model ColocationLead {
   estimatedRackCount Int
   selectedBandwidth  String?
   serviceLevel       String?
+  opsPlan            String?
+  opsMonthlyIdr      Float?
   engineeringReview  Boolean    @default(false)
   enterpriseTier     String?
   technical          Json?
