@@ -11,7 +11,7 @@ interface Props {
     usableU: number;
     systemsPerRack?: number;
     highDensity: boolean;
-    labels: { rack: string; perRack: string; standardBand: string; highDensityBand: string };
+    labels: { rack: string; perRack: string; standardBand: string; highDensityBand: string; serversPerRack: string };
 }
 
 const STANDARD_RACK_KW = 6;   // typical standard-density rack allowance shown as reference band
@@ -76,7 +76,7 @@ export function RackViz({ rackUPerServer, powerKwPerServer, servers, racks, usab
                     <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${stdMark * 100}%` }}>{STANDARD_RACK_KW} kW · {labels.standardBand}</span>
                     <span className="absolute right-0">{HIGH_DENSITY_KW} kW · {labels.highDensityBand}</span>
                 </div>
-                <p className="mt-3 text-[10px] font-mono text-slate-500">{usedU}/{usableU}U · {perRack}/{labels.rack.toLowerCase()}</p>
+                <p className="mt-3 text-[10px] font-mono text-slate-500">{usedU}/{usableU}U · {perRack} {labels.serversPerRack}</p>
             </div>
         </div>
     );

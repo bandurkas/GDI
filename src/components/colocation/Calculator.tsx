@@ -283,7 +283,7 @@ export function ColocationCalculator({ content }: Props) {
                                     usableU={COLOCATION_PRICING.usableRackU}
                                     systemsPerRack={preset?.systemsPerRackDefault}
                                     highDensity={result.highDensity}
-                                    labels={{ rack: C.result.racks, perRack: C.rackViz.perRack, standardBand: C.rackViz.standard, highDensityBand: C.rackViz.highDensity }}
+                                    labels={{ rack: C.result.racks, perRack: C.rackViz.perRack, standardBand: C.rackViz.standard, highDensityBand: C.rackViz.highDensity, serversPerRack: C.rackViz.serversPerRack }}
                                 />
                             </div>
 

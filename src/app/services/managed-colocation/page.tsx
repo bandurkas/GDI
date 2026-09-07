@@ -280,7 +280,7 @@ export default async function ManagedColocationPage() {
                                         <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
                                             {metrics.map((m, i) => (
                                                 <div key={i} className={i < 2 ? "" : "col-span-2 sm:col-span-1"}>
-                                                    <dd className={`font-mono font-bold ${i < 2 ? "text-2xl" : "text-sm"} text-white leading-tight`}>{m}</dd>
+                                                    <dd className={`font-mono font-bold ${i < 2 ? "text-xl" : "text-sm"} text-white leading-snug`}>{m}</dd>
                                                 </div>
                                             ))}
                                         </dl>

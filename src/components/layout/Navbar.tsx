@@ -28,8 +28,8 @@ export function Navbar() {
                     />
                 </Link>
 
-                <div className="flex items-center gap-6">
-                    <Link href="/" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                <div className="flex items-center gap-3 sm:gap-6">
+                    <Link href="/" className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         GDI
                     </Link>
                     <Link href="/products" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
@@ -95,13 +95,13 @@ export function Navbar() {
                             </button>
                         </>
                     ) : (
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
                             <Link href="/auth/login" className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                 {dictionary.common.login}
                             </Link>
                             <Link
                                 href="/auth/register"
-                                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/40"
+                                className="rounded-full bg-indigo-600 px-3 sm:px-5 py-2 text-sm font-medium text-white whitespace-nowrap hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/40"
                             >
                                 {dictionary.common.getStarted}
                             </Link>
