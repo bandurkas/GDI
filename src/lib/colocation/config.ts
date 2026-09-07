@@ -28,6 +28,8 @@ export interface ColocationPreset {
     badge?: "popular-ai" | "blackwell-ultra";
     examples?: string[];
     note?: string;
+    /** Typical market value of the server (USD), used to size the hardware-responsibility component of ops plans. */
+    hardwareValueUsd?: number;
     /** Only used for the on-page "server categories" cards. */
     gpuCount?: number;
     weightKg?: number;
@@ -44,6 +46,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         setupPriceIdr: 660000,
         baseMonthlyIdr: 1560000,
         engineeringReview: false,
+        hardwareValueUsd: 6000,
         examples: ["Dell PowerEdge R660-class", "HPE ProLiant DL360-class", "Supermicro 1U compute"],
     },
     {
@@ -56,6 +59,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         setupPriceIdr: 660000,
         baseMonthlyIdr: 2040000,
         engineeringReview: false,
+        hardwareValueUsd: 9000,
         examples: ["Dell PowerEdge R760-class", "HPE ProLiant DL380-class", "Lenovo ThinkSystem SR650-class"],
     },
     {
@@ -68,6 +72,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         setupPriceIdr: 660000,
         baseMonthlyIdr: 2040000,
         engineeringReview: false,
+        hardwareValueUsd: 16000,
         examples: ["Storage appliances", "CPU-dense 2U systems above the standard power allowance"],
     },
     {
@@ -79,6 +84,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         setupPriceIdr: 6000000,
         systemsPerRackDefault: 4,
         engineeringReview: true,
+        hardwareValueUsd: 50000,
         examples: ["4× NVIDIA L40S", "4× PCIe accelerator server", "OEM AI inference server"],
         note: "Actual OEM PSU and power profile must be validated.",
     },
@@ -92,6 +98,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         systemsPerRackDefault: 2,
         systemsPerRackSpecialized: 4,
         engineeringReview: true,
+        hardwareValueUsd: 230000,
         gpuCount: 8,
     },
     {
@@ -104,6 +111,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         systemsPerRackDefault: 2,
         systemsPerRackSpecialized: 4,
         engineeringReview: true,
+        hardwareValueUsd: 315000,
         gpuCount: 8,
     },
     {
@@ -116,6 +124,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         systemsPerRackDefault: 2,
         systemsPerRackSpecialized: 4,
         engineeringReview: true,
+        hardwareValueUsd: 290000,
         badge: "popular-ai",
         gpuCount: 8,
         weightKg: 142.4,
@@ -131,6 +140,7 @@ export const COLOCATION_PRESETS: ColocationPreset[] = [
         systemsPerRackDefault: 2,
         systemsPerRackSpecialized: 4,
         engineeringReview: true,
+        hardwareValueUsd: 330000,
         badge: "blackwell-ultra",
         gpuCount: 8,
         weightKg: 168,
@@ -209,15 +219,22 @@ export const STANDARD_RACK_PRICING = [
     { id: "full", monthlyIdr: 24000000 },
 ];
 
-// ── Managed Server Operations (OS / application layer on the customer's servers) ──
-// Separate from data-center remote hands (facility) and from hardware warranty / OEM support.
-// Prices = regional + global market average × 1.20 (see docs/PRICING_SERVER_OPS.md).
+// ── Managed Server Operations (OS / application layer + hardware responsibility) ──
+// Separate from data-center remote hands (facility). Price per server =
+//   (labour & tooling cost basis + hardware-responsibility reserve = hardware value × rate / 12) × SERVER_OPS_MARKUP
+// Cost bases are market averages (see docs/PRICING_SERVER_OPS.md). Markup requested by the owner: +30 %.
 export type OpsPlanId = "none" | "essential" | "standard" | "advanced" | "gpu";
 
 export interface OpsPlan {
     id: Exclude<OpsPlanId, "none">;
-    monthlyPerServerIdr: number;
-    setupPerServerIdr: number;
+    /** Market-average labour + tooling cost per server per month (IDR, before markup). */
+    labourCostIdr: number;
+    /** Hardware-responsibility reserve as a share of hardware value per year (0 = no hardware coverage). */
+    hardwareRatePerYear: number;
+    /** One-time onboarding (connection, initial configuration, customer software install), market-average cost basis (before markup). */
+    setupCostIdr: number;
+    /** Engineering hours included in onboarding. */
+    onboardingHours: number;
     includedHours: number;
     coverage: "24x7-monitoring" | "business-hours" | "24x7";
     responseMinutes: number;
@@ -227,20 +244,34 @@ export interface OpsPlan {
     volumeReviewFrom?: number;
 }
 
+export const SERVER_OPS_MARKUP = 1.3;
+export const USD_IDR_PLANNING_RATE = 17600;
+
 export const SERVER_OPS_PLANS: OpsPlan[] = [
-    { id: "essential", monthlyPerServerIdr: 480000, setupPerServerIdr: 600000, includedHours: 0, coverage: "24x7-monitoring", responseMinutes: 60 },
-    { id: "standard", monthlyPerServerIdr: 1800000, setupPerServerIdr: 1200000, includedHours: 4, coverage: "business-hours", responseMinutes: 240 },
-    { id: "advanced", monthlyPerServerIdr: 6000000, setupPerServerIdr: 1800000, includedHours: 10, coverage: "24x7", responseMinutes: 30 },
-    { id: "gpu", monthlyPerServerIdr: 9000000, setupPerServerIdr: 6000000, includedHours: 12, coverage: "24x7", responseMinutes: 30, gpuOnly: true, volumeReviewFrom: 10 },
+    { id: "essential", labourCostIdr: 400000, hardwareRatePerYear: 0, setupCostIdr: 500000, onboardingHours: 2, includedHours: 0, coverage: "24x7-monitoring", responseMinutes: 60 },
+    { id: "standard", labourCostIdr: 1500000, hardwareRatePerYear: 0.05, setupCostIdr: 2000000, onboardingHours: 6, includedHours: 4, coverage: "business-hours", responseMinutes: 240 },
+    { id: "advanced", labourCostIdr: 5000000, hardwareRatePerYear: 0.10, setupCostIdr: 3000000, onboardingHours: 10, includedHours: 10, coverage: "24x7", responseMinutes: 30 },
+    { id: "gpu", labourCostIdr: 7500000, hardwareRatePerYear: 0.10, setupCostIdr: 9000000, onboardingHours: 24, includedHours: 12, coverage: "24x7", responseMinutes: 30, gpuOnly: true, volumeReviewFrom: 10 },
 ];
 
+const round10k = (v: number) => Math.round(v / 10000) * 10000;
+
+/** Public monthly price of an ops plan for a server of the given hardware value (IDR). */
+export function opsMonthlyIdr(plan: OpsPlan, hardwareValueIdr: number): number {
+    return round10k((plan.labourCostIdr + (hardwareValueIdr * plan.hardwareRatePerYear) / 12) * SERVER_OPS_MARKUP);
+}
+export function opsSetupIdr(plan: OpsPlan): number {
+    return round10k(plan.setupCostIdr * SERVER_OPS_MARKUP);
+}
+export const hardwareValueIdrOf = (preset: ColocationPreset) => (preset.hardwareValueUsd ?? 6000) * USD_IDR_PLANNING_RATE;
+
+/** Add-ons: market average × SERVER_OPS_MARKUP. Hardware parts/labour are included in Advanced & GPU plans; at cost otherwise. */
 export const SERVER_OPS_ADDONS = {
-    extraAdminHourIdr: 600000,
-    backupPer100GbIdr: 300000,
-    backupPerTbIdr: 1500000,
-    hardwareMaintenanceNbdPerServerIdr: 1800000,
-    vulnerabilityScanPerServerIdr: 900000,
-    drRestoreTestPerEventIdr: 1500000,
+    extraAdminHourIdr: 650000,
+    backupPer100GbIdr: 325000,
+    backupPerTbIdr: 1625000,
+    vulnerabilityScanPerServerIdr: 975000,
+    drRestoreTestPerEventIdr: 1625000,
 };
 
 export const getOpsPlan = (id: OpsPlanId) => SERVER_OPS_PLANS.find((p) => p.id === id);

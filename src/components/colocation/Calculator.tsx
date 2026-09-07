@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus, Info, AlertTriangle, Cpu, Server, HardDrive, Sparkles } from "lucide-react";
 import type { ColocationContent } from "@/lib/colocation/content";
-import { BANDWIDTH_OPTIONS, COLOCATION_PRESETS, COLOCATION_PRICING, CONTRACT_TERMS, CUSTOM_PRESET_ID, SERVER_OPS_PLANS, getPreset, type ContractTerm, type OpsPlanId } from "@/lib/colocation/config";
+import { BANDWIDTH_OPTIONS, COLOCATION_PRESETS, COLOCATION_PRICING, CONTRACT_TERMS, CUSTOM_PRESET_ID, SERVER_OPS_PLANS, getPreset, opsMonthlyIdr, type ContractTerm, type OpsPlanId } from "@/lib/colocation/config";
 import { calculateColocation, formatIdr, formatPower, formatUsd, type CalcInput } from "@/lib/colocation/calc";
 import { track } from "@/lib/colocation/analytics";
 import { LeadForm } from "./LeadForm";
@@ -42,7 +42,7 @@ export function ColocationCalculator({ content }: Props) {
     const [serviceLevel, setServiceLevel] = useState<CalcInput["serviceLevel"]>("core");
     const [opsPlan, setOpsPlan] = useState<OpsPlanId>("none");
     const [powerOverride, setPowerOverride] = useState("");
-    const [custom, setCustom] = useState({ rackU: "2", powerWatts: "800", psuCount: "", dualFeed: false, depthMm: "", weightKg: "", ports: "", specialCooling: false, notes: "" });
+    const [custom, setCustom] = useState({ rackU: "2", powerWatts: "800", psuCount: "", dualFeed: false, depthMm: "", weightKg: "", ports: "", specialCooling: false, notes: "", hardwareValue: "" });
     const [leadOpen, setLeadOpen] = useState(false);
     const started = useRef(false);
     const lastTier = useRef("none");
@@ -54,6 +54,7 @@ export function ColocationCalculator({ content }: Props) {
             rackU: Number(custom.rackU) || 1, powerWatts: Number(custom.powerWatts) || 0,
             psuCount: Number(custom.psuCount) || undefined, dualFeed: custom.dualFeed, depthMm: Number(custom.depthMm) || undefined,
             weightKg: Number(custom.weightKg) || undefined, ports: Number(custom.ports) || undefined, specialCooling: custom.specialCooling, notes: custom.notes || undefined,
+            hardwareValueIdr: Number(custom.hardwareValue) || undefined,
         } : undefined,
     }), [presetId, quantity, contractMonths, bandwidthId, gpuFabric, siteMode, drScope, drCount, serviceLevel, opsPlan, powerOverride, custom]);
 
@@ -186,6 +187,11 @@ export function ColocationCalculator({ content }: Props) {
                             <label className="flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300"><input type="checkbox" className="h-4 w-4 accent-indigo-600" checked={custom.dualFeed} onChange={(e) => setCustom({ ...custom, dualFeed: e.target.checked })} />{C.customFields.dualFeed}</label>
                             <label className="flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-300"><input type="checkbox" className="h-4 w-4 accent-indigo-600" checked={custom.specialCooling} onChange={(e) => setCustom({ ...custom, specialCooling: e.target.checked })} />{C.customFields.specialCooling}</label>
                             <div className="sm:col-span-2"><label className={labelCls} htmlFor="c-notes">{C.customFields.notes}</label><input id="c-notes" className={inputCls} value={custom.notes} onChange={(e) => setCustom({ ...custom, notes: e.target.value })} /></div>
+                            <div className="sm:col-span-2">
+                                <label className={labelCls} htmlFor="c-hw">{content.serverOps.calc.customValue}</label>
+                                <input id="c-hw" type="number" min={0} step={1000000} inputMode="numeric" className={inputCls} value={custom.hardwareValue} onChange={(e) => setCustom({ ...custom, hardwareValue: e.target.value })} placeholder={String(result.hardwareValueIdr)} />
+                                <p className="mt-1.5 text-xs text-slate-400">{content.serverOps.calc.customValueHint}</p>
+                            </div>
                         </div>
                     )}
 
@@ -273,7 +279,7 @@ export function ColocationCalculator({ content }: Props) {
                     <div>
                         <label className={labelCls}>{content.serverOps.calc.label}</label>
                         <div className="grid gap-2" role="radiogroup" aria-label={content.serverOps.calc.label}>
-                            {[{ id: "none" as OpsPlanId, name: content.serverOps.calc.none, price: "", items: [] as string[] }, ...SERVER_OPS_PLANS.filter((pl) => (isGpu ? pl.gpuOnly : !pl.gpuOnly)).map((pl) => ({ id: pl.id as OpsPlanId, name: content.serverOps.plans[pl.id].name, price: `+ ${formatIdr(pl.monthlyPerServerIdr)} (${formatUsd(pl.monthlyPerServerIdr)}) ${isGpu ? content.serverOps.perNodeMonth : content.serverOps.perServerMonth}`, items: [content.serverOps.coverage[pl.coverage], pl.includedHours ? `${pl.includedHours} ${content.serverOps.hours}` : "", `${pl.responseMinutes} min ${content.serverOps.response}`].filter(Boolean) }))].map((o) => {
+                            {[{ id: "none" as OpsPlanId, name: content.serverOps.calc.none, price: "", items: [] as string[] }, ...SERVER_OPS_PLANS.filter((pl) => (isGpu ? pl.gpuOnly : !pl.gpuOnly)).map((pl) => ({ id: pl.id as OpsPlanId, name: content.serverOps.plans[pl.id].name, price: `+ ${formatIdr(opsMonthlyIdr(pl, result.hardwareValueIdr))} (${formatUsd(opsMonthlyIdr(pl, result.hardwareValueIdr))}) ${isGpu ? content.serverOps.perNodeMonth : content.serverOps.perServerMonth}`, items: [content.serverOps.coverage[pl.coverage], pl.includedHours ? `${pl.includedHours} ${content.serverOps.hours}` : "", `${pl.responseMinutes} min ${content.serverOps.response}`].filter(Boolean) }))].map((o) => {
                                 const checked = o.id === "none" ? result.opsPlan === "none" : result.opsPlan === o.id;
                                 return (
                                     <button key={o.id} type="button" role="radio" aria-checked={checked} onClick={() => { markStarted(); setOpsPlan(o.id); }} className={`text-left p-4 rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${checked ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10" : "border-slate-200 dark:border-white/10 hover:border-indigo-300 bg-slate-50/50 dark:bg-white/5"}`}>
@@ -325,6 +331,7 @@ export function ColocationCalculator({ content }: Props) {
                                 <Row label={C.result.connectivity} value={result.bandwidthQuoteRequired || result.fabricQuoteRequired ? C.result.quoteRequired : result.bandwidthMonthlyIdr ? formatIdr(result.bandwidthMonthlyIdr) : C.result.included} />
                                 <Row label={C.result.service} value={result.serviceQuoteRequired ? C.result.quoteRequired : result.serviceMonthlyIdr ? formatIdr(result.serviceMonthlyIdr) : C.result.included} />
                                 {result.opsPlan !== "none" && <Row label={content.serverOps.calc.resultRow} value={<>{formatIdr(result.opsMonthlyIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.opsMonthlyIdr)} · {content.serverOps.plans[result.opsPlan].name}</span></>} />}
+                                {result.opsPlan !== "none" && <Row label={content.serverOps.calc.hardwareValue} value={<>{formatIdr(result.hardwareValueIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.hardwareValueIdr)}{result.hardwareValueAssumed ? ` · ${content.serverOps.calc.assumed}` : ""}</span></>} />}
                                 <Row label={`${C.result.contractTotal} ${result.contractMonths} ${C.months}`} value={<>{formatIdr(result.contractTotalIdr)}<span className="block text-[10px] text-slate-400 font-medium">{formatUsd(result.contractTotalIdr)}</span></>} />
                                 <Row label={C.result.finalQuote} value={<span className={result.engineeringReview ? "text-amber-300" : "text-emerald-300"}>{result.engineeringReview ? C.result.validation : C.result.standardQuote}</span>} />
                             </div>

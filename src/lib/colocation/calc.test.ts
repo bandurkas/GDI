@@ -183,33 +183,46 @@ describe("colocation calculator — add-ons and options", () => {
     });
 });
 
-describe("managed server operations", () => {
-    it("standard plan adds per-server monthly and setup", () => {
-        const r = calculateColocation({ ...base, presetId: "standard-1u", quantity: 3, opsPlan: "standard" });
-        expect(r.opsMonthlyIdr).toBe(3 * 1800000);
-        expect(r.monthlyIdr).toBe(3 * 1560000 + 3 * 1800000);
-        expect(r.setupIdr).toBe(3 * 660000 + 3 * 1200000);
+describe("managed server operations (labour + hardware responsibility) × 1.30", () => {
+    // 1U: value USD 6,000 × 17,600 = 105.6M IDR
+    it("standard plan on 1U = (1.5M + 105.6M×5%/12) × 1.3 ≈ 2,520,000", () => {
+        const r = calculateColocation({ ...base, presetId: "standard-1u", quantity: 1, opsPlan: "standard" });
+        expect(r.opsMonthlyPerServerIdr).toBe(2520000);
+        expect(r.monthlyIdr).toBe(1560000 + 2520000);
+        expect(r.setupIdr).toBe(660000 + 2600000);
     });
-    it("essential and advanced plans price correctly", () => {
-        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "essential" }).monthlyIdr).toBe(2040000 + 480000);
-        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "advanced" }).monthlyIdr).toBe(2040000 + 6000000);
+    it("essential has no hardware component (520k) regardless of server value", () => {
+        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "essential" }).opsMonthlyPerServerIdr).toBe(520000);
+        expect(calculateColocation({ ...base, presetId: "storage-2u", opsPlan: "essential" }).opsMonthlyPerServerIdr).toBe(520000);
     });
-    it("GPU plan only applies to GPU-class servers; non-GPU plans are dropped for GPU servers", () => {
-        const g = calculateColocation({ ...base, opsPlan: "gpu" });
-        expect(g.opsPlan).toBe("gpu");
-        expect(g.monthlyIdr).toBe(49500000 + 9000000);
-        expect(g.setupIdr).toBe(6000000 + 6000000);
+    it("advanced on 2U = (5M + 158.4M×10%/12) × 1.3 ≈ 8,220,000", () => {
+        expect(calculateColocation({ ...base, presetId: "standard-2u", opsPlan: "advanced" }).opsMonthlyPerServerIdr).toBe(8220000);
+    });
+    it("GPU plan on B200 = (7.5M + 5.104B×10%/12) × 1.3 ≈ 65,040,000; B300 higher", () => {
+        const b200 = calculateColocation({ ...base, opsPlan: "gpu" });
+        expect(b200.opsMonthlyPerServerIdr).toBe(65040000);
+        expect(b200.monthlyIdr).toBe(49500000 + 65040000);
+        expect(b200.setupIdr).toBe(6000000 + 11700000);
+        const b300 = calculateColocation({ ...base, presetId: "dgx-b300", opsPlan: "gpu" });
+        expect(b300.opsMonthlyPerServerIdr).toBeGreaterThan(b200.opsMonthlyPerServerIdr);
+        const l40s = calculateColocation({ ...base, presetId: "gpu-4u-l40s", opsPlan: "gpu" });
+        expect(l40s.opsMonthlyPerServerIdr).toBe(19280000);
+    });
+    it("plan scoping: GPU plan only for GPU-class, OS plans not for GPU-class", () => {
         expect(calculateColocation({ ...base, presetId: "standard-1u", opsPlan: "gpu" }).opsPlan).toBe("none");
         expect(calculateColocation({ ...base, opsPlan: "standard" }).opsPlan).toBe("none");
     });
-    it("GPU ops flags volume review from 10 nodes and follows DR duplication", () => {
-        expect(calculateColocation({ ...base, quantity: 10, opsPlan: "gpu" }).opsVolumeReview).toBe(true);
-        expect(calculateColocation({ ...base, quantity: 9, opsPlan: "gpu" }).opsVolumeReview).toBe(false);
-        const dr = calculateColocation({ ...base, quantity: 2, siteMode: "dr", drScope: "all", opsPlan: "gpu" });
-        expect(dr.opsMonthlyIdr).toBe(4 * 9000000);
+    it("custom server uses entered hardware value, otherwise a flagged heuristic", () => {
+        const entered = calculateColocation({ ...base, presetId: "custom", custom: { rackU: 2, powerWatts: 800, hardwareValueIdr: 200000000 }, opsPlan: "advanced" });
+        expect(entered.hardwareValueAssumed).toBe(false);
+        expect(entered.opsMonthlyPerServerIdr).toBe(Math.round(((5000000 + 200000000 * 0.1 / 12) * 1.3) / 10000) * 10000);
+        const assumed = calculateColocation({ ...base, presetId: "custom", custom: { rackU: 2, powerWatts: 800 }, opsPlan: "standard" });
+        expect(assumed.hardwareValueAssumed).toBe(true);
+        expect(assumed.hardwareValueIdr).toBe(9000 * 17600);
     });
-    it("spec totals are unchanged when no ops plan is selected", () => {
+    it("volume review from 10 GPU nodes; DR duplication applies; no plan → spec totals unchanged", () => {
+        expect(calculateColocation({ ...base, quantity: 10, opsPlan: "gpu" }).opsVolumeReview).toBe(true);
+        expect(calculateColocation({ ...base, quantity: 2, siteMode: "dr", drScope: "all", opsPlan: "gpu" }).opsMonthlyIdr).toBe(4 * 65040000);
         expect(calculateColocation({ ...base, quantity: 10 }).monthlyIdr).toBe(495000000);
-        expect(calculateColocation({ ...base, quantity: 10 }).opsMonthlyIdr).toBe(0);
     });
 });

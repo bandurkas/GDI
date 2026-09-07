@@ -5,6 +5,10 @@ import {
     ENTERPRISE_THRESHOLDS,
     getPreset,
     getOpsPlan,
+    opsMonthlyIdr,
+    opsSetupIdr,
+    hardwareValueIdrOf,
+    USD_IDR_PLANNING_RATE,
     type OpsPlanId,
     type ContractTerm,
     type DrScope,
@@ -25,6 +29,8 @@ export interface CustomServerSpec {
     bandwidth?: string;
     specialCooling?: boolean;
     notes?: string;
+    /** Approximate hardware value (IDR) for the hardware-responsibility component; heuristic if omitted. */
+    hardwareValueIdr?: number;
 }
 
 export interface CalcInput {
@@ -60,6 +66,10 @@ export interface CalcResult {
     bandwidthMonthlyIdr: number;
     serviceMonthlyIdr: number;
     opsPlan: OpsPlanId;
+    /** Hardware value per server (IDR) used to size the ops hardware-responsibility component. */
+    hardwareValueIdr: number;
+    hardwareValueAssumed: boolean;
+    opsMonthlyPerServerIdr: number;
     opsMonthlyIdr: number;
     opsSetupIdr: number;
     opsVolumeReview: boolean;
@@ -147,6 +157,21 @@ export function calculateColocation(input: CalcInput): CalcResult {
 
     const isGpuClass = category === "gpu" || category === "extreme-gpu" || (category === "custom" && powerKw > P.customHighDensityThresholdKw);
 
+    let hardwareValueIdr: number;
+    let hardwareValueAssumed = false;
+    if (input.presetId === CUSTOM_PRESET_ID) {
+        if (input.custom?.hardwareValueIdr && input.custom.hardwareValueIdr > 0) {
+            hardwareValueIdr = input.custom.hardwareValueIdr;
+        } else {
+            hardwareValueAssumed = true;
+            hardwareValueIdr = isGpuClass
+                ? Math.round((50000 * (powerKw / 3)) * USD_IDR_PLANNING_RATE) // 4U L40S class ≈ USD 50k at 3 kW, scaled by power
+                : Math.max(6000, rackU * 4500) * USD_IDR_PLANNING_RATE;
+        }
+    } else {
+        hardwareValueIdr = hardwareValueIdrOf(getPreset(input.presetId) ?? getPreset("standard-1u")!);
+    }
+
     // Multi-site duplication
     let pricedServers = quantity;
     let drNote: CalcResult["drNote"] = "none";
@@ -175,8 +200,9 @@ export function calculateColocation(input: CalcInput): CalcResult {
         if (!plan || (plan.gpuOnly && !isGpuClass) || (!plan.gpuOnly && isGpuClass)) opsPlan = "none";
     }
     const ops = opsPlan !== "none" ? getOpsPlan(opsPlan)! : undefined;
-    const opsMonthly = ops ? ops.monthlyPerServerIdr * pricedServers : 0;
-    const opsSetup = ops ? ops.setupPerServerIdr * pricedServers : 0;
+    const opsPerServer = ops ? opsMonthlyIdr(ops, hardwareValueIdr) : 0;
+    const opsMonthly = opsPerServer * pricedServers;
+    const opsSetup = ops ? opsSetupIdr(ops) * pricedServers : 0;
     const opsVolumeReview = !!ops?.volumeReviewFrom && pricedServers >= ops.volumeReviewFrom;
 
     const monthly = serversMonthly + bandwidthMonthly + serviceMonthly + opsMonthly;
@@ -219,6 +245,9 @@ export function calculateColocation(input: CalcInput): CalcResult {
         bandwidthMonthlyIdr: bandwidthMonthly,
         serviceMonthlyIdr: serviceMonthly,
         opsPlan,
+        hardwareValueIdr,
+        hardwareValueAssumed,
+        opsMonthlyPerServerIdr: opsPerServer,
         opsMonthlyIdr: opsMonthly,
         opsSetupIdr: opsSetup,
         opsVolumeReview,

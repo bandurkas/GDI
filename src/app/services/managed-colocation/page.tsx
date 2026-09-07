@@ -6,7 +6,7 @@ import {
     ArrowRight, Zap, Server, Cpu, Sparkles, ShieldCheck, Gauge, Layers, ClipboardCheck, CheckCircle2, MapPin, MonitorCheck, ShieldPlus, Clock, Wrench as WrenchIcon,
 } from "lucide-react";
 import { colocationContent, type Lang } from "@/lib/colocation/content";
-import { COLOCATION_PRESETS, STANDARD_RACK_PRICING, SERVER_OPS_PLANS, SERVER_OPS_ADDONS, getPreset } from "@/lib/colocation/config";
+import { COLOCATION_PRESETS, STANDARD_RACK_PRICING, SERVER_OPS_PLANS, SERVER_OPS_ADDONS, getPreset, opsMonthlyIdr, opsSetupIdr, hardwareValueIdrOf } from "@/lib/colocation/config";
 import { calculateColocation, formatIdr, formatUsd, USD_IDR_RATE } from "@/lib/colocation/calc";
 import { ColocationCalculator } from "@/components/colocation/Calculator";
 import { PresetLink, Faq } from "@/components/colocation/Bits";
@@ -390,24 +390,39 @@ export default async function ManagedColocationPage() {
                             const c = t.serverOps.plans[pl.id];
                             const Icon = [MonitorCheck, ShieldPlus, Clock, Sparkles][i];
                             const gpu = pl.id === "gpu";
-                            const featured = pl.id === "standard";
+                            const featured = pl.id === "advanced";
+                            const fromPreset = getPreset(gpu ? "gpu-4u-l40s" : "standard-1u")!;
+                            const from = opsMonthlyIdr(pl, hardwareValueIdrOf(fromPreset));
+                            const setup = opsSetupIdr(pl);
                             return (
                                 <div key={pl.id} className={`flex flex-col p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${gpu ? "bg-slate-900 dark:bg-black text-white border-slate-800 hover:shadow-indigo-500/20" : featured ? "bg-slate-50 dark:bg-slate-950 border-indigo-500 shadow-xl shadow-indigo-500/10" : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-white/10 hover:border-indigo-400/60"}`}>
                                     <div className="flex items-center justify-between mb-5">
                                         <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${gpu ? "bg-white/10 text-amber-300" : "bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 text-indigo-600 dark:text-indigo-400"}`}><Icon size={20} /></div>
-                                        <span className={`font-mono text-[10px] uppercase tracking-[0.2em] ${gpu ? "text-amber-300" : "text-slate-400"}`}>{t.serverOps.coverage[pl.coverage]}</span>
+                                        <span className={`font-mono text-[10px] uppercase tracking-[0.2em] text-right ${gpu ? "text-amber-300" : "text-slate-400"}`}>{t.serverOps.coverage[pl.coverage]}</span>
                                     </div>
                                     <h3 className="text-xl font-bold mb-1">{c.name}</h3>
                                     <p className={`text-sm mb-5 ${gpu ? "text-slate-300" : "text-slate-500 dark:text-slate-400"}`}>{c.tagline}</p>
-                                    <p className={`text-[10px] font-bold uppercase tracking-widest ${gpu ? "text-slate-400" : "text-slate-400"}`}>{t.categories.from}</p>
-                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(pl.monthlyPerServerIdr)}<span className="text-xs font-bold text-slate-400 ml-1">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth}</span></p>
-                                    <p className="font-mono text-xs text-slate-400">{formatUsd(pl.monthlyPerServerIdr)}</p>
-                                    <p className={`mt-1 text-xs mb-5 ${gpu ? "text-slate-400" : "text-slate-500"}`}>{t.serverOps.setup} {formatIdr(pl.setupPerServerIdr)} ({formatUsd(pl.setupPerServerIdr)}) · {pl.includedHours ? `${pl.includedHours} ${t.serverOps.hours} · ` : ""}{pl.responseMinutes} min {t.serverOps.response}</p>
-                                    <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${gpu ? "text-slate-400" : "text-slate-400"}`}>{t.serverOps.included}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t.categories.from} · {fromPreset.name}</p>
+                                    <p className="text-2xl font-black tracking-tight tabular-nums">{formatIdr(from)}<span className="text-xs font-bold text-slate-400 ml-1">{gpu ? t.serverOps.perNodeMonth : t.serverOps.perServerMonth}</span></p>
+                                    <p className="font-mono text-xs text-slate-400">{formatUsd(from)}</p>
+                                    <p className={`mt-1 text-xs ${gpu ? "text-slate-400" : "text-slate-500"}`}>{t.serverOps.setup} {formatIdr(setup)} ({formatUsd(setup)}) · {pl.includedHours ? `${pl.includedHours} ${t.serverOps.hours} · ` : ""}{pl.responseMinutes} min {t.serverOps.response}</p>
+                                    <p className={`mt-2 mb-5 text-[11px] font-bold ${pl.hardwareRatePerYear ? (gpu ? "text-amber-300" : "text-indigo-600 dark:text-indigo-400") : "text-slate-400"}`}>
+                                        {pl.hardwareRatePerYear ? `${t.serverOps.hardwareShare}: ${Math.round(pl.hardwareRatePerYear * 100)}% ${t.serverOps.perYearOfValue}` : t.serverOps.noHardware}
+                                    </p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-slate-400">{t.serverOps.included}</p>
                                     <ul className={`space-y-2 text-sm flex-1 ${gpu ? "text-slate-200" : "text-slate-600 dark:text-slate-400"}`}>
                                         {c.items.map((it) => <li key={it} className="flex gap-2"><CheckCircle2 size={15} className={`mt-0.5 shrink-0 ${gpu ? "text-amber-300" : "text-emerald-500"}`} />{it}</li>)}
                                     </ul>
                                     {"note" in c && c.note && <p className={`mt-4 text-[11px] leading-snug ${gpu ? "text-slate-400" : "text-slate-500"}`}>{c.note}</p>}
+                                    <details className={`mt-5 rounded-xl border ${gpu ? "border-white/10 bg-white/5" : "border-slate-200 dark:border-white/10 bg-white dark:bg-white/5"}`}>
+                                        <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold uppercase tracking-widest flex items-center justify-between">
+                                            <span>{t.serverOps.onboardingTitle}</span>
+                                            <span className="font-mono normal-case tracking-normal text-slate-400">{formatIdr(setup)} · {pl.onboardingHours} {t.serverOps.onboardingHours}</span>
+                                        </summary>
+                                        <ul className={`px-4 pb-4 space-y-1.5 text-xs ${gpu ? "text-slate-300" : "text-slate-600 dark:text-slate-400"}`}>
+                                            {t.serverOps.onboarding[pl.id].map((it) => <li key={it} className="flex gap-2"><span className="mt-1.5 h-1 w-1 rounded-full bg-current shrink-0" />{it}</li>)}
+                                        </ul>
+                                    </details>
                                     <PresetLink presetId="ops" className={`mt-6 w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-colors cursor-pointer ${gpu ? "bg-white text-slate-900 hover:bg-slate-200" : "bg-slate-900 dark:bg-indigo-600 text-white hover:bg-black dark:hover:bg-indigo-500"}`}>
                                         {t.serverOps.cta} <ArrowRight size={16} />
                                     </PresetLink>
@@ -416,15 +431,59 @@ export default async function ManagedColocationPage() {
                         })}
                     </div>
 
+                    {/* Price matrix by server class */}
+                    <div className="mt-12 rounded-3xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+                        <div className="px-6 py-5 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-baseline justify-between gap-3">
+                            <h3 className="text-lg font-bold">{t.serverOps.matrixTitle}</h3>
+                            <p className="text-xs text-slate-500 max-w-xl">{t.serverOps.matrixNote}</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm min-w-[720px]">
+                                <thead>
+                                    <tr className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                        <th className="text-left px-6 py-3">{t.serverOps.matrixClass}</th>
+                                        {SERVER_OPS_PLANS.map((pl) => <th key={pl.id} className="text-right px-4 py-3">{t.serverOps.plans[pl.id].name}</th>)}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-white/10">
+                                    {COLOCATION_PRESETS.map((p) => {
+                                        const isGpu = p.category === "gpu" || p.category === "extreme-gpu";
+                                        const hv = hardwareValueIdrOf(p);
+                                        return (
+                                            <tr key={p.id} className="hover:bg-white dark:hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-3">
+                                                    <div className="font-bold text-slate-900 dark:text-white">{p.name}</div>
+                                                    <div className="font-mono text-[11px] text-slate-400">≈ ${(p.hardwareValueUsd ?? 0).toLocaleString("en-US")} hw</div>
+                                                </td>
+                                                {SERVER_OPS_PLANS.map((pl) => {
+                                                    const applicable = pl.gpuOnly ? isGpu : !isGpu;
+                                                    if (!applicable) return <td key={pl.id} className="px-4 py-3 text-right text-slate-300 dark:text-slate-600">—</td>;
+                                                    const v = opsMonthlyIdr(pl, hv);
+                                                    return (
+                                                        <td key={pl.id} className="px-4 py-3 text-right tabular-nums">
+                                                            <div className="font-bold text-slate-900 dark:text-white">{formatIdr(v)}</div>
+                                                            <div className="font-mono text-[11px] text-slate-400">{formatUsd(v)}</div>
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div className="mt-12 grid lg:grid-cols-3 gap-8 items-start">
                         <h3 className="text-xl font-bold">{t.serverOps.addonsTitle}</h3>
                         <ul className="lg:col-span-2 grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-slate-600 dark:text-slate-400">
-                            <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.extraHour}: {formatIdr(SERVER_OPS_ADDONS.extraAdminHourIdr)}</li>
+                            <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.extraHour}: {formatIdr(SERVER_OPS_ADDONS.extraAdminHourIdr)} ({formatUsd(SERVER_OPS_ADDONS.extraAdminHourIdr)})</li>
                             <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.backup}: {formatIdr(SERVER_OPS_ADDONS.backupPer100GbIdr)} {t.serverOps.addons.backupUnit} · {formatIdr(SERVER_OPS_ADDONS.backupPerTbIdr)} {t.serverOps.addons.backupTb}</li>
-                            <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.hardware}: {formatIdr(SERVER_OPS_ADDONS.hardwareMaintenanceNbdPerServerIdr)} {t.serverOps.perServerMonth}. {t.serverOps.addons.hardwareNote}</li>
                             <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.vuln}: {formatIdr(SERVER_OPS_ADDONS.vulnerabilityScanPerServerIdr)} {t.serverOps.perServerMonth}</li>
                             <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.dr}: {formatIdr(SERVER_OPS_ADDONS.drRestoreTestPerEventIdr)} {t.serverOps.addons.perEvent}</li>
+                            <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.hardwareAtCost}</li>
                             <li className="flex gap-3"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.addons.licensing}</li>
+                            <li className="flex gap-3 sm:col-span-2"><span className="mt-2 h-1 w-3 gdi-dash text-indigo-500 shrink-0" />{t.serverOps.onboardingExtra}</li>
                         </ul>
                     </div>
                 </div>
