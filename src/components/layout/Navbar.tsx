@@ -17,18 +17,18 @@ export function Navbar() {
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-colors duration-300">
             <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                <Link href="/" className="flex items-center">
+                <Link href="/" className="flex items-center shrink-0 dark:bg-white dark:rounded-xl dark:px-2 dark:py-1">
                     <Image
                         src="/gdi-logo.png"
                         alt="GDI Logo"
                         width={200}
                         height={56}
-                        className="h-14 w-auto"
+                        className="h-9 sm:h-12 lg:h-14 w-auto"
                         priority={true}
                     />
                 </Link>
 
-                <div className="flex items-center gap-3 sm:gap-6">
+                <div className="flex items-center gap-2 sm:gap-6 min-w-0">
                     <Link href="/" className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                         GDI
                     </Link>
@@ -101,7 +101,7 @@ export function Navbar() {
                             </Link>
                             <Link
                                 href="/auth/register"
-                                className="rounded-full bg-indigo-600 px-3 sm:px-5 py-2 text-sm font-medium text-white whitespace-nowrap hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/40"
+                                className="hidden sm:inline-flex rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white whitespace-nowrap hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/40"
                             >
                                 {dictionary.common.getStarted}
                             </Link>

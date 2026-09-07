@@ -1,6 +1,5 @@
 import { CheckCircle2, Zap, Shield, Brain, Globe, ChevronRight, ArrowRight, Server, Sparkles, Cpu, Building2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { cookies } from "next/headers";
 import { dictionaries } from "@/lib/dictionaries";
 import { colocationContent, type Lang } from "@/lib/colocation/content";
@@ -82,7 +81,7 @@ export default async function GDIPage() {
                                             <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"><Brain size={20} /></div>
                                             <p className="font-bold text-slate-900 dark:text-white">{dict.home.pillarAi.badge}</p>
                                         </div>
-                                        <Image src="/gdi-logo.png" alt="GDI" width={64} height={20} className="h-5 w-auto opacity-70" />
+                                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">Packages</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {[dict.products.startAi.name, dict.products.middleScale.name, dict.products.autoPlatform.name, dict.products.entAssistant.name].map((n, i) => (
